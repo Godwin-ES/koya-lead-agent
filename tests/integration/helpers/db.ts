@@ -1,7 +1,7 @@
 import { config as loadEnv } from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client, type QueryResultRow } from "pg";
+import { Client, Pool, type QueryResultRow } from "pg";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
@@ -25,6 +25,25 @@ export function dbClient(): Client {
     );
   }
   return new Client({ connectionString, ssl: { rejectUnauthorized: false } });
+}
+
+/**
+ * A real connection pool, for tests that need genuine server-side
+ * concurrency (e.g. proving an advisory lock actually serializes
+ * concurrent callers). A single `Client` isn't enough for that - `pg`
+ * queues queries sent to one `Client` internally and sends them one at a
+ * time, so firing many queries at a lone Client "concurrently" from JS
+ * never actually contends on the server; it just works by accident
+ * (and logs a deprecation warning for calling `.query()` while one is
+ * already in flight). A `Pool` genuinely dispatches concurrent queries
+ * over separate connections.
+ */
+export function dbPool(maxConnections = 6): Pool {
+  const connectionString = process.env.SUPABASE_DB_URL;
+  if (!connectionString) {
+    throw new Error("SUPABASE_DB_URL is not set.");
+  }
+  return new Pool({ connectionString, ssl: { rejectUnauthorized: false }, max: maxConnections });
 }
 
 export async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
@@ -75,6 +94,41 @@ export function anonClientAs(accessToken: string): SupabaseClient {
     auth: { autoRefreshToken: false, persistSession: false },
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   });
+}
+
+/**
+ * Inserts a minimal run row directly (bypassing RLS via the raw `pg`
+ * connection), for RPC tests that need a run to exist without caring how
+ * it got there. Returns its id.
+ */
+export async function insertTestRun(
+  client: Client,
+  userId: string,
+  overrides: Partial<{
+    status: string;
+    queued_at: string | null;
+    heartbeat_at: string | null;
+    worker_id: string | null;
+    attempt: number;
+    limits: Record<string, unknown>;
+  }> = {},
+): Promise<string> {
+  const result = await client.query<{ id: string }>(
+    `insert into runs (user_id, objective_raw, status, queued_at, heartbeat_at, worker_id, attempt, limits)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     returning id`,
+    [
+      userId,
+      "Find 10 US B2B SaaS companies with 10 to 100 employees",
+      overrides.status ?? "draft",
+      overrides.queued_at ?? null,
+      overrides.heartbeat_at ?? null,
+      overrides.worker_id ?? null,
+      overrides.attempt ?? 0,
+      JSON.stringify(overrides.limits ?? { target_qualified: 10 }),
+    ],
+  );
+  return result.rows[0]!.id;
 }
 
 /**
