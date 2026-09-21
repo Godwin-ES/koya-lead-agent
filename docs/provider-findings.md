@@ -217,25 +217,31 @@ status path, but the *trigger* is our own error handling around the
 
 ---
 
-## Step 2: Gemini model id — BLOCKED, needs `GOOGLE_AI_API_KEY`
+## Step 2: Gemini model id — CONFIRMED
 
-No Google AI Studio / Gemini API key is present in this environment
-(checked `env | grep -i GOOGLE`, nothing set). The plan's model-listing
-command cannot run:
+`GOOGLE_AI_API_KEY` was added to `app/.env.local` (git-ignored). Queried
+the Generative Language API directly (`GET
+https://generativelanguage.googleapis.com/v1beta/models`) rather than via
+`@google/genai`, since that package isn't installed until Task 2 — same
+underlying API, so the result is equivalent to the plan's listing command.
 
-```bash
-node -e "const {GoogleGenAI}=require('@google/genai');new GoogleGenAI({apiKey:process.env.GOOGLE_AI_API_KEY}).models.list().then(r=>console.log(JSON.stringify(r,null,2)))"
-```
+**Pinned model: `gemini-3.5-flash`.** Confirmed present in the live model
+list as `models/gemini-3.5-flash`, "Gemini 3.5 Flash" — the stable,
+non-preview, non-lite Flash tier, which is what "the Flash model id" means
+for our cheap-model use (§7.1 intake classifier default, source
+summarization, grounding checks). This also happens to match the value the
+user had already set in `.env.local`'s `GEMINI_MODEL`, so no change was
+needed there — just verification against the live API rather than trusting
+an unverified value, per the plan's instruction.
 
-**What I need from you:** a `GOOGLE_AI_API_KEY` (free tier is fine for
-this), either exported in the shell I'm working in or dropped into
-`app/.env.local` (git-ignored). Once present I'll run the listing command
-myself and pin the exact Flash model id here — no placeholder id is
-recorded in the meantime, per the plan's explicit instruction not to
-hardcode a remembered name.
+Other Flash variants exist (`gemini-3.5-flash-lite`, `gemini-3-flash-preview`,
+`gemini-3.6/3.7/3.8-flash`, several image/audio/TTS Flash variants) but are
+either preview-tier or task-specialized (image, audio, TTS) and are not
+candidates for our text classification/summarization use.
 
-**Not currently blocking:** the Gemini runner is Task 14, several tasks
-away. This only needs to be resolved before Task 14 starts.
+**Action:** `GEMINI_MODEL=gemini-3.5-flash` in `.env.example` and
+`app/.env.local`, referenced from `packages/core/src/providers/model/gemini.ts`
+in Task 7 — never hardcoded in application code.
 
 ---
 
@@ -266,20 +272,105 @@ blind.
 
 ---
 
-## Step 4: Crawl4AI container — IN PROGRESS
+## Step 4: Crawl4AI container — CONFIRMED
 
-```bash
-docker pull unclecode/crawl4ai:latest
-docker run -d -p 11235:11235 --name crawl4ai-dev unclecode/crawl4ai:latest
-curl -s http://localhost:11235/health
+Image: `unclecode/crawl4ai:latest`, version reported at runtime `0.9.3`.
+
+### Finding: the container binds loopback-only without an explicit API token
+
+Running the plan's literal command (`docker run -d -p 11235:11235 --name
+crawl4ai-dev unclecode/crawl4ai:latest`, no token) produces a container that
+reports Docker-healthy but is **unreachable from the host or from any other
+container**, including over a shared Docker Compose network. The
+entrypoint's own log explains why:
+
+```text
+entrypoint: no CRAWL4AI_API_TOKEN set; binding loopback only (127.0.0.1:11235).
+entrypoint: WARNING: this is the CONTAINER's loopback - published ports
+  (-p 11235:11235) will NOT work; connections from the host will be reset.
 ```
 
-Docker and network access are both available in this environment. The image
-pull was started and is running in the background (large image). Findings
-will be appended to this section once the pull completes and the container
-responds to a health check — health path, scrape endpoint path, request
-body shape, and the response field holding markdown, exactly as the plan
-requires. No application code depends on this until Task 11.
+Confirmed: `curl http://127.0.0.1:11235/health` from the host returned
+`Recv failure: Connection reset by peer`, while `docker exec crawl4ai-dev
+curl http://localhost:11235/health` (inside the container) returned `200`.
+Every endpoint except `/health` also requires bearer auth once reachable
+(`401 {"detail": "Authentication required"}`).
+
+**Fix, confirmed working:** set `CRAWL4AI_API_TOKEN` to an explicit value at
+container start. With it set, the container binds `0.0.0.0:11235` and the
+same token authenticates every call:
+
+```bash
+docker run -d -p 11235:11235 -e CRAWL4AI_API_TOKEN="$DEV_TOKEN" --name crawl4ai-dev unclecode/crawl4ai:latest
+curl -H "Authorization: Bearer $DEV_TOKEN" http://127.0.0.1:11235/health
+# {"status":"ok","timestamp":...,"version":"0.9.3"}
+```
+
+**Action for Task 2:** `docker-compose.dev.yml` must set `CRAWL4AI_API_TOKEN`
+from an env var (a generated dev-only value, documented in `.env.example`,
+never committed), not omit it. Without this, the worker container would be
+unable to reach the sidecar over the compose network at all — a failure
+that would look like a networking bug, not a missing-config one, and would
+be confusing to debug blind.
+
+### Finding: `/md` cannot report scrape failure; use `/crawl` instead
+
+Full route list (via `/openapi.json`, bearer-authenticated):
+`GET /`, `POST /crawl`, `POST /crawl/job`, `GET /crawl/job/{task_id}`,
+`POST /crawl/stream`, `POST /md`, `POST /html`, `POST /screenshot`,
+`POST /pdf`, `POST /execute_js`, `POST /llm/job`, `GET /health`,
+`GET /schema`, `GET /mcp/schema`, plus `/monitor/*` operational endpoints.
+
+Two candidates for our scraper adapter: `POST /md` (markdown-only,
+simplest) and `POST /crawl` (full result object). Live-tested both:
+
+```bash
+curl -X POST http://127.0.0.1:11235/md -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"url":"https://example.com","f":"fit"}'
+# {"url":..., "filter":"fit", "query":null, "cache":"0", "markdown":"# Example Domain\n...", "success":true}
+```
+
+`/md`'s response has **no HTTP status code field at all** — only a
+boolean `success`. Tested against a real 404
+(`https://httpbin.org/status/404`) via `/crawl` instead:
+
+```bash
+curl -X POST http://127.0.0.1:11235/crawl -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"urls":["https://httpbin.org/status/404"]}'
+# results[0]: success=false, status_code=404,
+#   error_message="Blocked by anti-bot protection: Structural: minimal_text, ...",
+#   markdown.raw_markdown="\n"
+```
+
+`/crawl`'s response correctly surfaces `success`, `status_code`, and a
+descriptive `error_message` per result, alongside
+`markdown.raw_markdown` / `markdown.fit_markdown`, `metadata.title`,
+`response_headers`, and `redirected_url`.
+
+**Correction to Task 11:** the scraper adapter must call `POST /crawl`
+(with `urls: [url]`, taking `results[0]`), not `POST /md`. Using `/md`
+would make a 404, a block, or a redirect-to-nowhere indistinguishable from
+a real successful scrape — directly defeating the design's `needs_review`
+requirement for a failed scrape (`SYSTEM-DESIGN-NEXTJS.md` §13: *"Scrape
+404 / robots-blocked / JS-only / parked: lead saved as `needs_review` with
+the reason; never a fabricated summary"*). The adapter reads content from
+`markdown.fit_markdown` (falling back to `markdown.raw_markdown` when
+`fit_markdown` is empty, as it was in this 404 test), and reads success
+from `success` + `status_code`, never from the presence of markdown text
+alone.
+
+### Confirmed shape for `packages/core/src/providers/scraper/crawl4ai.ts`
+
+- Health: `GET /health` → `{ status: "ok", timestamp, version }`, no auth
+  required (only unauthenticated route besides root).
+- Scrape: `POST /crawl`, body `{ urls: [url] }` minimum.
+- Result path: `response.results[0]`.
+- Success check: `results[0].success === true && results[0].status_code < 400`.
+- Content: `results[0].markdown.fit_markdown || results[0].markdown.raw_markdown`.
+- Failure reason for `needs_review`: `results[0].error_message` when
+  present, else `status_code`.
+- Auth: `Authorization: Bearer ${CRAWL4AI_API_TOKEN}` on every call except
+  `/health`.
 
 ---
 
@@ -296,4 +387,7 @@ requires. No application code depends on this until Task 11.
 | 7 | Task 15 | Read output tokens only from the final `result` message; per-step `output_tokens` is a placeholder. Dedupe input tokens by assistant message id. |
 | 8 | Task 15 | On hitting `maxTurns`, the SDK ends the query with an error result — the worker's own catch block must call `finalize_run` to reach `partial`, the SDK does not do this automatically. |
 | 9 | Task 16 (Dockerfile) | Must not strip optional npm dependencies, or the bundled Claude Code binary is missing. Add a build-time smoke check that imports the SDK and runs one trivial `query()`. |
-| 10 | Task 1, Steps 2-3 | Both credential-gated and require the user's direct action before Tasks 10 and 14 can start. Not blocking Tasks 2-9. |
+| 10 | Task 1, Step 3 | Apify actor selection is credential-gated and requires the user's direct action before Task 10 can start. Not blocking Tasks 2-9. |
+| 11 | Task 2 (docker-compose.dev.yml) | The crawl4ai sidecar must be started with `CRAWL4AI_API_TOKEN` set, or it binds loopback-only inside its own container and is unreachable even over a shared Docker network. |
+| 12 | Task 11 (scraper adapter) | Use `POST /crawl` (`results[0].success` / `.status_code` / `.error_message` / `.markdown.fit_markdown`), not `POST /md` — `/md`'s response carries no HTTP status, so it cannot distinguish a real scrape from a 404/block. |
+| 13 | Task 7 / `.env.example` | Gemini model pinned to `gemini-3.5-flash`, confirmed against the live Generative Language API model list rather than assumed. |
