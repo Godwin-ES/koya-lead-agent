@@ -10,11 +10,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["node"],
-    "paths": {
-      "@core/*": ["./packages/core/src/*"]
-    }
+    "types": ["node"]
   },
-  "include": ["tests/**/*.ts", "packages/core/src/**/*.ts"],
-  "exclude": ["node_modules", "web", "worker/dist"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
