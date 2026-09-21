@@ -1,0 +1,24 @@
+# Local development only. The deployed worker does NOT run this — it
+# defaults to Firecrawl instead (see SYSTEM-DESIGN-NEXTJS.md §4.4). This
+# sidecar exists so Crawl4AI, which needs Chromium, stays free and
+# unlimited during iteration without going anywhere near a paid tier.
+#
+# CRAWL4AI_API_TOKEN is required, not optional: without it the container
+# binds its own loopback only and is unreachable even from another
+# container on this same network — confirmed in
+# app/docs/provider-findings.md, Task 1 Step 4. Set it in .env.local.
+services:
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: koya-lead-agent-crawl4ai-dev
+    ports:
+      - "11235:11235"
+    environment:
+      CRAWL4AI_API_TOKEN: "${CRAWL4AI_API_TOKEN:?set CRAWL4AI_API_TOKEN in .env.local, e.g. openssl rand -hex 24}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11235/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
