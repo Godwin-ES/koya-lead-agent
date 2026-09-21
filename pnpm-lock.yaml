@@ -160,6 +160,12 @@ importers:
 
   packages/core:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.127.0
+        version: 0.127.0
+      '@google/genai':
+        specifier: ^2.23.0
+        version: 2.23.0
       '@supabase/supabase-js':
         specifier: ^2.116.0
         version: 2.116.0

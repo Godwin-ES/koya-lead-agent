@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@google/genai": "^2.23.0",
     "@supabase/supabase-js": "^2.116.0",
     "zod": "^4.6.5"
   },
