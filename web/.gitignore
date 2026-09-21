@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files - .env.example is tracked (a symlink to ../.env.example, the
+# single source of truth); everything holding real values is not.
+.env
+.env.local
+.env.*.local
 
 # vercel
 .vercel

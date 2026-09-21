@@ -1,10 +1,12 @@
 import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
@@ -25,11 +27,19 @@ export default defineConfig({
       "tests/unit/**/*.test.tsx",
       "tests/contract/**/*.test.ts",
       "tests/integration/**/*.test.ts",
+      "web/tests/unit/**/*.test.ts",
+      "web/tests/unit/**/*.test.tsx",
     ],
   },
   resolve: {
     alias: {
       "@core": path.resolve(rootDir, "packages/core/src"),
+      "@": path.resolve(rootDir, "web"),
     },
+    // Cheap safety net against a repeat of the dual-React-copy issue
+    // documented in BUILD-NOTES-NEXTJS.md (Task 6) - the actual fix was a
+    // stray web/pnpm-lock.yaml giving web/ its own disconnected
+    // node_modules store; this just guards against it recurring.
+    dedupe: ["react", "react-dom"],
   },
 });

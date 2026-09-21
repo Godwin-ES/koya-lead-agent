@@ -12,9 +12,16 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "pnpm --filter web dev",
+    // Production build, not `next dev` - see BUILD-NOTES-NEXTJS.md
+    // (Task 6): Turbopack dev mode's HMR WebSocket fails its handshake
+    // in this environment, and when it does, client-side event handlers
+    // silently never attach at all - confirmed directly (a button click
+    // produced zero effect and zero errors under `next dev`, then worked
+    // immediately under `next build` + `next start`). A production
+    // build is also the more faithful thing to E2E-test regardless.
+    command: "pnpm --filter web build && pnpm --filter web start",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 });

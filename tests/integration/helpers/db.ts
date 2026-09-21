@@ -1,13 +1,19 @@
 import { config as loadEnv } from "dotenv";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Client, Pool, type QueryResultRow } from "pg";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
 // Loaded here, not globally, so unit/contract tests never need real
 // secrets and this file is the one place that knows where .env.local is.
-const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+//
+// Resolved from process.cwd() rather than import.meta.url deliberately:
+// this file is imported by both Vitest (true ESM) and Playwright (which
+// transforms test files, and anything they import, to CommonJS - where
+// import.meta.url doesn't exist at all and throws a SyntaxError). Both
+// runners are always invoked from the app/ workspace root, so cwd-based
+// resolution works for both without needing two versions of this file.
+const appDir = process.cwd();
 loadEnv({ path: path.join(appDir, ".env.local") });
 
 /**
@@ -158,6 +164,8 @@ export async function createTestUser() {
 
   return {
     userId: created.user.id,
+    email,
+    password,
     accessToken: signedIn.session.access_token,
     async cleanup() {
       await admin.auth.admin.deleteUser(created.user.id);

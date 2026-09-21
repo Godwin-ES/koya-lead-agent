@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. SYSTEM-DESIGN-NEXTJS.md §17.2: "One spacing scale, one
+ * radius scale, one shadow scale... Dark and light are both first-class,
+ * with contrast verified in both." Light is the default; dark applies
+ * both by OS preference (prefers-color-scheme) and by explicit override
+ * (data-theme, set by next-themes) so a user's manual choice always wins
+ * over the system default.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f4f5;
+  --color-surface-3: #e4e4e7;
+  --color-text: #18181b;
+  --color-text-muted: #71717a;
+  --color-border: #e4e4e7;
+
+  --color-accent: #4f46e5;
+  --color-accent-contrast: #ffffff;
+
+  --color-info-bg: #eff6ff;
+  --color-info-text: #1d4ed8;
+  --color-warning-bg: #fffbeb;
+  --color-warning-text: #92400e;
+  --color-success-bg: #f0fdf4;
+  --color-success-text: #15803d;
+  --color-danger-bg: #fef2f2;
+  --color-danger-text: #b91c1c;
+  --color-danger-border: #fecaca;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #09090b;
+    --color-surface: #18181b;
+    --color-surface-2: #27272a;
+    --color-surface-3: #3f3f46;
+    --color-text: #fafafa;
+    --color-text-muted: #a1a1aa;
+    --color-border: #3f3f46;
+
+    --color-accent: #818cf8;
+    --color-accent-contrast: #09090b;
+
+    --color-info-bg: #1e293b;
+    --color-info-text: #93c5fd;
+    --color-warning-bg: #292118;
+    --color-warning-text: #fcd34d;
+    --color-success-bg: #142e1f;
+    --color-success-text: #86efac;
+    --color-danger-bg: #2e1616;
+    --color-danger-text: #fca5a5;
+    --color-danger-border: #7f1d1d;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #09090b;
+  --color-surface: #18181b;
+  --color-surface-2: #27272a;
+  --color-surface-3: #3f3f46;
+  --color-text: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-border: #3f3f46;
+
+  --color-accent: #818cf8;
+  --color-accent-contrast: #09090b;
+
+  --color-info-bg: #1e293b;
+  --color-info-text: #93c5fd;
+  --color-warning-bg: #292118;
+  --color-warning-text: #fcd34d;
+  --color-success-bg: #142e1f;
+  --color-success-text: #86efac;
+  --color-danger-bg: #2e1616;
+  --color-danger-text: #fca5a5;
+  --color-danger-border: #7f1d1d;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* prefers-reduced-motion (§17.11): no animation longer than 200ms on interaction feedback. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
