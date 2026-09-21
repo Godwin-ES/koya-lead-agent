@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "db:migrate": "node scripts/apply-migrations.mjs",
     "check:workspace": "test ! -f web/pnpm-lock.yaml || (echo 'web/pnpm-lock.yaml exists - web/ has its own disconnected node_modules store again. Run: rm -f web/pnpm-lock.yaml && rm -rf web/node_modules && pnpm install' && exit 1)",
-    "check": "pnpm check:workspace && pnpm lint && pnpm typecheck && pnpm test"
+    "check:symlinks": "node scripts/check-symlinks.mjs",
+    "check": "pnpm check:workspace && pnpm check:symlinks && pnpm lint && pnpm typecheck && pnpm test"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

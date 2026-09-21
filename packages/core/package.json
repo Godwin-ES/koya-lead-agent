@@ -13,6 +13,7 @@
     "@anthropic-ai/sdk": "^0.127.0",
     "@google/genai": "^2.23.0",
     "@supabase/supabase-js": "^2.116.0",
+    "apify-client": "^2.25.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
