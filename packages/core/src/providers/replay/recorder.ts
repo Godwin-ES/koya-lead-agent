@@ -1,4 +1,4 @@
-import { fixtureExists, loadFixture, saveFixture } from "./fixtures.js";
+import { fixtureExists, loadFixture, saveFixture } from "./fixtures";
 
 /**
  * Wraps every external call in the project - Apify, Crawl4AI, Firecrawl,

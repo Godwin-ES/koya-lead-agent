@@ -1,4 +1,4 @@
-import type { RunLimits, Scraper } from "./types.js";
+import type { RunLimits, Scraper } from "./types";
 
 /** SYSTEM-DESIGN-NEXTJS.md §7's "Intake and Visible Defaults" table. */
 export const LIMIT_DEFAULTS: RunLimits = {

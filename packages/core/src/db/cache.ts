@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { DiscoveryCacheRow, ScrapeCacheRow } from "./row-types.js";
+import type { DiscoveryCacheRow, ScrapeCacheRow } from "./row-types";
 
 /**
  * `discovery_cache` / `scrape_cache` - worker-only (service_role) per

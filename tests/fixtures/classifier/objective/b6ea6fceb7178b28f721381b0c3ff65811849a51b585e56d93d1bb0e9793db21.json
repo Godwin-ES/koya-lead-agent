@@ -1,0 +1,7 @@
+{
+  "verdict": "out_of_scope_unsafe",
+  "confidence": 1,
+  "reason": "The request asks to find personal email addresses and perform email outreach, both of which are restricted actions outside the scope of this system.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

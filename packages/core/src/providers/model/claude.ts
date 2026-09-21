@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import type { StructuredCallArgs, StructuredCallResult } from "./types.js";
+import type { StructuredCallArgs, StructuredCallResult } from "./types";
 
 let cachedClient: Anthropic | null = null;
 

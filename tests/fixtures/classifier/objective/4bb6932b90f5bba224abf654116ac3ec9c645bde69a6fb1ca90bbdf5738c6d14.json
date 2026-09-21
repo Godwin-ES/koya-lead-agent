@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 0.95,
+  "reason": "The request provides a clear target company type (B2B SaaS), a specific geographic constraint (US), a headcount range (10-100 employees), and a relevant business problem (needs AI automation support).",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

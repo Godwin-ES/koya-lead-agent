@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ToolCallRow } from "./row-types.js";
+import type { ToolCallRow } from "./row-types";
 
 /**
  * Wraps `record_tool_call(...)` - the only writer to `tool_calls`. `seq`

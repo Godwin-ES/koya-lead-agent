@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 1,
+  "reason": "The objective is highly specific, providing a clear target company type (B2B SaaS), geography (North America), headcount range (50 to 250), buyer persona (VP of Engineering), and a specific signal (hiring for DevOps).",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

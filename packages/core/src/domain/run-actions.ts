@@ -1,4 +1,4 @@
-import type { ActionState, Run, RunAction } from "./types.js";
+import type { ActionState, Run, RunAction } from "./types";
 
 const ENABLED: ActionState = { kind: "enabled" };
 const HIDDEN: ActionState = { kind: "hidden" };

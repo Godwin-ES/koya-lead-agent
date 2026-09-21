@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LeadRow, NewLead } from "./row-types.js";
+import type { LeadRow, NewLead } from "./row-types";
 
 /**
  * Thin `leads` table wrappers. `upsertLead` relies on `leads_run_domain_key`

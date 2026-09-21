@@ -1,0 +1,13 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request is too broad. It lacks details on the specific niche, geography, company size, and the ideal buyer persona.",
+  "missing_criteria": [
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem"
+  ],
+  "suggested_rewrite": "Find B2B software-as-a-service (SaaS) companies in North America with 50 to 250 employees that are currently hiring for DevOps roles, targeting the VP of Engineering."
+}

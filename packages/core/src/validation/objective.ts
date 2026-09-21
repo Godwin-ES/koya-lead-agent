@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { stage1, type Stage1Code } from "./stage1.js";
-import { classifyObjective } from "./classifier.js";
-import { hashObjective } from "../domain/normalize.js";
-import type { MissingCriterion, RunValidationVerdict } from "../schemas/validation.js";
+import { stage1, type Stage1Code } from "./stage1";
+import { classifyObjective } from "./classifier";
+import { hashObjective } from "../domain/normalize";
+import type { MissingCriterion, RunValidationVerdict } from "../schemas/validation";
 
 /** Below this, a confident-sounding verdict still only whispers (§7.2: "Low classifier confidence never blocks"). */
 const CONFIDENCE_FLOOR = 0.6;

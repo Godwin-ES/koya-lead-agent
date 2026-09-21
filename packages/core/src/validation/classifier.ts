@@ -1,7 +1,7 @@
-import { callCheapModel } from "../providers/model/cheap-model.js";
-import { withRecording } from "../providers/replay/recorder.js";
-import { hashObjective } from "../domain/normalize.js";
-import { ValidationVerdictSchema, MISSING_CRITERIA_KEYS, type ClassifierVerdict } from "../schemas/validation.js";
+import { callCheapModel } from "../providers/model/cheap-model";
+import { withRecording } from "../providers/replay/recorder";
+import { hashObjective } from "../domain/normalize";
+import { ValidationVerdictSchema, MISSING_CRITERIA_KEYS, type ClassifierVerdict } from "../schemas/validation";
 
 /**
  * SYSTEM-DESIGN-NEXTJS.md §7.1's Stage 2: one structured-output call on

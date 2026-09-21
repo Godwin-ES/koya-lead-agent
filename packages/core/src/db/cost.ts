@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CostLedgerRow, NewCostLedgerEntry } from "./row-types.js";
+import type { CostLedgerRow, NewCostLedgerEntry } from "./row-types";
 
 /** `cost_ledger` - the budget meters' data source (§11, §17.7). */
 

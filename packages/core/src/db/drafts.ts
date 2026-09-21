@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { NewOutreachDraft, OutreachDraftRow } from "./row-types.js";
+import type { NewOutreachDraft, OutreachDraftRow } from "./row-types";
 
 /**
  * Thin `outreach_drafts` wrappers. The `outreach_requires_qualified`

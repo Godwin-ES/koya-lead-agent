@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AgentEventRow } from "./row-types.js";
+import type { AgentEventRow } from "./row-types";
 
 /** Wraps `append_agent_event(...)` - powers the live run timeline (§17.7). */
 

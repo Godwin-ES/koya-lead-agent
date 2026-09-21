@@ -1,7 +1,7 @@
 import type { ZodType } from "zod";
-import { callClaudeStructured } from "./claude.js";
-import { callGeminiStructured } from "./gemini.js";
-import type { StructuredCallResult } from "./types.js";
+import { callClaudeStructured } from "./claude";
+import { callGeminiStructured } from "./gemini";
+import type { StructuredCallResult } from "./types";
 
 export interface CheapModelOpts {
   /** A short identifier for the call, e.g. "objective-verdict", "source-summary". */

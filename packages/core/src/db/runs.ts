@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { NewRun, RunRow, RunSummary } from "./row-types.js";
+import type { NewRun, RunRow, RunSummary } from "./row-types";
 
 /**
  * Thin wrappers around the `runs` table and its RPCs. No business logic -

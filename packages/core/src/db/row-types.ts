@@ -6,8 +6,8 @@
  * that knows each table's shape, per Task 5's own scope ("thin, focused
  * modules... they are the only place that knows the table shapes").
  */
-import type { RunLimits, RunStatus, LeadQualificationStatus, ToolCallStatus, Runner, Scraper } from "../domain/types.js";
-import type { RunValidationVerdict } from "../schemas/validation.js";
+import type { RunLimits, RunStatus, LeadQualificationStatus, ToolCallStatus, Runner, Scraper } from "../domain/types";
+import type { RunValidationVerdict } from "../schemas/validation";
 
 export interface RunRow {
   id: string;
@@ -39,6 +39,7 @@ export interface RunRow {
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  idempotency_key: string | null;
 }
 
 export interface NewRun {
@@ -57,6 +58,8 @@ export interface NewRun {
   validation_confidence?: number;
   validation_missing_criteria?: string[];
   validation_dismissed_at?: string;
+  idempotency_key?: string;
+  queued_at?: string;
 }
 
 export interface LeadRow {

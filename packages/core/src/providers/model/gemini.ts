@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
-import type { StructuredCallArgs, StructuredCallResult } from "./types.js";
+import type { StructuredCallArgs, StructuredCallResult } from "./types";
 
 let cachedClient: GoogleGenAI | null = null;
 
