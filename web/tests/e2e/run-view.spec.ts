@@ -167,7 +167,7 @@ test.describe("run view", () => {
       // "am I at the bottom" state before the next assertion depends on
       // it - a fixed short wait, not a poll, since there is no visible
       // DOM signal for that internal state alone.
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(500);
       const scrollBefore = await timeline.evaluate((el) => el.scrollTop);
 
       const supabase = serviceRoleClient();

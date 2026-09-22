@@ -39,9 +39,22 @@ describe("row level security", () => {
       `insert into tool_calls (run_id, seq, tool_name, status) values ($1, 1, 'discover_companies', 'ok')`,
       [ownerRunId],
     );
+
+    // Real content_md is irrelevant to RLS visibility, so a placeholder
+    // is fine - only `url` needs to match `leads.source_urls` for the
+    // owned row, and deliberately not for the unrelated one.
+    await db.query(
+      `insert into scrape_cache (url_hash, url, scraper, content_md) values ($1, $2, 'crawl4ai', $3)`,
+      ["owned-test-hash", "https://acme.example", "# Acme\nPlaceholder content."],
+    );
+    await db.query(
+      `insert into scrape_cache (url_hash, url, scraper, content_md) values ($1, $2, 'crawl4ai', $3)`,
+      ["unrelated-test-hash", "https://unrelated.example", "# Unrelated\nNo lead references this."],
+    );
   });
 
   afterAll(async () => {
+    await db.query("delete from scrape_cache where url_hash in ('owned-test-hash', 'unrelated-test-hash')");
     await db.query("delete from runs where id = $1", [ownerRunId]);
     await db.end();
     await owner.cleanup();
@@ -74,6 +87,27 @@ describe("row level security", () => {
     const { data, error } = await client.from("leads").select("id").eq("id", ownerLeadId);
     expect(error).toBeNull();
     expect(data).toHaveLength(1);
+  });
+
+  it("lets the owner read scraped content for one of their own leads' source urls (the evidence drawer, §17.9)", async () => {
+    const client = anonClientAs(owner.accessToken);
+    const { data, error } = await client.from("scrape_cache").select("url").eq("url", "https://acme.example");
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+  });
+
+  it("does not let a second user read scraped content tied to the first user's lead", async () => {
+    const client = anonClientAs(other.accessToken);
+    const { data, error } = await client.from("scrape_cache").select("url").eq("url", "https://acme.example");
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+  });
+
+  it("does not expose a scrape_cache row that no owned lead's source_urls references", async () => {
+    const client = anonClientAs(owner.accessToken);
+    const { data, error } = await client.from("scrape_cache").select("url").eq("url", "https://unrelated.example");
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
   });
 
   it("lets the owner read the tool-call log for their own run (the evidence UI, §17.7)", async () => {

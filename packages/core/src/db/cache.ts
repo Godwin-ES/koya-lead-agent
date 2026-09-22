@@ -33,6 +33,21 @@ export async function setDiscoveryCache(
   return data as DiscoveryCacheRow;
 }
 
+/**
+ * Fetches whatever scraped content the user's own RLS grants them
+ * visibility into for a set of URLs - the evidence drawer's source
+ * material (SYSTEM-DESIGN-NEXTJS.md §17.9). Scoped by `scrape_cache`'s
+ * own RLS policy (migration 012), not by anything this function does
+ * itself: a caller with the anon/authenticated client only ever gets
+ * back rows for URLs that are also in `source_urls` on a lead they own.
+ */
+export async function listScrapeCacheForUrls(supabase: SupabaseClient, urls: string[]): Promise<ScrapeCacheRow[]> {
+  if (urls.length === 0) return [];
+  const { data, error } = await supabase.from("scrape_cache").select().in("url", urls);
+  if (error) throw error;
+  return (data ?? []) as ScrapeCacheRow[];
+}
+
 export async function getScrapeCache(supabase: SupabaseClient, urlHash: string): Promise<ScrapeCacheRow | null> {
   const { data, error } = await supabase
     .from("scrape_cache")

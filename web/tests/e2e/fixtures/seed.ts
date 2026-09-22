@@ -32,13 +32,22 @@ export interface SeedRunOptions {
 
 export async function seedRun(options: SeedRunOptions) {
   const supabase = serviceRoleClient();
+  const needsQualityReport = options.status === "completed" || options.status === "partial";
 
+  // check_completed_requires_quality_report (Task 4) is a BEFORE
+  // INSERT OR UPDATE trigger checked against the row's own id - a row
+  // can never be inserted directly as 'completed' with no matching
+  // run_quality_reports row, and that row can't exist until the run's
+  // own id does (its own FK). Insert as 'queued' first, write the
+  // report, then update to the real target status - the same
+  // insert-then-report-then-transition order finalize_run's own RPC
+  // follows for a real run.
   const { data: run, error } = await supabase
     .from("runs")
     .insert({
       user_id: options.userId,
       objective_raw: options.objective ?? "Find 10 US B2B SaaS companies, 10-100 employees",
-      status: options.status,
+      status: needsQualityReport ? "queued" : options.status,
       icp: options.icp ?? null,
       counters: options.counters ?? {},
       limits: { ...LIMIT_DEFAULTS, ...options.limits },
@@ -50,10 +59,7 @@ export async function seedRun(options: SeedRunOptions) {
     .single();
   if (error) throw error;
 
-  if (options.status === "completed" || options.status === "partial") {
-    // check_completed_requires_quality_report (Task 4) refuses a
-    // `completed` row with no quality report on file - seed one so a
-    // seeded "completed" run is actually reachable.
+  if (needsQualityReport) {
     await supabase.from("run_quality_reports").insert({
       run_id: run.id,
       checks: [],
@@ -61,6 +67,9 @@ export async function seedRun(options: SeedRunOptions) {
       passed: options.status === "completed",
       summary: "Seeded for an E2E test - not a real finalize_run report.",
     });
+    const { error: updateError } = await supabase.from("runs").update({ status: options.status }).eq("id", run.id);
+    if (updateError) throw updateError;
+    run.status = options.status;
   }
 
   let seq = 1;
