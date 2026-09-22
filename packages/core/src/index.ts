@@ -20,3 +20,4 @@ export * from "./skills/loader";
 export * from "./quality/report";
 export * from "./quality/sample-pack";
 export * from "./providers/failure-injection";
+export * from "./benchmark/score";
