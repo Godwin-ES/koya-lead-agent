@@ -1,8 +1,7 @@
 import { z, type ZodType } from "zod";
 import { IcpSchema } from "../schemas/icp";
 import { QualificationSchema } from "../schemas/qualification";
-import { QualityReportSchema, QUALITY_CHECK_IDS, QUALITY_SCORECARD_DIMENSIONS } from "../schemas/quality";
-import type { QualityCheckResult, QualityScorecardEntry } from "../schemas/quality";
+import { computeQualityReport } from "../quality/report";
 import { normalizeDomain, hashObjective } from "../domain/normalize";
 import { updateRun, finalizeRun as finalizeRunRow, getRunSummary } from "../db/runs";
 import { getDiscoveryCache, setDiscoveryCache, getScrapeCache, setScrapeCache } from "../db/cache";
@@ -312,66 +311,33 @@ const listRunState: ToolDefinition = {
 
 const FinalizeRunInput = z.object({ summary: z.string().min(1) });
 
-/**
- * A real, mechanically-verified quality report, computed directly from
- * `leads`/`outreach_drafts` rather than trusted claims - not the full
- * quality module described in assets/lead-list-quality-guide.md, which
- * Task 19 owns. Every check here is something this task can actually
- * query and confirm today; nothing is hardcoded to pass.
- */
-async function computeQualityReport(
-  ctx: ToolContext,
-  targetQualified: number,
-): Promise<{ checks: QualityCheckResult[]; scorecard: QualityScorecardEntry[]; passed: boolean }> {
-  const leads = await listLeadsForRun(ctx.supabase, ctx.run.id);
-  const qualified = leads.filter((l) => l.qualification_status === "qualified");
-  const draftsByLead = await Promise.all(qualified.map((l) => listDraftsForLead(ctx.supabase, l.id)));
-  const allDrafts = draftsByLead.flat();
-
-  const domains = leads.map((l) => l.company_domain);
-  const uniqueDomains = new Set(domains);
-  const flaggedDrafts = allDrafts.filter((d) => d.flagged_unsupported);
-
-  const checks: QualityCheckResult[] = [
-    { id: "has_ten_qualified", passed: qualified.length >= targetQualified, detail: `${qualified.length} of ${targetQualified} target qualified leads.` },
-    { id: "every_lead_has_name_and_domain", passed: leads.every((l) => !!l.company_name && !!l.company_domain), detail: "Checked company_name and company_domain are non-empty on every lead." },
-    { id: "every_lead_has_qualification_reasoning", passed: leads.every((l) => l.fit_reasons.length > 0 || l.concerns.length > 0), detail: "Checked fit_reasons or concerns is non-empty on every lead." },
-    { id: "every_lead_has_source_context", passed: leads.every((l) => !!l.source_summary), detail: "Checked source_summary is present on every lead." },
-    {
-      id: "every_qualified_lead_has_outreach_drafts",
-      passed: qualified.every((_, i) => (draftsByLead[i]?.length ?? 0) > 0),
-      detail: `${qualified.filter((_, i) => (draftsByLead[i]?.length ?? 0) > 0).length} of ${qualified.length} qualified leads have at least one outreach draft.`,
-    },
-    { id: "no_email_finding_or_validation_attempted", passed: true, detail: "No email-finding or validation tool exists in this system's toolset - structurally guaranteed, not merely asserted." },
-    { id: "no_duplicate_companies", passed: uniqueDomains.size === domains.length, detail: `${domains.length - uniqueDomains.size} duplicate company_domain value(s) found among ${domains.length} leads.` },
-    { id: "needs_review_excluded_from_qualified_count", passed: qualified.every((l) => l.qualification_status === "qualified"), detail: "qualified_count is always derived by filtering on qualification_status = 'qualified', never inferred." },
-  ];
-
-  const scorecard: QualityScorecardEntry[] = [
-    { dimension: "icp_fit", passed: qualified.every((l) => l.fit_reasons.length > 0), note: "Every qualified lead has at least one stated fit reason." },
-    { dimension: "evidence_quality", passed: leads.every((l) => !!l.source_summary && l.source_urls.length > 0), note: "Every lead has a source summary and at least one source URL." },
-    { dimension: "duplicate_rate", passed: uniqueDomains.size === domains.length, note: `${domains.length - uniqueDomains.size} duplicate domain(s).` },
-    { dimension: "outreach_relevance", passed: flaggedDrafts.length === 0, note: `${flaggedDrafts.length} of ${allDrafts.length} draft(s) flagged by the grounding check.` },
-    { dimension: "data_completeness", passed: leads.every((l) => !!l.company_name && !!l.company_domain && !!l.source_summary), note: "Required fields present across all leads." },
-    { dimension: "safety_compliance", passed: true, note: "No email-finding, validation, or send capability exists in this toolset." },
-  ];
-
-  return { checks, scorecard, passed: checks.every((c) => c.passed) && scorecard.every((s) => s.passed) };
-}
-
 const finalizeRun: ToolDefinition = {
   name: "finalize_run",
   description: "Finalize this run: computes the quality report from saved leads and drafts, and transitions the run to completed or partial.",
   inputSchema: FinalizeRunInput,
   handler: async (ctx, rawInput): Promise<ToolHandlerResult> => {
     const input = rawInput as z.infer<typeof FinalizeRunInput>;
-    const { checks, scorecard, passed } = await computeQualityReport(ctx, ctx.run.limits.target_qualified);
 
-    // Even a replayed/hand-built report is validated against the schema
-    // before it's persisted, same discipline as classifier.ts (Task 8).
-    QualityReportSchema.parse({ checks, scorecard, passed, summary: input.summary });
+    const leads = await listLeadsForRun(ctx.supabase, ctx.run.id);
+    const draftsByLeadId = new Map<string, Awaited<ReturnType<typeof listDraftsForLead>>>(
+      await Promise.all(leads.map(async (l) => [l.id, await listDraftsForLead(ctx.supabase, l.id)] as const)),
+    );
 
-    const result = await finalizeRunRow(ctx.supabase, { runId: ctx.run.id, checks, scorecard, passed, summary: input.summary });
+    const report = computeQualityReport({
+      leads,
+      draftsByLeadId,
+      targetQualified: ctx.run.limits.target_qualified,
+      emailFindingOrSendAttempted: false,
+      summary: input.summary,
+    });
+
+    const result = await finalizeRunRow(ctx.supabase, {
+      runId: ctx.run.id,
+      checks: report.checks,
+      scorecard: report.scorecard,
+      passed: report.passed,
+      summary: report.summary,
+    });
     return { resultSummary: `Run finalized as ${result.status}`, data: result };
   },
 };
