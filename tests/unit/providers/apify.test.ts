@@ -108,6 +108,31 @@ describe("apify discovery adapter", () => {
     expect(result.candidates[0]!.companyDomain).toBe("acme.example");
   });
 
+  it("parses real actor output shape (recorded from a real 2-result run, Task 10 Step 3)", async () => {
+    // rp_openpro.ai/b2b-url-finder items carry `domain`, `url`, and
+    // `pageTitle` - there is no `name` field. The original toCandidate()
+    // assumed `item.name` and would have dropped every real result;
+    // confirmed live before this fixture was captured (BUILD-NOTES-NEXTJS.md).
+    const key = seed("apify:discover:real-shape-test", {
+      run: { defaultDatasetId: "FvJd8ZcER4kSnjGeu" },
+      items: [
+        {
+          domain: "merriam-webster.com",
+          url: "https://www.merriam-webster.com/dictionary/organic",
+          pageTitle: "ORGANIC Definition & Meaning - Merriam-Webster",
+          sources: ["bing"],
+          keyword: "organic skincare brand",
+          position: 1,
+          processedAt: "2026-09-22T11:14:04.089Z",
+        },
+      ],
+    });
+    const result = await discover(baseContext, { query: "organic skincare brand", requested: 2 }, { fixtureKeyOverride: key });
+    expect(result.candidates).toHaveLength(1);
+    expect(result.candidates[0]!.companyName).toBe("ORGANIC Definition & Meaning - Merriam-Webster");
+    expect(result.candidates[0]!.companyDomain).toBe("merriam-webster.com");
+  });
+
   it("refuses to dispatch when the run-level spend ceiling is already exhausted", async () => {
     await expect(
       discover(

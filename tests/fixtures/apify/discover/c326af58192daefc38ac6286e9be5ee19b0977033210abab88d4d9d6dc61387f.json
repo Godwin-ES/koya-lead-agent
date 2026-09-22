@@ -1,0 +1,31 @@
+{
+  "run": {
+    "defaultDatasetId": "FvJd8ZcER4kSnjGeu"
+  },
+  "items": [
+    {
+      "domain": "merriam-webster.com",
+      "url": "https://www.merriam-webster.com/dictionary/organic",
+      "pageTitle": "ORGANIC Definition & Meaning - Merriam-Webster",
+      "pageDescription": "6 days ago &#0183;&#32;The meaning of ORGANIC is of, relating to, yielding, or involving the use of food produced with the use of feed or …",
+      "sources": [
+        "bing"
+      ],
+      "keyword": "organic skincare brand",
+      "position": 1,
+      "processedAt": "2026-09-22T11:14:04.089Z"
+    },
+    {
+      "domain": "mayoclinic.org",
+      "url": "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/organic-food/art-20043880",
+      "pageTitle": "Organic foods: Are they safer? More nutritious? - Mayo Clinic",
+      "pageDescription": "Feb 28, 2025 &#0183;&#32;Understand the differences between organic foods and traditionally grown foods when it comes to nutrition, safety and …",
+      "sources": [
+        "bing"
+      ],
+      "keyword": "organic skincare brand",
+      "position": 2,
+      "processedAt": "2026-09-22T11:14:04.089Z"
+    }
+  ]
+}

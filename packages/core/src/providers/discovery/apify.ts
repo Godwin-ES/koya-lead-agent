@@ -105,16 +105,25 @@ export async function dispatchRaw(args: RawDispatchArgs): Promise<RawDispatchRes
   return { run: { defaultDatasetId: run.defaultDatasetId }, items: items as Record<string, unknown>[] };
 }
 
-/** Extracts a usable candidate from a raw Apify item, defensively - exact field names depend on the actor, still unconfirmed. */
+/**
+ * Extracts a usable candidate from a raw Apify item. Field names confirmed
+ * against a real 2-result run of rp_openpro.ai/b2b-url-finder (Task 10
+ * Step 3, BUILD-NOTES-NEXTJS.md): items carry `domain`, `url`, and
+ * `pageTitle` - there is no `name` field. The original guess (`item.name`)
+ * would have silently dropped every real result, confirmed by that same
+ * run: 2/2 items failed to parse before this fix.
+ */
 function toCandidate(item: Record<string, unknown>): DiscoveryCandidate | null {
-  const name = typeof item.name === "string" ? item.name.trim() : "";
   const rawDomain = typeof item.domain === "string" ? item.domain.trim() : "";
-  if (!name || !rawDomain) return null;
+  if (!rawDomain) return null;
 
   const domain = normalizeDomain(rawDomain);
   if (!domain) return null;
 
-  return { companyName: name, companyDomain: domain, raw: item };
+  const pageTitle = typeof item.pageTitle === "string" ? item.pageTitle.trim() : "";
+  const companyName = pageTitle || domain;
+
+  return { companyName, companyDomain: domain, raw: item };
 }
 
 // A per-process, best-effort run-level spend tracker. The authoritative
@@ -159,7 +168,10 @@ export async function discover(
   const remaining = Math.max(0, context.limits.candidate_limit - (context.counters.candidates_seen ?? 0));
   const cap = Math.max(0, Math.min(request.requested, remaining));
 
-  const input: Record<string, unknown> = { query: request.query, [CAP_FIELD_NAME]: cap };
+  // The chosen actor (rp_openpro.ai/b2b-url-finder) takes an array of
+  // search keywords, not a single query string - confirmed against its
+  // real input schema (Task 10 Step 3, BUILD-NOTES-NEXTJS.md).
+  const input: Record<string, unknown> = { keywords: [request.query], [CAP_FIELD_NAME]: cap };
 
   if (cap === 0) {
     return { input, candidates: [], itemCount: 0, cacheHit: false, estimatedCostUsd: 0 };
