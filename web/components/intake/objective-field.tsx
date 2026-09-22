@@ -67,8 +67,8 @@ export function ObjectiveField({
           pendingLabel="Checking"
           variant="secondary"
           state={
-            trimmed.length < MIN_LENGTH
-              ? { kind: "disabled", reason: `Write at least ${MIN_LENGTH} characters before checking.` }
+            trimmed.length === 0
+              ? { kind: "disabled", reason: "Type an objective before checking." }
               : alreadyCheckedThisText
                 ? { kind: "disabled", reason: "Already checked - edit the objective to check again." }
                 : undefined
