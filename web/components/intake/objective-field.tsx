@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { ValidationFlag } from "./validation-flag";
 import { ActionButton } from "@/components/primitives/action-button";
 import { checkObjective } from "@/actions/validation";
@@ -38,7 +39,19 @@ export function ObjectiveField({
   const trimmed = value.trim();
   const alreadyCheckedThisText = validation !== null && lastCheckedText === trimmed;
 
-  const showFlag = validation && !dismissed;
+  // Excluding severity "none" here isn't just for the success-message
+  // case below: ValidationFlag already renders nothing for that verdict
+  // (`if (result.severity === "none") return null`), but this wrapping
+  // div rendered anyway - an empty, non-visually-detectable
+  // `#objective-flag` that the textarea's `aria-describedby` still
+  // pointed screen readers at even though there was nothing to describe.
+  const showFlag = validation && validation.severity !== "none" && !dismissed;
+  // severity "none" only ever means verdict "valid" (buildResult in
+  // packages/core/src/validation/objective.ts) - the one outcome
+  // ValidationFlag deliberately renders nothing for, which otherwise left
+  // a successful check looking indistinguishable from never having
+  // checked at all.
+  const showSuccess = validation !== null && validation.severity === "none";
 
   return (
     <div>
@@ -105,6 +118,12 @@ export function ObjectiveField({
           {value.length}/{MAX_LENGTH}
         </span>
       </div>
+      {showSuccess && (
+        <div className="mt-2 flex items-center gap-2 rounded-md bg-[var(--color-success-bg)] px-3 py-2 text-sm text-[var(--color-success-text)]">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Objective looks good.
+        </div>
+      )}
       {showFlag && (
         <div id="objective-flag">
           <ValidationFlag

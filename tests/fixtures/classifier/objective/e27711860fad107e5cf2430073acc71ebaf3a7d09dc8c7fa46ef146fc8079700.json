@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 0.98,
+  "reason": "The objective clearly specifies the industry (fintech), geographic region (US), and a precise company size range (20-80 employees), which is highly actionable for a research agent.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

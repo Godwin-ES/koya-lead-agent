@@ -38,6 +38,24 @@ test.describe("run intake", () => {
     }
   });
 
+  test("a well-formed objective shows a green success message after checking", async ({ page }) => {
+    const user = await createTestUser();
+    try {
+      await signIn(page, user.email, user.password);
+      await page.goto("/runs/new");
+
+      await page.getByLabel("Qualification objective").fill("Find 10 US fintech companies with 20-80 employees");
+      await expect(page.getByText("Objective looks good.")).toHaveCount(0);
+
+      await page.getByRole("button", { name: "Check objective" }).click();
+      await expect(page.getByText("Objective looks good.")).toBeVisible({ timeout: 10_000 });
+      // A verdict this clean must never also show a flag needing dismissal.
+      await expect(page.locator("#objective-flag")).toHaveCount(0);
+    } finally {
+      await user.cleanup();
+    }
+  });
+
   test("editing the objective after a check re-locks Start run until checked again", async ({ page }) => {
     const user = await createTestUser();
     try {
