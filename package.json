@@ -10,7 +10,7 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:worker": "pnpm --filter worker dev",
-    "dev:sidecar": "docker compose -f docker-compose.dev.yml up -d",
+    "dev:sidecar": "docker compose --env-file .env.local -f docker-compose.dev.yml up -d",
     "build": "pnpm --filter web build",
     "lint": "pnpm -r lint",
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
