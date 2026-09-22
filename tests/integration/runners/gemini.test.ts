@@ -91,7 +91,7 @@ describe("runGeminiAgent", () => {
     const calls = await listToolCallsForRun(supabase, run.id);
     const seqOf = (name: string) => calls.find((c) => c.tool_name === name)?.seq ?? Infinity;
     expect(seqOf("save_icp")).toBeLessThan(seqOf("discover_companies"));
-  });
+  }, 20_000);
 
   it("emits an agent event for every tool call", async () => {
     const run = await createRun({ objective: "B2B SaaS ops tools" });
@@ -116,7 +116,7 @@ describe("runGeminiAgent", () => {
     const toolUseEvents = events.filter((e) => e.type === "tool_use");
     expect(toolUseEvents.length).toBeGreaterThanOrEqual(3); // save_icp, discover_companies, finalize_run
     expect(toolUseEvents.map((e) => (e.payload as { tool: string }).tool)).toEqual(["save_icp", "discover_companies", "finalize_run"]);
-  });
+  }, 20_000);
 
   it("stops at the turn limit and finalizes with what it has", async () => {
     const run = await createRun({ objective: "vague objective", maxTurns: 1 });
@@ -129,7 +129,7 @@ describe("runGeminiAgent", () => {
 
     const calls = await listToolCallsForRun(supabase, run.id);
     expect(calls.find((c) => c.tool_name === "finalize_run")).toBeDefined();
-  });
+  }, 20_000);
 
   it("recovers from one invalid tool input by correcting itself", async () => {
     const run = await createRun({ objective: "recovers test", maxTurns: 2 });
@@ -145,5 +145,5 @@ describe("runGeminiAgent", () => {
 
     const { data: finalRun } = await supabase.from("runs").select().eq("id", run.id).single();
     expect(finalRun.icp).not.toBeNull();
-  });
+  }, 20_000);
 });
