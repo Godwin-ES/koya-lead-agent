@@ -1,27 +1,40 @@
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildTools, buildPreToolUseHook, recordModelUsage, DISALLOWED_BUILTIN_TOOLS, type LoopState } from "../../../worker/src/runners/agent-sdk";
+import {
+  buildTools,
+  buildRawToolHandlers,
+  buildPreToolUseHook,
+  recordModelUsage,
+  recordSession,
+  replaySession,
+  DISALLOWED_BUILTIN_TOOLS,
+  type LoopState,
+} from "../../../worker/src/runners/agent-sdk";
 import { gate, TOOL_NAMES } from "@core/tools/gate";
 import { LIMIT_DEFAULTS } from "@core/domain/limits";
 import type { ToolRunState } from "@core/tools/log";
+import { fixturePathFor, saveFixture } from "@core/providers/replay/fixtures";
 import { createFakeSupabase } from "../../unit/tools/support/fake-supabase";
 
 /**
  * The Agent SDK's own `query()` loop is a black box that spawns a real
- * subprocess talking to the real Anthropic API - there is no fixture
- * replay mechanism for it the way there is for our own raw fetch/Gemini
- * dispatch functions, so it cannot be exercised by an automated test
- * without violating the project-wide "no automated test makes a real
- * external call" constraint (SYSTEM-DESIGN-NEXTJS.md §11). That one real
- * exercise is the live smoke test, Task 15 Step 3 - a deliberate,
- * individually-approved action, never a side effect of `pnpm test`.
+ * subprocess talking to the real Anthropic API - it cannot be exercised
+ * by an automated test without violating the project-wide "no automated
+ * test makes a real external call" constraint (SYSTEM-DESIGN-NEXTJS.md
+ * §11). That one real exercise is the live smoke test, Task 15 Step 3 -
+ * a deliberate, individually-approved action, never a side effect of
+ * `pnpm test`.
  *
  * What *is* testable, and tested here, is everything this file actually
- * wrote: the tool wrappers, the PreToolUse hook, and the cost-recording
- * logic - all plain functions that close over a Supabase client and
- * don't touch the SDK's `query()` at all. These are exactly the pieces
- * where a real bug would live (wrong gate() call, wrong error mapping,
- * wrong cost math) - the `query()` plumbing around them is thin and
- * SDK-owned.
+ * wrote: the tool wrappers, the PreToolUse hook, the cost-recording
+ * logic, and - Task 22 - `recordSession`/`replaySession`, the
+ * session-level recorder that stands in for `query()` in replay mode.
+ * These are all plain functions that close over a Supabase client (or, for
+ * the session helpers, a plain async generator) and don't touch the
+ * SDK's `query()` at all. These are exactly the pieces where a real bug
+ * would live (wrong gate() call, wrong error mapping, wrong cost math,
+ * a tool_use block replayed out of order) - the `query()` plumbing
+ * around them is thin and SDK-owned.
  */
 
 function baseRun(overrides: Partial<ToolRunState> = {}): ToolRunState {
@@ -195,6 +208,145 @@ describe("agent-sdk runner: tool surface", () => {
   it("disallows every dangerous built-in tool the agent must not reach", () => {
     for (const dangerous of ["Bash", "Write", "Edit", "WebFetch", "WebSearch", "Task"]) {
       expect(DISALLOWED_BUILTIN_TOOLS).toContain(dangerous);
+    }
+  });
+});
+
+/**
+ * Task 22: `agent-sdk.ts` had no replay mechanism at all before this -
+ * `query()`'s whole multi-turn loop is SDK-owned, so there's no single
+ * dispatch call to wrap the way `dispatchGeminiRaw` is. `recordSession`/
+ * `replaySession` are the session-level stand-in: real fixture files
+ * under tests/fixtures/agent-sdk/, written and cleaned up by each test
+ * (same discipline as the scrape_cache/system_errors leak fixes from
+ * Tasks 18/20 - nothing here uses a mock filesystem).
+ */
+describe("agent-sdk runner: recordSession / replaySession", () => {
+  async function* fakeLiveGenerator(messages: unknown[]) {
+    for (const message of messages) yield message as never;
+  }
+
+  it("recordSession yields every message through and saves them as a fixture", async () => {
+    const fixtureKey = `agent-sdk-test:record:${Date.now()}`;
+    const filePath = fixturePathFor(fixtureKey);
+    try {
+      const live = fakeLiveGenerator([
+        { type: "system", subtype: "init", skills: ["a"] },
+        { type: "result", num_turns: 1, total_cost_usd: 0.01, modelUsage: {} },
+      ]);
+
+      const yielded: unknown[] = [];
+      for await (const message of recordSession(fixtureKey, live as never)) yielded.push(message);
+
+      expect(yielded).toHaveLength(2);
+      expect(existsSync(filePath)).toBe(true);
+      const saved = JSON.parse(readFileSync(filePath, "utf-8"));
+      expect(saved).toEqual([
+        { type: "system", subtype: "init", skills: ["a"] },
+        { type: "result", num_turns: 1, total_cost_usd: 0.01, modelUsage: {} },
+      ]);
+    } finally {
+      rmSync(filePath, { force: true });
+    }
+  });
+
+  it("recordSession still saves whatever it captured if the live generator throws mid-session", async () => {
+    const fixtureKey = `agent-sdk-test:record-partial:${Date.now()}`;
+    const filePath = fixturePathFor(fixtureKey);
+    async function* throwingGenerator() {
+      yield { type: "system", subtype: "init", skills: [] } as never;
+      throw new Error("Reached maximum number of turns (3)");
+    }
+    try {
+      await expect(async () => {
+        for await (const _ of recordSession(fixtureKey, throwingGenerator())) {
+          /* drain */
+        }
+      }).rejects.toThrow("Reached maximum number of turns");
+
+      expect(existsSync(filePath)).toBe(true);
+      const saved = JSON.parse(readFileSync(filePath, "utf-8"));
+      expect(saved).toEqual([{ type: "system", subtype: "init", skills: [] }]);
+    } finally {
+      rmSync(filePath, { force: true });
+    }
+  });
+
+  it("replaySession yields the recorded messages in order and replays each tool_use through the raw handler", async () => {
+    const fixtureKey = `agent-sdk-test:replay:${Date.now()}`;
+    saveFixture(fixtureKey, [
+      { type: "system", subtype: "init", skills: [] },
+      {
+        type: "assistant",
+        message: {
+          content: [{ type: "tool_use", name: "mcp__lead-agent__save_icp", input: { target_company_type: "B2B SaaS" } }],
+        },
+      },
+      { type: "result", num_turns: 1, total_cost_usd: 0.01, modelUsage: {} },
+    ]);
+    const filePath = fixturePathFor(fixtureKey);
+
+    try {
+      const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+      const rawHandlers = {
+        save_icp: async (args: Record<string, unknown>) => {
+          calls.push({ name: "save_icp", args });
+          return { content: [{ type: "text" as const, text: "ok" }] };
+        },
+      };
+
+      const yielded: unknown[] = [];
+      for await (const message of replaySession(fixtureKey, rawHandlers)) yielded.push(message);
+
+      expect(yielded).toHaveLength(3);
+      expect(calls).toEqual([{ name: "save_icp", args: { target_company_type: "B2B SaaS" } }]);
+    } finally {
+      rmSync(filePath, { force: true });
+    }
+  });
+
+  it("replaySession, via the real raw handlers, actually writes through invoke() the same way a live tool call would", async () => {
+    const { client, tables } = createFakeSupabase();
+    tables.runs.push({ id: "run-1", icp: null, counters: {}, limits: LIMIT_DEFAULTS });
+    const ctxRef = { current: { id: "run-1", icp: null, limits: LIMIT_DEFAULTS, counters: { qualified_count: 0 }, clarificationCount: 0, spentUsd: 0, scraper: "crawl4ai" as const } };
+    const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
+    const rawHandlers = buildRawToolHandlers(ctxRef, state, client);
+
+    const fixtureKey = `agent-sdk-test:replay-real:${Date.now()}`;
+    saveFixture(fixtureKey, [
+      {
+        type: "assistant",
+        message: {
+          content: [
+            {
+              type: "tool_use",
+              name: "mcp__lead-agent__save_icp",
+              input: {
+                target_company_type: "B2B SaaS",
+                industries: [],
+                geography: [],
+                headcount_range: "",
+                buyer_persona: "",
+                business_problem: "",
+                hard_filters: [],
+                soft_preferences: [],
+                disqualifiers: [],
+              },
+            },
+          ],
+        },
+      },
+    ]);
+    const filePath = fixturePathFor(fixtureKey);
+
+    try {
+      for await (const _ of replaySession(fixtureKey, rawHandlers)) {
+        /* drain */
+      }
+      expect(ctxRef.current.icp).not.toBeNull();
+      expect(tables.tool_calls.some((c) => c.tool_name === "save_icp" && c.status === "ok")).toBe(true);
+    } finally {
+      rmSync(filePath, { force: true });
     }
   });
 });

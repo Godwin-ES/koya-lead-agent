@@ -91,7 +91,8 @@ test.describe("ui quality", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     const user = await createTestUser();
     try {
-      const run = await seedRun({ userId: user.userId, status: "completed", icp: {}, counters: { qualified_count: 1 } });
+      const objective = "Find 10 US industrial automation companies, keyboard-only path test";
+      const run = await seedRun({ userId: user.userId, status: "completed", icp: {}, counters: { qualified_count: 1 }, objective });
       const lead = await seedLead({ runId: run.id, companyName: "Acme Robotics", qualificationStatus: "qualified" });
       await seedDraft({ leadId: lead.id, channel: "email", step: 1, body: "Step one draft body." });
 
@@ -99,7 +100,7 @@ test.describe("ui quality", () => {
       await page.goto("/runs");
 
       // /runs -> run detail, via keyboard only.
-      const runLink = page.getByRole("link", { name: run.objective_raw });
+      const runLink = page.getByRole("link", { name: objective });
       await runLink.focus();
       await expect(runLink).toBeFocused();
       await page.keyboard.press("Enter");

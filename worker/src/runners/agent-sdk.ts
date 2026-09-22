@@ -12,6 +12,8 @@ import { buildSystemPrompt } from "@core/skills/loader";
 import { appendAgentEvent } from "@core/db/events";
 import { insertCostLedgerEntry, sumCostForRun } from "@core/db/cost";
 import { getRunById, updateRun } from "@core/db/runs";
+import { isReplayMode } from "@core/providers/replay/recorder";
+import { loadFixture, saveFixture } from "@core/providers/replay/fixtures";
 import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
 
 const SERVER_NAME = "lead-agent";
@@ -55,12 +57,48 @@ export interface LoopState {
   cancelled: boolean;
 }
 
+type RawToolHandler = (args: Record<string, unknown>) => Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }>;
+
 /**
- * Wraps every ToolDefinition as an SDK MCP tool, all closing over the
- * same mutable `ctxRef`/`state` so a tool call's effect (a saved ICP, an
- * incremented counter, a clarification request) is visible to the very
- * next call within the same session - refreshed after every successful
- * invoke(), same pattern as the Gemini runner's own `run` reassignment.
+ * The actual per-tool side effect, factored out from `buildTools` so it
+ * can also be called directly by `replaySession` below - during replay
+ * there is no live SDK subprocess to invoke it for us, so this is what
+ * replays a recorded tool_use block into the same real `invoke()` call
+ * (and therefore the same real DB writes) a live run would have made.
+ * Closes over the same mutable `ctxRef`/`state` so a tool call's effect
+ * (a saved ICP, an incremented counter, a clarification request) is
+ * visible to the very next call within the same session - refreshed
+ * after every successful invoke(), same pattern as the Gemini runner's
+ * own `run` reassignment.
+ */
+function makeToolHandler(
+  def: (typeof TOOL_DEFINITIONS)[number],
+  ctxRef: { current: ToolRunState },
+  state: LoopState,
+  supabase: SupabaseClient,
+  shouldStop?: () => boolean,
+): RawToolHandler {
+  return async (args) => {
+    try {
+      const result = await invoke({ supabase, run: ctxRef.current }, def.name, args, def.handler);
+      ctxRef.current = await refreshRunState(supabase, ctxRef.current);
+
+      if (def.name === "finalize_run") state.finalized = true;
+      if (def.name === "request_clarification") state.clarificationRequested = true;
+      // Checked only after invoke() has fully committed - "finishes
+      // the current tool call" (Task 16), never interrupts one.
+      if (shouldStop?.()) state.cancelled = true;
+
+      return { content: [{ type: "text" as const, text: result.resultSummary ?? "ok" }] };
+    } catch (err) {
+      const message = err instanceof ToolDeniedError ? err.agentMessage : err instanceof Error ? err.message : String(err);
+      return { content: [{ type: "text" as const, text: message }], isError: true };
+    }
+  };
+}
+
+/**
+ * Wraps every ToolDefinition as an SDK MCP tool.
  *
  * No `def.inputSchema.parse()` call here, unlike the Gemini runner: the
  * SDK's `tool()` already validates `args` against the Zod shape we give
@@ -77,24 +115,18 @@ export function buildTools(
 ) {
   return TOOL_DEFINITIONS.map((def) => {
     const shape = (def.inputSchema as unknown as { shape: Record<string, ZodType> }).shape;
-    return tool(def.name, def.description, shape, async (args) => {
-      try {
-        const result = await invoke({ supabase, run: ctxRef.current }, def.name, args as Record<string, unknown>, def.handler);
-        ctxRef.current = await refreshRunState(supabase, ctxRef.current);
-
-        if (def.name === "finalize_run") state.finalized = true;
-        if (def.name === "request_clarification") state.clarificationRequested = true;
-        // Checked only after invoke() has fully committed - "finishes
-        // the current tool call" (Task 16), never interrupts one.
-        if (shouldStop?.()) state.cancelled = true;
-
-        return { content: [{ type: "text" as const, text: result.resultSummary ?? "ok" }] };
-      } catch (err) {
-        const message = err instanceof ToolDeniedError ? err.agentMessage : err instanceof Error ? err.message : String(err);
-        return { content: [{ type: "text" as const, text: message }], isError: true };
-      }
-    });
+    return tool(def.name, def.description, shape, makeToolHandler(def, ctxRef, state, supabase, shouldStop));
   });
+}
+
+/** Same handlers as `buildTools`, keyed by bare tool name instead of wrapped as SDK tool() objects - what `replaySession` calls directly. */
+export function buildRawToolHandlers(
+  ctxRef: { current: ToolRunState },
+  state: LoopState,
+  supabase: SupabaseClient,
+  shouldStop?: () => boolean,
+): Record<string, RawToolHandler> {
+  return Object.fromEntries(TOOL_DEFINITIONS.map((def) => [def.name, makeToolHandler(def, ctxRef, state, supabase, shouldStop)]));
 }
 
 /**
@@ -129,7 +161,7 @@ export function buildPreToolUseHook(ctxRef: { current: ToolRunState }): HookCall
 
 export interface RunAgentSdkParams {
   supabase: SupabaseClient;
-  run: ToolRunState & OrchestratorRun;
+  run: ToolRunState & OrchestratorRun & { fixtureSet?: string | null };
   model?: string;
   /** See RunGeminiAgentParams.shouldStop (worker/src/runners/gemini.ts) - same contract, same Task 16 graceful-shutdown use. */
   shouldStop?: () => boolean;
@@ -169,6 +201,75 @@ export async function recordModelUsage(
   }
 }
 
+/** A JSON-round-tripped `SDKMessage` - see `recordSession`'s note on why the round trip matters. */
+type RawSdkMessage = Record<string, unknown>;
+
+/**
+ * SYSTEM-DESIGN-NEXTJS.md §11: "Every external call goes through a
+ * recorder - including model calls." Unlike the Gemini runner (a manual
+ * loop where each turn is one discrete HTTP dispatch, naturally wrapped
+ * by `withRecording`), the Claude Agent SDK's `query()` owns its entire
+ * multi-turn loop internally, including invoking our tool handlers - so
+ * there is no single per-turn dispatch call to wrap. The recordable unit
+ * here is the whole session's message stream instead.
+ *
+ * Live mode: iterate the real `query()` generator, collecting every
+ * message as it's yielded (JSON round-tripped - some `SDKMessage`
+ * variants expose fields via class-instance getters that
+ * `JSON.stringify` drops, the same trap `dispatchGeminiRaw`'s own
+ * comment documents for the Gemini SDK's response type). Saved once the
+ * generator finishes (or throws), so a real crash mid-session still
+ * yields a partial-but-honest recording rather than nothing.
+ */
+export async function* recordSession(fixtureKey: string, live: AsyncGenerator<SDKMessage, void>): AsyncGenerator<SDKMessage, void> {
+  const recorded: RawSdkMessage[] = [];
+  try {
+    for await (const message of live) {
+      recorded.push(JSON.parse(JSON.stringify(message)) as RawSdkMessage);
+      yield message;
+    }
+  } finally {
+    saveFixture(fixtureKey, recorded);
+  }
+}
+
+/**
+ * Replay mode: no live subprocess exists to run our tools for us, so
+ * this is what stands in for it. Replays the recorded message stream
+ * verbatim (for the same event-logging/turn-counting code below to
+ * process identically either way), and - the one thing genuinely new
+ * here versus the Gemini runner's replay, which only ever replays a
+ * *dispatch response* - re-executes every recorded `tool_use` block
+ * through the real raw handler (`buildRawToolHandlers`), in the exact
+ * order it happened live. That reproduces the same real `invoke()` calls
+ * and therefore the same real DB writes (leads, drafts, counters) a live
+ * run made, deterministically, for $0: the tool handlers' own external
+ * calls (Apify/Crawl4AI/Firecrawl) are independently fixture-backed via
+ * their own `withRecording` wrapping, so nothing here touches a live
+ * provider either.
+ */
+export async function* replaySession(fixtureKey: string, rawHandlers: Record<string, RawToolHandler>): AsyncGenerator<SDKMessage, void> {
+  const messages = loadFixture<RawSdkMessage[]>(fixtureKey);
+  for (const raw of messages) {
+    const message = raw as unknown as SDKMessage;
+    yield message;
+
+    if (raw.type === "assistant") {
+      const content = ((raw as { message?: { content?: unknown[] } }).message?.content ?? []) as Array<{
+        type?: string;
+        name?: string;
+        input?: Record<string, unknown>;
+      }>;
+      for (const block of content) {
+        if (block.type !== "tool_use") continue;
+        const bareName = (block.name ?? "").replace(`mcp__${SERVER_NAME}__`, "");
+        const handler = rawHandlers[bareName];
+        if (handler) await handler(block.input ?? {});
+      }
+    }
+  }
+}
+
 export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSdkResult> {
   const ctxRef = { current: params.run };
   const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
@@ -179,24 +280,33 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
   let numTurns = 0;
   let totalCostUsd = 0;
 
+  const fixtureKey = `agent-sdk:${params.model ?? process.env.ANTHROPIC_MODEL ?? "default"}:${params.run.fixtureSet ?? "live"}`;
+
   try {
-    for await (const message of query({
-      prompt: buildPhasePrompt(params.run),
-      options: {
-        model: params.model ?? process.env.ANTHROPIC_MODEL,
-        systemPrompt: { type: "custom", prompt: buildSystemPrompt({ runner: "agent-sdk" }) },
-        mcpServers: { [SERVER_NAME]: server },
-        settingSources: ["project"],
-        skills: "all",
-        allowedTools: toolNames,
-        disallowedTools: [...DISALLOWED_BUILTIN_TOOLS],
-        maxTurns: params.run.limits.max_turns,
-        cwd: WORKER_ROOT,
-        hooks: {
-          PreToolUse: [{ matcher: `mcp__${SERVER_NAME}__.*`, hooks: [buildPreToolUseHook(ctxRef)] }],
-        },
-      },
-    }) as AsyncGenerator<SDKMessage, void>) {
+    const liveOrReplayed = isReplayMode()
+      ? replaySession(fixtureKey, buildRawToolHandlers(ctxRef, state, params.supabase, params.shouldStop))
+      : recordSession(
+          fixtureKey,
+          query({
+            prompt: buildPhasePrompt(params.run),
+            options: {
+              model: params.model ?? process.env.ANTHROPIC_MODEL,
+              systemPrompt: { type: "custom", prompt: buildSystemPrompt({ runner: "agent-sdk" }) },
+              mcpServers: { [SERVER_NAME]: server },
+              settingSources: ["project"],
+              skills: "all",
+              allowedTools: toolNames,
+              disallowedTools: [...DISALLOWED_BUILTIN_TOOLS],
+              maxTurns: params.run.limits.max_turns,
+              cwd: WORKER_ROOT,
+              hooks: {
+                PreToolUse: [{ matcher: `mcp__${SERVER_NAME}__.*`, hooks: [buildPreToolUseHook(ctxRef)] }],
+              },
+            },
+          }) as AsyncGenerator<SDKMessage, void>,
+        );
+
+    for await (const message of liveOrReplayed) {
       if (message.type === "system" && message.subtype === "init") {
         await appendAgentEvent(params.supabase, params.run.id, "skill_load", { skills: message.skills });
       }
