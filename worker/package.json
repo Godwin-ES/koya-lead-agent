@@ -19,7 +19,8 @@
     "@core/lead-agent": "workspace:*",
     "@google/genai": "^2.23.0",
     "apify-client": "^2.25.0",
-    "firecrawl": "^4.41.0"
+    "firecrawl": "^4.41.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.2"

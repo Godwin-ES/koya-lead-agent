@@ -1,0 +1,12 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "call-2",
+        "name": "discover_companies",
+        "args": { "query": "B2B SaaS ops tools", "requested": 5 }
+      }
+    }
+  ],
+  "usage": { "inputTokens": 510, "outputTokens": 60 }
+}

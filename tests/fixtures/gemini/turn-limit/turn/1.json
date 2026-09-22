@@ -1,0 +1,6 @@
+{
+  "parts": [
+    { "text": "I'm still thinking through the ICP before I search." }
+  ],
+  "usage": { "inputTokens": 200, "outputTokens": 30 }
+}

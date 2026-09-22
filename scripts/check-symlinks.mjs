@@ -9,19 +9,30 @@
  * part of `pnpm check` so a broken symlink fails loudly with the exact
  * fix, instead of resurfacing as a confusing three-layers-deep
  * "Cannot find module" or "Invalid hook call".
+ *
+ * Uses `lstatSync` to detect the symlink itself (not `existsSync`, which
+ * FOLLOWS a symlink and returns false for a dangling one - the exact
+ * failure mode this guard exists to catch. An `existsSync`-gated version
+ * of this script silently skipped every broken link it was meant to
+ * catch, confirmed when this exact bug recurred a fourth time (Task 14)
+ * right after this guard had just reported "Symlinks OK.".
  */
-import { realpathSync, existsSync } from "node:fs";
-import path from "node:path";
+import { realpathSync, lstatSync } from "node:fs";
 
 const CHECKS = [
   { link: "packages/core/node_modules/@anthropic-ai/sdk" },
   { link: "packages/core/node_modules/@google/genai" },
+  { link: "packages/core/node_modules/apify-client" },
 ];
 
 let failed = false;
 
 for (const { link } of CHECKS) {
-  if (!existsSync(link)) continue; // not installed at all - a different problem, not this one
+  try {
+    lstatSync(link); // throws if nothing is there at all - a different problem, not this one
+  } catch {
+    continue;
+  }
   try {
     realpathSync(link);
   } catch {

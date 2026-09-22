@@ -1,0 +1,12 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "call-1",
+        "name": "save_icp",
+        "args": { "target_company_type": "B2B SaaS company" }
+      }
+    }
+  ],
+  "usage": { "inputTokens": 300, "outputTokens": 50 }
+}

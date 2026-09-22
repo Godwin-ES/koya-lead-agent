@@ -28,8 +28,16 @@ function isToolName(name: string): name is ToolName {
 /** list_run_state is read-only and free - the agent can check its own progress without spending budget (§12). */
 const UNCOUNTED_TOOLS: ReadonlySet<ToolName> = new Set(["list_run_state"]);
 
-/** Tools usable before the ICP has been saved - everything else needs ICP criteria to act on. */
-const ICP_EXEMPT_TOOLS: ReadonlySet<ToolName> = new Set(["save_icp", "request_clarification", "list_run_state"]);
+/**
+ * Tools usable before the ICP has been saved - everything else needs ICP
+ * criteria to act on. `finalize_run` is exempt too: it's the orchestrator's
+ * turn-limit safety valve (worker/src/runners/gemini.ts), which must be
+ * able to close out a run even if the model never got around to saving
+ * an ICP - "return fewer leads with a clear explanation" (assets/
+ * lead-list-quality-guide.md) has to remain reachable in that case, not
+ * itself gated behind the very thing that never happened.
+ */
+const ICP_EXEMPT_TOOLS: ReadonlySet<ToolName> = new Set(["save_icp", "request_clarification", "list_run_state", "finalize_run"]);
 
 /**
  * Everything `gate()` needs to decide, already resolved by the caller.

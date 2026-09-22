@@ -1,0 +1,12 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "call-3",
+        "name": "finalize_run",
+        "args": { "summary": "Discovered candidates from cache; stopping short of qualification for this fixture scenario." }
+      }
+    }
+  ],
+  "usage": { "inputTokens": 300, "outputTokens": 40 }
+}
