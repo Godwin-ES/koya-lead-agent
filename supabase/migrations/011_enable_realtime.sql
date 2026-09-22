@@ -1,0 +1,16 @@
+-- Task 17: `supabase_realtime` is a publication like any other in
+-- Postgres logical replication - a table's own RLS policies control
+-- which *rows* a subscribed client receives, but nothing broadcasts at
+-- all unless the table is first added to this publication. No earlier
+-- migration ever did that (confirmed empirically:
+-- `select * from pg_publication_tables where pubname = 'supabase_realtime'`
+-- returned zero rows against the real project), which meant the run
+-- view's realtime subscription (SYSTEM-DESIGN-NEXTJS.md §17.6) could
+-- never receive a single event - caught by an E2E test asserting the
+-- "N new events - jump to latest" pill appears after a service_role
+-- insert, which it never did.
+--
+-- Only the four tables the run view actually subscribes to
+-- (web/lib/realtime/use-run-stream.ts): the run row itself, plus its
+-- three append-only child tables. Nothing else needs live broadcast.
+alter publication supabase_realtime add table runs, tool_calls, agent_events, cost_ledger;

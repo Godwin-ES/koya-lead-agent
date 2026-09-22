@@ -2,6 +2,7 @@ export * from "./domain/status";
 export * from "./domain/types";
 export * from "./domain/run-actions";
 export * from "./domain/limits";
+export * from "./domain/phases";
 export * from "./domain/normalize";
 export * from "./schemas/icp";
 export * from "./schemas/qualification";
