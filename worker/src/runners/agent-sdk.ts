@@ -19,14 +19,104 @@ import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
 const SERVER_NAME = "lead-agent";
 
 /**
+ * Task 22's live benchmark recording pass found the other half of the
+ * same "$0.92, zero tools called" bug alongside the `alwaysLoad` one:
+ * `query()`'s subprocess inherits `process.env` by default (the SDK's own
+ * docs say so explicitly), which - whenever this worker code happens to
+ * run underneath another Claude Code session, as it did when driven from
+ * inside this very agent's own sandbox - includes that outer session's
+ * `CLAUDE_CODE_SESSION_ID`/`CLAUDE_CODE_MESSAGING_SOCKET`/
+ * `CLAUDE_CODE_CHILD_SESSION` env vars. The bundled Claude Code binary
+ * reads those to attach itself as a *child session* of the outer one,
+ * which is exactly why the recorded fixtures show the model reaching for
+ * `ToolSearch`/`Artifact`/`SendMessage`/`PushNotification` - this outer
+ * session's own tools, not the worker's eight. Stripping every
+ * `CLAUDE_CODE_*`/`CLAUDECODE` var (and `AI_AGENT`, another session
+ * marker) before spawning keeps the subprocess a genuinely standalone
+ * session regardless of what process happens to be running this code -
+ * a real production deploy (Task 23) wouldn't have these vars set at
+ * all, so this only ever matters in a dev/sandbox environment like this
+ * one, but it's cheap insurance either way.
+ */
+function subprocessEnv(): Record<string, string | undefined> {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (key.startsWith("CLAUDE_CODE_") || key === "CLAUDECODE" || key === "AI_AGENT") delete env[key];
+  }
+  return env;
+}
+
+/**
  * Built-in tools the agent must never reach, regardless of allowlist
  * ordering (SYSTEM-DESIGN-NEXTJS.md §8: only the eight named tools are
  * usable). Exported so a test can assert on the exact set without
  * spinning up a real session - this list is itself the enforcement (via
  * `disallowedTools`), so testing that it's correct is testing the real
  * thing, not a proxy for it.
+ *
+ * The second half of this list (`ToolSearch` through
+ * `mcp__claude_ai_Claude_Docs__read`) was added after Task 22's live
+ * benchmark recording pass: none of Task 15's original nine names cover
+ * them, and every one showed up as a real, callable tool in the recorded
+ * fixtures - not hypothetically, actually called (`ToolSearch`,
+ * `Skill`... though `Skill` itself is legitimate, see `skills: "all"`
+ * below) or offered. A `tools: []` allowlist-only approach was tried
+ * first and rejected: it also hid this file's own `mcp__lead-agent__*`
+ * tools, and the model started hallucinating fake XML-tag tool calls
+ * instead of using real ones - worse than the bug it was meant to fix.
+ * This blocklist has to be kept in sync with whatever built-ins this
+ * Claude Code version ships by hand; there's no discovered allowlist
+ * primitive that composes cleanly with the SDK-server tools this runner
+ * actually needs.
  */
-export const DISALLOWED_BUILTIN_TOOLS = ["Bash", "Write", "Edit", "WebFetch", "WebSearch", "Glob", "Grep", "Task", "Read"] as const;
+export const DISALLOWED_BUILTIN_TOOLS = [
+  "Bash",
+  "Write",
+  "Edit",
+  "WebFetch",
+  "WebSearch",
+  "Glob",
+  "Grep",
+  "Task",
+  "Read",
+  "ToolSearch",
+  "TodoWrite",
+  "Artifact",
+  "ArtifactComments",
+  "ArtifactData",
+  "SendMessage",
+  "PushNotification",
+  "Monitor",
+  "RemoteTrigger",
+  "NotebookEdit",
+  "EnterPlanMode",
+  "ExitPlanMode",
+  "EnterWorktree",
+  "ExitWorktree",
+  "DesignSync",
+  "ShareOnboardingGuide",
+  "CronCreate",
+  "CronDelete",
+  "CronList",
+  "TaskStop",
+  "TaskCreate",
+  "TaskGet",
+  "TaskList",
+  "TaskUpdate",
+  "ListAgents",
+  "ReportFindings",
+  "ScheduleWakeup",
+  "Workflow",
+  "Agent",
+  "mcp__claude_ai_Claude_Docs__read",
+  "mcp__claude_ai_Claude_Docs__query",
+  "mcp__claude_ai_Claude_Docs__create",
+  "mcp__claude_ai_Claude_Docs__update",
+  "mcp__claude_ai_Claude_Docs__delete",
+  "mcp__claude_ai_Claude_Docs__batch",
+  "mcp__claude_ai_Claude_Docs__export",
+  "mcp__claude_ai_Claude_Docs__guide",
+] as const;
 
 /**
  * `worker/` - the directory holding `.claude/skills/` (Task 13) - so the
@@ -274,7 +364,15 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
   const ctxRef = { current: params.run };
   const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
   const tools = buildTools(ctxRef, state, params.supabase, params.shouldStop);
-  const server = createSdkMcpServer({ name: SERVER_NAME, version: "1.0.0", tools });
+  // Task 22's live benchmark recording pass found this the hard way ($0.92
+  // spent on three sessions that never called a single real tool): this SDK
+  // version defers a server's tools behind tool search by default ("tools
+  // are deferred when tool search is enabled"), and our own eight tools are
+  // the *entire* point of this agent - there is nothing else it should be
+  // discovering. `alwaysLoad: true` (`defer_loading: false` on the API)
+  // keeps them in the prompt from turn one, matching `allowedTools`'
+  // already-explicit intent that these are the only tools that exist here.
+  const server = createSdkMcpServer({ name: SERVER_NAME, version: "1.0.0", tools, alwaysLoad: true });
   const toolNames = TOOL_DEFINITIONS.map((d) => `mcp__${SERVER_NAME}__${d.name}`);
 
   let numTurns = 0;
@@ -299,6 +397,7 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
               disallowedTools: [...DISALLOWED_BUILTIN_TOOLS],
               maxTurns: params.run.limits.max_turns,
               cwd: WORKER_ROOT,
+              env: subprocessEnv(),
               hooks: {
                 PreToolUse: [{ matcher: `mcp__${SERVER_NAME}__.*`, hooks: [buildPreToolUseHook(ctxRef)] }],
               },

@@ -210,6 +210,12 @@ describe("agent-sdk runner: tool surface", () => {
       expect(DISALLOWED_BUILTIN_TOOLS).toContain(dangerous);
     }
   });
+
+  it("disallows the outer-session tools Task 22's live benchmark pass found leaking through", () => {
+    for (const foreign of ["ToolSearch", "TodoWrite", "Artifact", "SendMessage", "Workflow", "mcp__claude_ai_Claude_Docs__read"]) {
+      expect(DISALLOWED_BUILTIN_TOOLS).toContain(foreign);
+    }
+  });
 });
 
 /**

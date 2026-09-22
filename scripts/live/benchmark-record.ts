@@ -41,7 +41,7 @@ const { listLeadsForRun } = await import("../../packages/core/src/db/leads");
 const { listToolCallsForRun } = await import("../../packages/core/src/db/tool-calls");
 const { sumCostForRun } = await import("../../packages/core/src/db/cost");
 
-for (const key of ["GOOGLE_AI_API_KEY", "ANTHROPIC_API_KEY", "APIFY_ACTOR_ID", "APIFY_TOKEN"]) {
+for (const key of ["GOOGLE_AI_API_KEY", "ANTHROPIC_API_KEY", "APIFY_ACTOR_ID", "APIFY_API_KEY"]) {
   if (!process.env[key]) {
     console.error(`${key} is not set in .env.local - nothing to run.`);
     process.exit(1);
@@ -79,56 +79,78 @@ const supabase = serviceRoleClient();
 const user = await createTestUser();
 const metaOutDir = path.resolve(process.cwd(), "tests/fixtures/benchmark/meta");
 mkdirSync(metaOutDir, { recursive: true });
+const failures: Array<{ key: string; message: string }> = [];
 
 try {
   for (const entry of MATRIX) {
     console.log(`\n=== ${entry.key} (${entry.runner}, model=${entry.model}) ===`);
 
-    const { data: run, error } = await supabase
-      .from("runs")
-      .insert({
-        user_id: user.userId,
-        objective_raw: OBJECTIVE,
-        status: "running",
-        icp: null,
-        limits: BENCHMARK_LIMITS,
-        counters: {},
-        fixture_set: FIXTURE_SET,
-      })
-      .select()
-      .single();
-    if (error) throw error;
+    const MAX_ATTEMPTS = 3;
+    let attempt = 0;
+    let succeeded = false;
 
-    const runState = {
-      id: run.id,
-      icp: null,
-      limits: run.limits,
-      counters: { qualified_count: 0 },
-      clarificationCount: 0,
-      spentUsd: 0,
-      scraper: "crawl4ai" as const,
-      objectiveRaw: run.objective_raw,
-      fixtureSet: FIXTURE_SET,
-    };
+    while (attempt < MAX_ATTEMPTS && !succeeded) {
+      attempt += 1;
+      try {
+        const { data: run, error } = await supabase
+          .from("runs")
+          .insert({
+            user_id: user.userId,
+            objective_raw: OBJECTIVE,
+            status: "running",
+            icp: null,
+            limits: BENCHMARK_LIMITS,
+            counters: {},
+            fixture_set: FIXTURE_SET,
+          })
+          .select()
+          .single();
+        if (error) throw error;
 
-    const startedAt = Date.now();
-    const result =
-      entry.runner === "gemini"
-        ? await runGeminiAgent({ supabase, run: runState, model: entry.model })
-        : await runAgentSdk({ supabase, run: runState, model: entry.model });
-    const wallClockMs = Date.now() - startedAt;
+        const runState = {
+          id: run.id,
+          icp: null,
+          limits: run.limits,
+          counters: { qualified_count: 0 },
+          clarificationCount: 0,
+          spentUsd: 0,
+          scraper: "crawl4ai" as const,
+          objectiveRaw: run.objective_raw,
+          fixtureSet: FIXTURE_SET,
+        };
 
-    const leads = await listLeadsForRun(supabase, run.id);
-    const toolCalls = await listToolCallsForRun(supabase, run.id);
-    const spentUsd = await sumCostForRun(supabase, run.id);
+        const startedAt = Date.now();
+        const result =
+          entry.runner === "gemini"
+            ? await runGeminiAgent({ supabase, run: runState, model: entry.model })
+            : await runAgentSdk({ supabase, run: runState, model: entry.model });
+        const wallClockMs = Date.now() - startedAt;
 
-    console.log(`stopReason=${result.stopReason} wallClockMs=${wallClockMs} leads=${leads.length} toolCalls=${toolCalls.length} spentUsd=${spentUsd}`);
-    console.log(`Candidate domains discovered: ${leads.map((l) => l.company_domain).join(", ") || "(none)"}`);
+        const leads = await listLeadsForRun(supabase, run.id);
+        const toolCalls = await listToolCallsForRun(supabase, run.id);
+        const spentUsd = await sumCostForRun(supabase, run.id);
 
-    writeFileSync(
-      path.join(metaOutDir, `${entry.key}.json`),
-      JSON.stringify({ key: entry.key, runner: entry.runner, model: entry.model, runId: run.id, wallClockMs, stopReason: result.stopReason }, null, 2) + "\n",
-    );
+        console.log(`stopReason=${result.stopReason} wallClockMs=${wallClockMs} leads=${leads.length} toolCalls=${toolCalls.length} spentUsd=${spentUsd}`);
+        console.log(`Candidate domains discovered: ${leads.map((l) => l.company_domain).join(", ") || "(none)"}`);
+
+        writeFileSync(
+          path.join(metaOutDir, `${entry.key}.json`),
+          JSON.stringify({ key: entry.key, runner: entry.runner, model: entry.model, runId: run.id, wallClockMs, stopReason: result.stopReason }, null, 2) + "\n",
+        );
+        succeeded = true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`  attempt ${attempt}/${MAX_ATTEMPTS} failed: ${message}`);
+        if (attempt < MAX_ATTEMPTS) {
+          const backoffMs = 10_000 * attempt;
+          console.error(`  retrying in ${backoffMs / 1000}s (a failed call spends nothing - only a completed one is billed)...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        } else {
+          failures.push({ key: entry.key, message });
+          console.error(`  giving up on "${entry.key}" after ${MAX_ATTEMPTS} attempts - continuing with the rest of the matrix.`);
+        }
+      }
+    }
   }
 
   console.log(
@@ -137,6 +159,12 @@ try {
       "Next: hand-label tests/fixtures/benchmark/ground-truth.json against the discovered domains printed above (a real, blind label per domain, " +
       "not copied from any model's own verdict), then run `pnpm tsx scripts/benchmark.ts` to score all four in replay mode for $0.",
   );
+
+  if (failures.length > 0) {
+    console.error(`\n${failures.length} entr${failures.length === 1 ? "y" : "ies"} could not be recorded after ${3} attempts each:`);
+    for (const f of failures) console.error(`  - ${f.key}: ${f.message}`);
+    console.error("Re-run this script later (e.g. once the provider outage clears) - already-recorded entries are untouched and won't be re-billed unless you delete their fixture files.");
+  }
 } finally {
   await user.cleanup();
 }
