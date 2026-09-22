@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
-    "build": "echo \"worker build: pending Task 16 (Docker image bundler decision)\" && exit 1",
+    "start": "tsx src/index.ts",
+    "build": "echo \"no separate build step - runs via tsx directly in the Dockerfile, see worker/Dockerfile's comment\" && exit 0",
     "lint": "echo \"(no lint config yet for worker)\"",
     "typecheck": "tsc --noEmit"
   },
@@ -19,7 +19,9 @@
     "@core/lead-agent": "workspace:*",
     "@google/genai": "^2.23.0",
     "apify-client": "^2.25.0",
+    "dotenv": "^18.0.1",
     "firecrawl": "^4.41.0",
+    "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },
   "devDependencies": {

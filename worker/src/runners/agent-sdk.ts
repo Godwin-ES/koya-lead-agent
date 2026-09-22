@@ -51,6 +51,8 @@ async function refreshRunState<T extends ToolRunState>(supabase: SupabaseClient,
 export interface LoopState {
   finalized: boolean;
   clarificationRequested: boolean;
+  /** Set once a tool call completes after a shouldStop() check returns true - the outer loop breaks on the next message it processes. */
+  cancelled: boolean;
 }
 
 /**
@@ -67,7 +69,12 @@ export interface LoopState {
  * function-call args don't have, which is exactly why that runner
  * validates explicitly and this one doesn't need to.
  */
-export function buildTools(ctxRef: { current: ToolRunState }, state: LoopState, supabase: SupabaseClient) {
+export function buildTools(
+  ctxRef: { current: ToolRunState },
+  state: LoopState,
+  supabase: SupabaseClient,
+  shouldStop?: () => boolean,
+) {
   return TOOL_DEFINITIONS.map((def) => {
     const shape = (def.inputSchema as unknown as { shape: Record<string, ZodType> }).shape;
     return tool(def.name, def.description, shape, async (args) => {
@@ -77,6 +84,9 @@ export function buildTools(ctxRef: { current: ToolRunState }, state: LoopState, 
 
         if (def.name === "finalize_run") state.finalized = true;
         if (def.name === "request_clarification") state.clarificationRequested = true;
+        // Checked only after invoke() has fully committed - "finishes
+        // the current tool call" (Task 16), never interrupts one.
+        if (shouldStop?.()) state.cancelled = true;
 
         return { content: [{ type: "text" as const, text: result.resultSummary ?? "ok" }] };
       } catch (err) {
@@ -121,9 +131,11 @@ export interface RunAgentSdkParams {
   supabase: SupabaseClient;
   run: ToolRunState & OrchestratorRun;
   model?: string;
+  /** See RunGeminiAgentParams.shouldStop (worker/src/runners/gemini.ts) - same contract, same Task 16 graceful-shutdown use. */
+  shouldStop?: () => boolean;
 }
 
-export type AgentSdkStopReason = "finalized" | "max_turns" | "clarification_requested";
+export type AgentSdkStopReason = "finalized" | "max_turns" | "clarification_requested" | "cancelled";
 
 export interface RunAgentSdkResult {
   stopReason: AgentSdkStopReason;
@@ -159,8 +171,8 @@ export async function recordModelUsage(
 
 export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSdkResult> {
   const ctxRef = { current: params.run };
-  const state: LoopState = { finalized: false, clarificationRequested: false };
-  const tools = buildTools(ctxRef, state, params.supabase);
+  const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
+  const tools = buildTools(ctxRef, state, params.supabase, params.shouldStop);
   const server = createSdkMcpServer({ name: SERVER_NAME, version: "1.0.0", tools });
   const toolNames = TOOL_DEFINITIONS.map((d) => `mcp__${SERVER_NAME}__${d.name}`);
 
@@ -204,6 +216,16 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
       totalCostUsd = message.total_cost_usd;
       await recordModelUsage(params.supabase, params.run.id, message.modelUsage ?? {});
     }
+
+    // Checked once per message, after any tool call in it has already
+    // committed - breaking `for await` here closes the underlying async
+    // generator (and the SDK's subprocess with it) without waiting for
+    // more turns.
+    if (state.cancelled) break;
+  }
+
+  if (state.cancelled) {
+    return { stopReason: "cancelled", numTurns, totalCostUsd };
   }
 
   if (!state.finalized && !state.clarificationRequested) {

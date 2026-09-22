@@ -102,9 +102,18 @@ export interface RunGeminiAgentParams {
   supabase: SupabaseClient;
   run: ToolRunState & OrchestratorRun & { fixtureSet?: string | null };
   model?: string;
+  /**
+   * Checked after each fully-completed tool call (never mid-call) - lets
+   * the worker (Task 16) request a graceful stop for SIGTERM without
+   * interrupting a write in progress. Returning true stops the loop with
+   * `stopReason: "cancelled"` and deliberately skips the max-turns
+   * auto-finalize path: a cancelled run should be requeued, not closed
+   * out with whatever partial data it happened to have.
+   */
+  shouldStop?: () => boolean;
 }
 
-export type GeminiStopReason = "finalized" | "max_turns" | "clarification_requested";
+export type GeminiStopReason = "finalized" | "max_turns" | "clarification_requested" | "cancelled";
 
 export interface RunGeminiAgentResult {
   turnsUsed: number;
@@ -201,14 +210,21 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
 
         if (toolName === "finalize_run") stopReason = "finalized";
         if (toolName === "request_clarification") stopReason = "clarification_requested";
+        if (!stopReason && params.shouldStop?.()) stopReason = "cancelled";
       } catch (err) {
         const message = err instanceof ToolDeniedError ? err.agentMessage : err instanceof Error ? err.message : String(err);
         await appendAgentEvent(params.supabase, run.id, "tool_result", { tool: toolName, error: message });
         responseParts.push({ functionResponse: { id: call.id, name: toolName, response: { error: message } } });
       }
+
+      if (stopReason === "cancelled") break;
     }
 
     history.push({ role: "user", parts: responseParts });
+  }
+
+  if (stopReason === "cancelled") {
+    return { turnsUsed, stopReason };
   }
 
   if (!stopReason) {

@@ -264,9 +264,15 @@ importers:
       apify-client:
         specifier: ^2.25.0
         version: 2.25.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      dotenv:
+        specifier: ^18.0.1
+        version: 18.0.1
       firecrawl:
         specifier: ^4.41.0
         version: 4.41.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       zod:
         specifier: ^4.6.5
         version: 4.6.5

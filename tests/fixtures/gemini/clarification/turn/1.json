@@ -1,0 +1,12 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "call-1",
+        "name": "request_clarification",
+        "args": { "question": "Which geography should I focus on?" }
+      }
+    }
+  ],
+  "usage": { "inputTokens": 250, "outputTokens": 30 }
+}

@@ -42,7 +42,7 @@ describe("agent-sdk runner: buildTools", () => {
     const { client, tables } = createFakeSupabase();
     tables.runs.push({ id: "run-1", icp: null, counters: {}, limits: LIMIT_DEFAULTS });
     const ctxRef = { current: baseRun({ icp: null }) };
-    const state: LoopState = { finalized: false, clarificationRequested: false };
+    const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
 
     const tools = buildTools(ctxRef, state, client);
     const saveIcp = tools.find((t) => t.name === "save_icp")!;
@@ -70,7 +70,7 @@ describe("agent-sdk runner: buildTools", () => {
     const { client, tables } = createFakeSupabase();
     tables.runs.push({ id: "run-1", icp: null, counters: {}, limits: LIMIT_DEFAULTS });
     const ctxRef = { current: baseRun({ icp: null }) };
-    const state: LoopState = { finalized: false, clarificationRequested: false };
+    const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
 
     const tools = buildTools(ctxRef, state, client);
     const discover = tools.find((t) => t.name === "discover_companies")!;
@@ -85,7 +85,7 @@ describe("agent-sdk runner: buildTools", () => {
     const { client, tables } = createFakeSupabase();
     tables.runs.push({ id: "run-1", status: "running", icp: {}, counters: {}, limits: { ...LIMIT_DEFAULTS, target_qualified: 0 } });
     const ctxRef = { current: baseRun() };
-    const state: LoopState = { finalized: false, clarificationRequested: false };
+    const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
 
     const tools = buildTools(ctxRef, state, client);
     const finalize = tools.find((t) => t.name === "finalize_run")!;
