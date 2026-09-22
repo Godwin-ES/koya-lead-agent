@@ -40,6 +40,8 @@ export interface RunRow {
   finished_at: string | null;
   created_at: string;
   idempotency_key: string | null;
+  /** Task 20's failure-injection toggle - see packages/core/src/providers/failure-injection.ts. */
+  injected_failure: string | null;
 }
 
 export interface NewRun {
@@ -59,6 +61,7 @@ export interface NewRun {
   validation_missing_criteria?: string[];
   validation_dismissed_at?: string;
   idempotency_key?: string;
+  injected_failure?: string;
   queued_at?: string;
 }
 

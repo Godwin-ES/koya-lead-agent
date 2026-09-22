@@ -4,13 +4,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { RunLimits, RunCounters, Scraper } from "@core/domain/types";
 import { TOOL_DEFINITIONS } from "@core/tools/definitions";
-import { invoke, ToolDeniedError, type ToolRunState } from "@core/tools/log";
+import { invoke, ToolDeniedError, FatalToolError, type ToolRunState } from "@core/tools/log";
 import { buildSystemPrompt } from "@core/skills/loader";
 import { appendAgentEvent } from "@core/db/events";
 import { insertCostLedgerEntry } from "@core/db/cost";
 import { sumCostForRun } from "@core/db/cost";
 import { getRunById, updateRun } from "@core/db/runs";
 import { withRecording } from "@core/providers/replay/recorder";
+import { isInjected } from "@core/providers/failure-injection";
 import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
 
 let cachedClient: GoogleGenAI | null = null;
@@ -147,6 +148,16 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
     // otherwise never exists anywhere, only ever held in this loop's local variable.
     await updateRun(params.supabase, run.id, { counters: { ...run.counters, turns_used: turnsUsed } });
 
+    // Task 20 failure injection (§13: "Model API 429 / 5xx"). Checked
+    // once, on the first turn, before any real or replayed dispatch -
+    // simulates the model provider itself failing, which propagates up
+    // through claimAndProcessOne's catch and marks the run failed with
+    // the reason, the same terminal state a genuine persistent 429
+    // would produce.
+    if (turnsUsed === 1 && isInjected("model_429", run.injectedFailure)) {
+      throw new Error("Gemini API error: 429 Too Many Requests (rate limit exceeded).");
+    }
+
     const fixtureKey = `gemini:${params.run.fixtureSet ?? "live"}:turn:${turnsUsed}`;
     const turn = await withRecording(fixtureKey, () =>
       dispatchGeminiRaw({ model, systemInstruction, functionDeclarations, history }),
@@ -215,6 +226,14 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
         if (toolName === "request_clarification") stopReason = "clarification_requested";
         if (!stopReason && params.shouldStop?.()) stopReason = "cancelled";
       } catch (err) {
+        // A FatalToolError (Task 20: an auth failure, a dead provider)
+        // is not something the agent can work around by trying again or
+        // using a different tool - it propagates out of this loop
+        // entirely, up to claimAndProcessOne's own catch (service.ts),
+        // which marks the run `failed`. Every other handler error stays
+        // recoverable: fed back as a functionResponse error so the
+        // model can self-correct (§13: malformed tool input).
+        if (err instanceof FatalToolError) throw err;
         const message = err instanceof ToolDeniedError ? err.agentMessage : err instanceof Error ? err.message : String(err);
         await appendAgentEvent(params.supabase, run.id, "tool_result", { tool: toolName, error: message });
         responseParts.push({ functionResponse: { id: call.id, name: toolName, response: { error: message } } });

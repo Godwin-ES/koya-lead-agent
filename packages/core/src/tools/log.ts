@@ -3,11 +3,13 @@ import type { Scraper } from "../domain/types";
 import { recordToolCall } from "../db/tool-calls";
 import { updateRun } from "../db/runs";
 import { gate, UNCOUNTED_TOOLS, type GateRunState } from "./gate";
+import { isInjected } from "../providers/failure-injection";
 
-/** What a tool handler needs beyond gate()'s own GateRunState - the run id (to write rows against) and scraper choice. */
+/** What a tool handler needs beyond gate()'s own GateRunState - the run id (to write rows against), scraper choice, and any active failure-injection toggle (Task 20). */
 export interface ToolRunState extends GateRunState {
   id: string;
   scraper: Scraper;
+  injectedFailure?: string | null;
 }
 
 export interface ToolContext {
@@ -28,6 +30,27 @@ export class ToolDeniedError extends Error {
   constructor(public readonly agentMessage: string) {
     super(agentMessage);
     this.name = "ToolDeniedError";
+  }
+}
+
+/**
+ * A handler error the runner must not treat as recoverable - unlike an
+ * ordinary thrown error (which `invoke()` records and rethrows, and
+ * which each runner's own per-call catch converts into a functionResult
+ * error fed back to the model so it can self-correct, e.g. malformed
+ * tool input), a `FatalToolError` means the underlying failure can't be
+ * worked around by trying again or using a different tool - an
+ * authentication failure, a dead provider. §13: "Apify auth/quota
+ * error: run fails fast... no retry loop" / "Crawl4AI sidecar down:
+ * run fails with an actionable message." Each runner's tool-call catch
+ * block re-throws this instead of swallowing it, so it propagates all
+ * the way out to the worker's own catch (service.ts), which marks the
+ * run `failed` with the real reason.
+ */
+export class FatalToolError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "FatalToolError";
   }
 }
 
@@ -61,13 +84,33 @@ async function bumpToolCallsUsed(ctx: ToolContext, toolName: string): Promise<vo
   await updateRun(ctx.supabase, ctx.run.id, { counters: { ...ctx.run.counters, tool_calls_used: next } });
 }
 
-export async function invoke(
+/**
+ * Task 20's `invalid_tool_input` toggle: fires once, on the first call
+ * to `save_icp` (the agent's near-universal first tool call, so this is
+ * reliably reachable), then clears itself so it doesn't re-corrupt
+ * every subsequent call and loop forever - the point is to demonstrate
+ * §13's "Zod error returned to the agent as a tool error so it can
+ * correct itself," not to permanently break the tool.
+ */
+async function maybeInjectInvalidInput(
   ctx: ToolContext,
   toolName: string,
   input: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  if (toolName !== "save_icp" || !isInjected("invalid_tool_input", ctx.run.injectedFailure)) return input;
+  ctx.run.injectedFailure = null;
+  await updateRun(ctx.supabase, ctx.run.id, { injected_failure: null });
+  return {};
+}
+
+export async function invoke(
+  ctx: ToolContext,
+  toolName: string,
+  rawInput: Record<string, unknown>,
   handler: ToolHandler,
 ): Promise<ToolHandlerResult> {
   const startedAt = Date.now();
+  const input = await maybeInjectInvalidInput(ctx, toolName, rawInput);
   const decision = gate(ctx.run, toolName, input);
 
   if (decision.kind === "deny") {

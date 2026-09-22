@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { claimNextRun, heartbeat, updateRun } from "@core/db/runs";
 import { sumCostForRun } from "@core/db/cost";
+import { recordSystemError } from "@core/db/system-errors";
+import { isInjected } from "@core/providers/failure-injection";
 import type { RunLimits, Runner, Scraper } from "@core/domain/types";
 import type { ToolRunState } from "@core/tools/log";
 import { runGeminiAgent, type GeminiStopReason } from "./runners/gemini";
@@ -65,7 +67,23 @@ export async function claimAndProcessOne(
       objectiveRaw: row.objective_raw,
       clarificationAnswer: row.clarification_answer,
       fixtureSet: row.fixture_set,
+      injectedFailure: row.injected_failure,
     };
+
+    // Task 20 failure injection (§13: "Worker crash / redeploy
+    // mid-run"). A demo/test process can't literally call
+    // `process.exit()` here without killing whatever is running this
+    // code (including the test suite that verifies this path) - this
+    // simulates the *outcome* a real crash produces (the run can't
+    // continue, fails loudly with a system_errors row) rather than the
+    // OS-level kill itself. The actual "heartbeat expires, the run gets
+    // reclaimed and requeued" recovery path already has real test
+    // coverage (tests/integration/rpc/reclaim.test.ts, Task 5), driven
+    // by directly manipulating heartbeat_at rather than waiting out a
+    // real 90-second staleness window.
+    if (isInjected("worker_kill", row.injected_failure)) {
+      throw new Error("Simulated worker crash mid-run (failure injection: worker_kill).");
+    }
 
     const runner = resolveRunner(row);
     const result =
@@ -91,11 +109,18 @@ export async function claimAndProcessOne(
 
     return { claimed: true, runId: row.id, stopReason: result.stopReason };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error(`run ${row.id} failed:`, err);
-    await updateRun(supabase, row.id, {
-      status: "failed",
-      failure_reason: err instanceof Error ? err.message : String(err),
-    }).catch((updateErr) => console.error(`failed to mark run ${row.id} failed:`, updateErr));
+    await updateRun(supabase, row.id, { status: "failed", failure_reason: message }).catch((updateErr) =>
+      console.error(`failed to mark run ${row.id} failed:`, updateErr),
+    );
+    // SYSTEM-DESIGN-NEXTJS.md §13: "Every failure writes a system_errors
+    // row" - this catch block is the one place every unrecoverable run
+    // failure already passes through, regardless of which stage or
+    // provider caused it.
+    await recordSystemError(supabase, { runId: row.id, phase: "run", message }).catch((recordErr) =>
+      console.error(`failed to record system_error for run ${row.id}:`, recordErr),
+    );
     return { claimed: true, runId: row.id };
   } finally {
     clearInterval(heartbeatTimer);

@@ -11,7 +11,8 @@ import { upsertOutreachDraft, listDraftsForLead } from "../db/drafts";
 import { discover } from "../providers/discovery/apify";
 import { scrape } from "../providers/scraper";
 import { checkGrounding } from "../safety/grounding";
-import type { ToolContext, ToolHandler, ToolHandlerResult } from "./log";
+import { isInjected } from "../providers/failure-injection";
+import { FatalToolError, type ToolContext, type ToolHandler, type ToolHandlerResult } from "./log";
 import { TOOL_NAMES, type ToolName } from "./gate";
 
 /**
@@ -91,6 +92,17 @@ const discoverCompanies: ToolDefinition = {
     const requested = input.requested as number;
     const cacheKey = `apify:${hashObjective(query)}`;
 
+    // Task 20 failure injection (§13: "Apify auth/quota error" / "Apify
+    // returns 0 candidates") - checked before any real dispatch or cache
+    // lookup, so it deterministically produces the failure regardless of
+    // what's actually cached.
+    if (isInjected("apify_auth_error", ctx.run.injectedFailure)) {
+      throw new FatalToolError("Apify authentication failed: invalid or revoked API token (401).");
+    }
+    if (isInjected("apify_empty_result", ctx.run.injectedFailure)) {
+      return { resultSummary: `0 candidates discovered for "${query}"`, data: [] };
+    }
+
     const cached = await getDiscoveryCache(ctx.supabase, cacheKey);
     if (cached) {
       return { resultSummary: `${cached.item_count ?? 0} cached candidates for "${query}" (no spend)`, data: cached.results };
@@ -156,6 +168,11 @@ const scrapeSite: ToolDefinition = {
     const url = input.url as string;
     const candidateDomain = input.candidateDomain as string;
     const urlHash = hashObjective(url);
+
+    // Task 20 failure injection (§13: "Crawl4AI sidecar down").
+    if (isInjected("sidecar_down", ctx.run.injectedFailure)) {
+      throw new FatalToolError("Crawl4AI health check failed: connection refused at the configured sidecar URL.");
+    }
 
     const cached = await getScrapeCache(ctx.supabase, urlHash);
     if (cached) {
