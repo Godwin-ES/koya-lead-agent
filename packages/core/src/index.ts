@@ -15,3 +15,4 @@ export * from "./providers/scraper";
 export * from "./tools/gate";
 export * from "./tools/log";
 export * from "./tools/definitions";
+export * from "./skills/loader";
