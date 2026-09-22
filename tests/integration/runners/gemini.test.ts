@@ -64,14 +64,24 @@ describe("runGeminiAgent", () => {
   it("saves the icp before the first discovery call", async () => {
     const run = await createRun({ objective: "B2B SaaS ops tools" });
     const cacheKey = `apify:${hashObjective("B2B SaaS ops tools")}`;
-    await supabase.from("discovery_cache").insert({
-      cache_key: cacheKey,
-      actor_id: "test-actor",
-      input_json: {},
-      results: [{ companyName: "Acme", companyDomain: "acme.example" }],
-      item_count: 1,
-      expires_at: new Date(Date.now() + 60_000).toISOString(),
-    });
+    // upsert, not insert: both this test and the next seed the same
+    // cache_key (the fixture's discover_companies call always requests
+    // the same query, regardless of this run's own objective text) -
+    // discovery_cache.cache_key is UNIQUE, so a plain insert would
+    // silently fail (unchecked) the second time this file runs the
+    // suite without a fresh database.
+    const { error: cacheError } = await supabase.from("discovery_cache").upsert(
+      {
+        cache_key: cacheKey,
+        actor_id: "test-actor",
+        input_json: {},
+        results: [{ companyName: "Acme", companyDomain: "acme.example" }],
+        item_count: 1,
+        expires_at: new Date(Date.now() + 60_000).toISOString(),
+      },
+      { onConflict: "cache_key" },
+    );
+    if (cacheError) throw cacheError;
 
     const state = { ...toRunState(run, "B2B SaaS ops tools"), fixtureSet: "specific-objective" };
     const result = await runGeminiAgent({ supabase, run: state });
@@ -86,14 +96,18 @@ describe("runGeminiAgent", () => {
   it("emits an agent event for every tool call", async () => {
     const run = await createRun({ objective: "B2B SaaS ops tools" });
     const cacheKey = `apify:${hashObjective("B2B SaaS ops tools")}`;
-    await supabase.from("discovery_cache").insert({
-      cache_key: cacheKey,
-      actor_id: "test-actor",
-      input_json: {},
-      results: [],
-      item_count: 0,
-      expires_at: new Date(Date.now() + 60_000).toISOString(),
-    });
+    const { error: cacheError } = await supabase.from("discovery_cache").upsert(
+      {
+        cache_key: cacheKey,
+        actor_id: "test-actor",
+        input_json: {},
+        results: [],
+        item_count: 0,
+        expires_at: new Date(Date.now() + 60_000).toISOString(),
+      },
+      { onConflict: "cache_key" },
+    );
+    if (cacheError) throw cacheError;
 
     const state = { ...toRunState(run, "B2B SaaS ops tools"), fixtureSet: "specific-objective" };
     await runGeminiAgent({ supabase, run: state });
