@@ -179,49 +179,67 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
   let numTurns = 0;
   let totalCostUsd = 0;
 
-  for await (const message of query({
-    prompt: buildPhasePrompt(params.run),
-    options: {
-      model: params.model ?? process.env.ANTHROPIC_MODEL,
-      systemPrompt: { type: "custom", prompt: buildSystemPrompt({ runner: "agent-sdk" }) },
-      mcpServers: { [SERVER_NAME]: server },
-      settingSources: ["project"],
-      skills: "all",
-      allowedTools: toolNames,
-      disallowedTools: [...DISALLOWED_BUILTIN_TOOLS],
-      maxTurns: params.run.limits.max_turns,
-      cwd: WORKER_ROOT,
-      hooks: {
-        PreToolUse: [{ matcher: `mcp__${SERVER_NAME}__.*`, hooks: [buildPreToolUseHook(ctxRef)] }],
+  try {
+    for await (const message of query({
+      prompt: buildPhasePrompt(params.run),
+      options: {
+        model: params.model ?? process.env.ANTHROPIC_MODEL,
+        systemPrompt: { type: "custom", prompt: buildSystemPrompt({ runner: "agent-sdk" }) },
+        mcpServers: { [SERVER_NAME]: server },
+        settingSources: ["project"],
+        skills: "all",
+        allowedTools: toolNames,
+        disallowedTools: [...DISALLOWED_BUILTIN_TOOLS],
+        maxTurns: params.run.limits.max_turns,
+        cwd: WORKER_ROOT,
+        hooks: {
+          PreToolUse: [{ matcher: `mcp__${SERVER_NAME}__.*`, hooks: [buildPreToolUseHook(ctxRef)] }],
+        },
       },
-    },
-  }) as AsyncGenerator<SDKMessage, void>) {
-    if (message.type === "system" && message.subtype === "init") {
-      await appendAgentEvent(params.supabase, params.run.id, "skill_load", { skills: message.skills });
-    }
+    }) as AsyncGenerator<SDKMessage, void>) {
+      if (message.type === "system" && message.subtype === "init") {
+        await appendAgentEvent(params.supabase, params.run.id, "skill_load", { skills: message.skills });
+      }
 
-    if (message.type === "assistant") {
-      for (const block of message.message.content) {
-        if (block.type === "text") {
-          await appendAgentEvent(params.supabase, params.run.id, "assistant_text", { text: block.text });
-        }
-        if (block.type === "tool_use") {
-          await appendAgentEvent(params.supabase, params.run.id, "tool_use", { tool: block.name, args: block.input });
+      if (message.type === "assistant") {
+        for (const block of message.message.content) {
+          if (block.type === "text") {
+            await appendAgentEvent(params.supabase, params.run.id, "assistant_text", { text: block.text });
+          }
+          if (block.type === "tool_use") {
+            await appendAgentEvent(params.supabase, params.run.id, "tool_use", { tool: block.name, args: block.input });
+          }
         }
       }
-    }
 
-    if (message.type === "result") {
-      numTurns = message.num_turns;
-      totalCostUsd = message.total_cost_usd;
-      await recordModelUsage(params.supabase, params.run.id, message.modelUsage ?? {});
-    }
+      if (message.type === "result") {
+        numTurns = message.num_turns;
+        totalCostUsd = message.total_cost_usd;
+        await recordModelUsage(params.supabase, params.run.id, message.modelUsage ?? {});
+      }
 
-    // Checked once per message, after any tool call in it has already
-    // committed - breaking `for await` here closes the underlying async
-    // generator (and the SDK's subprocess with it) without waiting for
-    // more turns.
-    if (state.cancelled) break;
+      // Checked once per message, after any tool call in it has already
+      // committed - breaking `for await` here closes the underlying async
+      // generator (and the SDK's subprocess with it) without waiting for
+      // more turns.
+      if (state.cancelled) break;
+    }
+  } catch (err) {
+    // CORRECTION to docs/provider-findings.md finding #6 (confirmed live,
+    // Task 15 Step 3): hitting maxTurns does not always surface as a
+    // `result` message with `is_error: true` the way the docs describe -
+    // in this SDK version it throws directly from the async generator
+    // ("Claude Code returned an error result: Reached maximum number of
+    // turns (N)"), which an unguarded `for await` propagates straight
+    // out of this function. Any tool calls that already succeeded before
+    // the throw already committed via invoke() (ctxRef.current reflects
+    // them), so this is handled exactly like a graceful max-turns stop -
+    // the run still gets finalized with whatever it has, not left
+    // hanging or marked failed for a limit it was always going to hit.
+    await appendAgentEvent(params.supabase, params.run.id, "system", {
+      note: "query() ended with an exception rather than an error result message",
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 
   if (state.cancelled) {
