@@ -26,7 +26,7 @@ function isToolName(name: string): name is ToolName {
 }
 
 /** list_run_state is read-only and free - the agent can check its own progress without spending budget (§12). */
-const UNCOUNTED_TOOLS: ReadonlySet<ToolName> = new Set(["list_run_state"]);
+export const UNCOUNTED_TOOLS: ReadonlySet<ToolName> = new Set(["list_run_state"]);
 
 /**
  * Tools usable before the ICP has been saved - everything else needs ICP

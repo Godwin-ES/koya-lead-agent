@@ -11,7 +11,7 @@ import { gate } from "@core/tools/gate";
 import { buildSystemPrompt } from "@core/skills/loader";
 import { appendAgentEvent } from "@core/db/events";
 import { insertCostLedgerEntry, sumCostForRun } from "@core/db/cost";
-import { getRunById } from "@core/db/runs";
+import { getRunById, updateRun } from "@core/db/runs";
 import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
 
 const SERVER_NAME = "lead-agent";
@@ -216,6 +216,11 @@ export async function runAgentSdk(params: RunAgentSdkParams): Promise<RunAgentSd
         numTurns = message.num_turns;
         totalCostUsd = message.total_cost_usd;
         await recordModelUsage(params.supabase, params.run.id, message.modelUsage ?? {});
+        // Written for the run view's budget meters (Task 17) - same gap
+        // as the Gemini runner's turns_used, fixed the same way.
+        await updateRun(params.supabase, params.run.id, {
+          counters: { ...ctxRef.current.counters, turns_used: numTurns },
+        });
       }
 
       // Checked once per message, after any tool call in it has already

@@ -218,4 +218,21 @@ describe("invoke", () => {
     const rows = tables.tool_calls.filter((r) => r.run_id === "run-1");
     expect(rows.at(-1)).toMatchObject({ status: "ok" });
   });
+
+  it("increments counters.tool_calls_used on every outcome, so gate()'s own budget check has something real to read", async () => {
+    const { client, tables } = createFakeSupabase();
+    tables.runs.push({ id: "run-1", icp: {}, counters: {}, limits: LIMIT_DEFAULTS });
+    const run = baseRun();
+
+    await invoke({ supabase: client, run }, "list_run_state", {}, toolByName("list_run_state").handler);
+    expect(tables.runs[0]!.counters).not.toHaveProperty("tool_calls_used"); // uncounted, per gate.ts's own exemption
+
+    await invoke({ supabase: client, run }, "save_icp", { target_company_type: "SaaS" }, toolByName("save_icp").handler);
+    expect((tables.runs[0]!.counters as Record<string, number>).tool_calls_used).toBe(1);
+
+    await expect(
+      invoke({ supabase: client, run: { ...run, icp: null } }, "scrape_site", { url: "https://x.com" }, toolByName("scrape_site").handler),
+    ).rejects.toThrow(ToolDeniedError);
+    expect((tables.runs[0]!.counters as Record<string, number>).tool_calls_used).toBe(2);
+  });
 });

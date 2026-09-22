@@ -9,7 +9,7 @@ import { buildSystemPrompt } from "@core/skills/loader";
 import { appendAgentEvent } from "@core/db/events";
 import { insertCostLedgerEntry } from "@core/db/cost";
 import { sumCostForRun } from "@core/db/cost";
-import { getRunById } from "@core/db/runs";
+import { getRunById, updateRun } from "@core/db/runs";
 import { withRecording } from "@core/providers/replay/recorder";
 import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
 
@@ -143,6 +143,9 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
 
   while (turnsUsed < run.limits.max_turns && !stopReason) {
     turnsUsed += 1;
+    // Written for the run view's budget meters (Task 17) - counters.turns_used
+    // otherwise never exists anywhere, only ever held in this loop's local variable.
+    await updateRun(params.supabase, run.id, { counters: { ...run.counters, turns_used: turnsUsed } });
 
     const fixtureKey = `gemini:${params.run.fixtureSet ?? "live"}:turn:${turnsUsed}`;
     const turn = await withRecording(fixtureKey, () =>

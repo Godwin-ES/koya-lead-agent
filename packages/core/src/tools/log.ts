@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Scraper } from "../domain/types";
 import { recordToolCall } from "../db/tool-calls";
-import { gate, type GateRunState } from "./gate";
+import { updateRun } from "../db/runs";
+import { gate, UNCOUNTED_TOOLS, type GateRunState } from "./gate";
 
 /** What a tool handler needs beyond gate()'s own GateRunState - the run id (to write rows against) and scraper choice. */
 export interface ToolRunState extends GateRunState {
@@ -43,6 +44,23 @@ export class ToolDeniedError extends Error {
  * after" phrasing describes the guarantee (a row exists for every
  * outcome), not this specific two-step mechanism.
  */
+/**
+ * `gate()` reads `run.counters.tool_calls_used` to enforce
+ * `max_tool_calls`, but nothing wrote it until this function did -
+ * caught while wiring the run view's budget meters (Task 17), which
+ * need this same number: the check was silently never true. Every
+ * outcome (denied/ok/error) counts, matching what `tool_calls`' own row
+ * count already reflects - a denied call still cost a wasted round
+ * trip. `list_run_state` is the one exception, same as its exemption
+ * from the budget check itself (§12: free and uncounted).
+ */
+async function bumpToolCallsUsed(ctx: ToolContext, toolName: string): Promise<void> {
+  if ((UNCOUNTED_TOOLS as ReadonlySet<string>).has(toolName)) return;
+  const next = (ctx.run.counters.tool_calls_used ?? 0) + 1;
+  ctx.run.counters.tool_calls_used = next;
+  await updateRun(ctx.supabase, ctx.run.id, { counters: { ...ctx.run.counters, tool_calls_used: next } });
+}
+
 export async function invoke(
   ctx: ToolContext,
   toolName: string,
@@ -60,6 +78,7 @@ export async function invoke(
       denialReason: decision.reason,
       durationMs: Date.now() - startedAt,
     });
+    await bumpToolCallsUsed(ctx, toolName);
     throw new ToolDeniedError(decision.agentMessage);
   }
 
@@ -73,6 +92,7 @@ export async function invoke(
       estimatedCostUsd: result.estimatedCostUsd,
       durationMs: Date.now() - startedAt,
     });
+    await bumpToolCallsUsed(ctx, toolName);
     return result;
   } catch (err) {
     await recordToolCall(ctx.supabase, {
@@ -82,6 +102,7 @@ export async function invoke(
       errorMessage: err instanceof Error ? err.message : String(err),
       durationMs: Date.now() - startedAt,
     });
+    await bumpToolCallsUsed(ctx, toolName);
     throw err;
   }
 }
