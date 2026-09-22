@@ -74,6 +74,24 @@ describe("gate", () => {
     expect(gate(run, "discover_companies", { query: "saas" }).kind).toBe("deny");
   });
 
+  // A runner's own turn-limit safety valve calls finalize_run directly
+  // (worker/src/runners/gemini.ts, agent-sdk.ts) to close a run out
+  // gracefully once max_turns is hit. If that call could itself be
+  // denied, a run that also happened to exhaust its tool-call or spend
+  // budget first would end up uncaught-error'd into `failed` instead of
+  // `completed`/`partial` - exactly the ICP-exemption comment's own
+  // reasoning ("must be able to close out a run even if...") extended to
+  // these two checks, which finalize_run was missing before this fix.
+  it("never denies finalize_run for the tool call limit", () => {
+    const run = baseRun({ counters: { qualified_count: 0, tool_calls_used: LIMIT_DEFAULTS.max_tool_calls } });
+    expect(gate(run, "finalize_run", { summary: "done" }).kind).toBe("allow");
+  });
+
+  it("never denies finalize_run for the spend ceiling", () => {
+    const run = baseRun({ spentUsd: LIMIT_DEFAULTS.max_spend_usd });
+    expect(gate(run, "finalize_run", { summary: "done" }).kind).toBe("allow");
+  });
+
   it("returns an actionable message on denial so the agent can degrade gracefully", () => {
     const run = baseRun({ counters: { qualified_count: 0, scrapes_used: LIMIT_DEFAULTS.scrape_limit } });
     const d = gate(run, "scrape_site", {});

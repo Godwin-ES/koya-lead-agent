@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ActionButton } from "@/components/primitives/action-button";
 import { ObjectiveField } from "@/components/intake/objective-field";
-import { LimitSteppers } from "@/components/intake/limit-steppers";
+import { TargetQualifiedField } from "@/components/intake/target-qualified-field";
 import { createRun } from "@/actions/runs";
-import { LIMIT_DEFAULTS } from "@core/domain/limits";
-import type { RunLimits, Runner, Scraper } from "@core/domain/types";
+import type { Runner, Scraper } from "@core/domain/types";
 import type { ValidationResult } from "@core/validation/objective";
 
 const RUNNER_DEFAULT = (process.env.NEXT_PUBLIC_RUNNER_DEFAULT as Runner | undefined) ?? "gemini";
 const SCRAPER_DEFAULT = (process.env.NEXT_PUBLIC_SCRAPER_DEFAULT as Scraper | undefined) ?? "crawl4ai";
+const TARGET_QUALIFIED_DEFAULT = 10;
+const MIN_OBJECTIVE_LENGTH = 20;
 
 const RUNNER_NOTE: Record<Runner, string> = {
   gemini: "Cheapest for iteration. Not valid evidence for the Agent SDK submission requirement.",
@@ -34,7 +35,7 @@ export default function NewRunPage() {
   const [objectiveText, setObjectiveText] = useState("");
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [limits, setLimits] = useState<RunLimits>(LIMIT_DEFAULTS);
+  const [targetQualified, setTargetQualified] = useState(TARGET_QUALIFIED_DEFAULT);
   const [runner, setRunner] = useState<Runner>(RUNNER_DEFAULT);
   const [model, setModel] = useState("claude-opus-5");
   const [scraper, setScraper] = useState<Scraper>(SCRAPER_DEFAULT);
@@ -52,7 +53,32 @@ export default function NewRunPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
 
-  const submitDisabled = Boolean(validation && validation.blocking && !dismissed) || objectiveText.trim().length < 20;
+  // `validation` is reset to null on every edit to the objective text
+  // (ObjectiveField's own onChange), so "has been checked" and "checked
+  // for the text currently in the field" are the same condition here -
+  // Start run stays disabled until an explicit check has run for
+  // whatever is currently typed, and re-locks the moment that text
+  // changes again.
+  //
+  // Only a real "flag" verdict (vague/incoherent/not_a_request/
+  // out_of_scope/out_of_scope_unsafe) needs dismissal - "advisory"
+  // severity (a low-confidence verdict, or the classifier being
+  // unavailable) must never block, per this project's own explicit rule
+  // (SYSTEM-DESIGN-NEXTJS.md §13: "validation degrades permissive - it
+  // must never be the reason a user cannot start a run"). Gating on
+  // "checked" is new; gating on the flag itself still has to respect
+  // that rule exactly as it did before.
+  const objectiveChecked = validation !== null;
+  const hasUnresolvedFlag = objectiveChecked && validation!.severity === "flag" && !dismissed;
+  const tooShort = objectiveText.trim().length < MIN_OBJECTIVE_LENGTH;
+  const submitDisabled = tooShort || !objectiveChecked || hasUnresolvedFlag;
+
+  function submitDisabledReason(): string | undefined {
+    if (!tooShort && objectiveChecked && !hasUnresolvedFlag) return undefined;
+    if (tooShort) return "Write a fuller objective before starting.";
+    if (!objectiveChecked) return "Check the objective before starting.";
+    return "Resolve the flag above before starting.";
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -79,7 +105,7 @@ export default function NewRunPage() {
           onDismiss={() => setDismissed(true)}
         />
 
-        <LimitSteppers limits={limits} scraper={scraper} onChange={(patch) => setLimits((l) => ({ ...l, ...patch }))} />
+        <TargetQualifiedField value={targetQualified} onChange={setTargetQualified} />
 
         <div className="grid grid-cols-3 gap-3">
           <div>
@@ -144,12 +170,12 @@ export default function NewRunPage() {
           ref={submitRef}
           idleLabel="Start run"
           pendingLabel="Starting"
-          state={submitDisabled ? { kind: "disabled", reason: "Fix the objective above before starting." } : undefined}
+          state={submitDisabled ? { kind: "disabled", reason: submitDisabledReason()! } : undefined}
           action={async (idempotencyKey) => {
             setError(null);
             const result = await createRun({
               objectiveText: objectiveText.trim(),
-              limits,
+              targetQualified,
               runner,
               model: runner === "agent-sdk" ? model : undefined,
               scraper,

@@ -23,6 +23,7 @@ test.describe("run view", () => {
       await signIn(page, user.email, user.password);
       await page.goto("/runs/new");
       await page.getByLabel("Qualification objective").fill("Find 10 US fintech companies with 20-80 employees");
+      await page.getByRole("button", { name: "Check objective" }).click();
 
       const start = page.getByRole("button", { name: "Start run" });
       await expect(start).toBeEnabled({ timeout: 10_000 });

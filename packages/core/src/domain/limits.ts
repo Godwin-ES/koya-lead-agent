@@ -59,6 +59,39 @@ export function clampLimits(requested: Partial<RunLimits>): RunLimits {
   return result;
 }
 
+/**
+ * The intake form's only user-facing input is `target_qualified` -
+ * everything else is derived here, server-side, never trusted from the
+ * client (a hidden field is not the same as an enforced one). Ratios are
+ * chosen so `target_qualified = 10` reproduces today's exact
+ * `LIMIT_DEFAULTS` (25/30/120/60/$0.50) rather than inventing a new
+ * policy - this generalizes the existing default down to smaller
+ * requests, it doesn't replace it.
+ *
+ * `max_spend_usd` is floored at $0.50 regardless of how small the target
+ * is, deliberately not scaled down with it: model spend (turns/tokens)
+ * is largely independent of how many leads are being asked for - a
+ * single Claude Opus session was observed spending $0.49 without
+ * producing any leads at all (Task 22's live benchmark pass) - so a
+ * tighter floor risks cutting off a small, legitimate request on model
+ * cost alone before it can finish.
+ */
+export function deriveLimitsFromTarget(targetQualifiedRequested: number): RunLimits {
+  const range = RANGES.target_qualified!;
+  const safeRequested = Number.isFinite(targetQualifiedRequested) ? targetQualifiedRequested : range.min;
+  const target = Math.min(range.max, Math.max(range.min, Math.round(safeRequested)));
+
+  const candidateRange = RANGES.candidate_limit!;
+  const scrapeRange = RANGES.scrape_limit!;
+  const candidate_limit = Math.min(candidateRange.max, Math.max(candidateRange.min, Math.ceil(target * 2.5)));
+  const scrape_limit = Math.min(scrapeRange.max, Math.max(scrapeRange.min, Math.ceil(target * 3)));
+  const max_tool_calls = Math.max(FLOORS.max_tool_calls!, scrape_limit * 4);
+  const max_turns = Math.max(FLOORS.max_turns!, Math.round(max_tool_calls / 2));
+  const max_spend_usd = Math.max(0.5, target * 0.08);
+
+  return { target_qualified: target, candidate_limit, scrape_limit, max_turns, max_tool_calls, max_spend_usd };
+}
+
 export interface SpendUnitCosts {
   /** Estimated Apify cost per candidate company discovered. */
   perCandidateUsd: number;

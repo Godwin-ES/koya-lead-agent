@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ValidationFlag } from "./validation-flag";
+import { ActionButton } from "@/components/primitives/action-button";
 import { checkObjective } from "@/actions/validation";
 import type { ValidationResult } from "@core/validation/objective";
 
 const MIN_LENGTH = 20;
 const MAX_LENGTH = 1000;
-const DEBOUNCE_MS = 600;
 
+/**
+ * Checking used to fire automatically 600ms after every pause in typing -
+ * a real, billable classifier call on every debounced pause while
+ * composing or revising a long objective, not just once. Replaced with an
+ * explicit "Check objective" button: one deliberate call per check, and
+ * `validation` (owned by the parent, reset to null on every edit) doubles
+ * as the "has this exact text been checked yet" signal the parent gates
+ * Start run on - editing the text after a check invalidates it, requiring
+ * a fresh check before submitting again.
+ */
 export function ObjectiveField({
   value,
   onChange,
@@ -24,38 +34,9 @@ export function ObjectiveField({
   dismissed: boolean;
   onDismiss: () => void;
 }) {
-  const [checking, setChecking] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastCheckedRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    const trimmed = value.trim();
-    if (trimmed.length < MIN_LENGTH || trimmed === lastCheckedRef.current) {
-      return;
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setChecking(true);
-      try {
-        const result = await checkObjective(trimmed);
-        lastCheckedRef.current = trimmed;
-        onValidationChange(result);
-      } catch {
-        // A validation-check failure must never block typing or
-        // submission (SYSTEM-DESIGN-NEXTJS.md §13: validation degrades
-        // permissive) - just leave the field unflagged for now.
-        onValidationChange(null);
-      } finally {
-        setChecking(false);
-      }
-    }, DEBOUNCE_MS);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [value, onValidationChange]);
+  const [lastCheckedText, setLastCheckedText] = useState<string | null>(null);
+  const trimmed = value.trim();
+  const alreadyCheckedThisText = validation !== null && lastCheckedText === trimmed;
 
   const showFlag = validation && !dismissed;
 
@@ -77,12 +58,50 @@ export function ObjectiveField({
         }}
         aria-invalid={showFlag && validation!.severity === "flag" ? true : undefined}
         aria-describedby={showFlag ? "objective-flag" : undefined}
-        placeholder="Find 10 US B2B SaaS companies with 10 to 100 employees that may need AI automation support"
+        placeholder="Find US B2B SaaS companies with 10 to 100 employees that may need AI automation support"
         className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)]"
       />
-      <div className="mt-1 flex justify-between text-xs text-[var(--color-text-muted)]">
-        <span>{checking ? "Checking..." : " "}</span>
-        <span>
+      <div className="mt-2 flex items-center justify-between">
+        <ActionButton
+          idleLabel="Check objective"
+          pendingLabel="Checking"
+          variant="secondary"
+          state={
+            trimmed.length < MIN_LENGTH
+              ? { kind: "disabled", reason: `Write at least ${MIN_LENGTH} characters before checking.` }
+              : alreadyCheckedThisText
+                ? { kind: "disabled", reason: "Already checked - edit the objective to check again." }
+                : undefined
+          }
+          action={async () => {
+            try {
+              const result = await checkObjective(trimmed);
+              setLastCheckedText(trimmed);
+              onValidationChange(result);
+            } catch {
+              // A validation-check failure must never block typing or
+              // submission (SYSTEM-DESIGN-NEXTJS.md §13: validation
+              // degrades permissive) - surface it as the same
+              // "unavailable, proceeding without validation" advisory the
+              // server side already produces for its own classifier
+              // failures, rather than leaving the click looking like it
+              // did nothing.
+              setLastCheckedText(trimmed);
+              onValidationChange({
+                verdict: "unavailable",
+                confidence: null,
+                reason: "Could not check this objective right now - proceeding without validation.",
+                missingCriteria: [],
+                suggestedRewrite: null,
+                dismissible: true,
+                blocking: false,
+                severity: "advisory",
+                cached: false,
+              });
+            }
+          }}
+        />
+        <span className="text-xs text-[var(--color-text-muted)]">
           {value.length}/{MAX_LENGTH}
         </span>
       </div>

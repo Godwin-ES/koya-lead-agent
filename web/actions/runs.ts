@@ -4,15 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { insertRun, listRunsForUser, getRunById, updateRun } from "@core/db/runs";
 import { listLeadsForRun } from "@core/db/leads";
 import { validateObjective } from "@core/validation/objective";
-import { clampLimits } from "@core/domain/limits";
+import { clampLimits, deriveLimitsFromTarget } from "@core/domain/limits";
 import { deriveRunActions } from "@core/domain/run-actions";
-import type { RunLimits, RunCounters, Runner, Scraper } from "@core/domain/types";
+import type { RunCounters, RunLimits, Runner, Scraper } from "@core/domain/types";
 import type { RunRow } from "@core/db/row-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface CreateRunInput {
   objectiveText: string;
-  limits: Partial<RunLimits>;
+  /** The only limit the client can express - every other limit is derived from it server-side, never trusted from the client. */
+  targetQualified: number;
   runner: Runner;
   model?: string;
   scraper: Scraper;
@@ -30,10 +31,13 @@ export interface CreateRunResult {
 /**
  * SYSTEM-DESIGN-NEXTJS.md §9 Step 3: re-validates regardless of what the
  * client reported (a client-side check is UX, never the enforcement -
- * §7.1), refuses a confidently unsafe objective server-side, persists
- * the verdict and any dismissal onto the run itself, copies every limit
- * onto the row (clamped, so the agent can never receive an out-of-range
- * request), and is idempotent on the client-generated key.
+ * §7.1), refuses a confidently unsafe objective server-side, derives every
+ * limit but `target_qualified` here from scratch
+ * (packages/core/src/domain/limits.ts's deriveLimitsFromTarget) rather
+ * than accepting them from the client - hiding a field in the UI isn't
+ * the same as enforcing it, and a client could otherwise still POST
+ * arbitrary candidate_limit/scrape_limit/max_spend_usd values directly -
+ * and is idempotent on the client-generated key.
  */
 export async function createRun(input: CreateRunInput): Promise<CreateRunResult> {
   const supabase = await createClient();
@@ -59,7 +63,7 @@ export async function createRun(input: CreateRunInput): Promise<CreateRunResult>
     return { error: validation.reason || "This objective asks for something outside this tool's scope." };
   }
 
-  const limits = clampLimits(input.limits);
+  const limits = deriveLimitsFromTarget(input.targetQualified);
 
   const run = await insertRun(supabase, {
     user_id: user.id,
