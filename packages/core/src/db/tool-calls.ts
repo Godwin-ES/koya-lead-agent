@@ -19,6 +19,8 @@ export interface RecordToolCallInput {
   denialReason?: string;
   durationMs?: number;
   estimatedCostUsd?: number;
+  /** The handler's own `ToolHandlerResult.data` - the full structured payload a run-view detail panel reads, not just the one-line resultSummary. */
+  resultData?: unknown;
 }
 
 export async function recordToolCall(supabase: SupabaseClient, input: RecordToolCallInput): Promise<ToolCallRow> {
@@ -34,6 +36,7 @@ export async function recordToolCall(supabase: SupabaseClient, input: RecordTool
       denial_reason: input.denialReason ?? null,
       duration_ms: input.durationMs ?? null,
       estimated_cost_usd: input.estimatedCostUsd ?? null,
+      p_result_data: input.resultData ?? null,
     })
     .single();
   if (error) throw error;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/primitives/status-badge";
+import { ToolCallDetail } from "./tool-call-detail";
 import { TOOL_CALL_STATUS } from "@core/domain/status";
 import type { ToolCallRow, AgentEventRow } from "@core/db/row-types";
 
@@ -40,6 +41,7 @@ function formatDuration(ms: number | null): string | null {
 }
 
 function TimelineRow({ call }: { call: ToolCallRow }) {
+  const [expanded, setExpanded] = useState(false);
   const entry = TOOL_CALL_STATUS[call.status];
   const isNotable = call.status === "denied" || call.status === "error";
   const reason = call.denial_reason ?? call.error_message;
@@ -47,26 +49,43 @@ function TimelineRow({ call }: { call: ToolCallRow }) {
   return (
     <li
       className={cn(
-        "flex flex-col gap-1 border-b border-[var(--color-border)] px-3 py-2 text-sm last:border-b-0",
+        "flex flex-col gap-1 border-b border-[var(--color-border)] text-sm last:border-b-0",
         isNotable && "bg-[var(--color-danger-bg)]",
       )}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">#{call.seq}</span>
-        <span className="font-medium text-[var(--color-text)]">{call.tool_name}</span>
-        <StatusBadge entry={entry} />
-        {formatDuration(call.duration_ms) && (
-          <span className="text-xs text-[var(--color-text-muted)]">{formatDuration(call.duration_ms)}</span>
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        aria-expanded={expanded}
+        className="flex w-full flex-col gap-1 px-3 py-2 text-left hover:bg-[var(--color-surface-2)]"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          {expanded ? (
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+          )}
+          <span className="font-mono text-xs text-[var(--color-text-muted)]">#{call.seq}</span>
+          <span className="font-medium text-[var(--color-text)]">{call.tool_name}</span>
+          <StatusBadge entry={entry} />
+          {formatDuration(call.duration_ms) && (
+            <span className="text-xs text-[var(--color-text-muted)]">{formatDuration(call.duration_ms)}</span>
+          )}
+          {formatCost(call.estimated_cost_usd) && (
+            <span className="text-xs text-[var(--color-text-muted)]">{formatCost(call.estimated_cost_usd)}</span>
+          )}
+        </div>
+        {isNotable && reason && (
+          <p className="pl-5 text-sm font-medium text-[var(--color-danger-text)]">{reason}</p>
         )}
-        {formatCost(call.estimated_cost_usd) && (
-          <span className="text-xs text-[var(--color-text-muted)]">{formatCost(call.estimated_cost_usd)}</span>
+        {!isNotable && call.result_summary && (
+          <p className="pl-5 text-xs text-[var(--color-text-muted)]">{call.result_summary}</p>
         )}
-      </div>
-      {isNotable && reason && (
-        <p className="text-sm font-medium text-[var(--color-danger-text)]">{reason}</p>
-      )}
-      {!isNotable && call.result_summary && (
-        <p className="text-xs text-[var(--color-text-muted)]">{call.result_summary}</p>
+      </button>
+      {expanded && (
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3 pl-8">
+          <ToolCallDetail call={call} />
+        </div>
       )}
     </li>
   );

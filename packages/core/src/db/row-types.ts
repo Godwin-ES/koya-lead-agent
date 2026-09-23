@@ -116,6 +116,7 @@ export interface ToolCallRow {
   denial_reason: string | null;
   duration_ms: number | null;
   estimated_cost_usd: number | null;
+  result_data: unknown | null;
   created_at: string;
 }
 

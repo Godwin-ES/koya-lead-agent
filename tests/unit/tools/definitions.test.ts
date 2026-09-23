@@ -44,6 +44,22 @@ describe("TOOL_DEFINITIONS", () => {
     expect(tables.runs[0]!.icp).toEqual({ target_company_type: "SaaS" });
   });
 
+  // Every handler already computed a rich `data` payload - invoke() just
+  // never persisted it, only the one-line resultSummary, which is why
+  // clicking a timeline row for real detail was never possible. This is
+  // the plumbing that made that fixable without inventing new data
+  // collection: result.data now reaches tool_calls.result_data.
+  it("persists the handler's data payload to tool_calls.result_data, not just the summary", async () => {
+    const { client, tables } = createFakeSupabase();
+    tables.runs.push({ id: "run-1", icp: null, counters: {}, limits: LIMIT_DEFAULTS });
+    const run = baseRun({ icp: null });
+
+    await invoke({ supabase: client, run }, "save_icp", { target_company_type: "SaaS", industries: ["fintech"] }, toolByName("save_icp").handler);
+
+    expect(tables.tool_calls).toHaveLength(1);
+    expect(tables.tool_calls[0]!.result_data).toEqual({ target_company_type: "SaaS", industries: ["fintech"] });
+  });
+
   it("discover_companies serves a cached result without a live dispatch", async () => {
     const { client, tables } = createFakeSupabase();
     tables.runs.push({ id: "run-1", icp: {}, counters: {}, limits: LIMIT_DEFAULTS });

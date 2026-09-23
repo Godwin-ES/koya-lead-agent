@@ -200,4 +200,49 @@ test.describe("run view", () => {
       await user.cleanup();
     }
   });
+
+  test("clicking a timeline row expands real detail, not just the one-line summary", async ({ page }) => {
+    const user = await createTestUser();
+    try {
+      const run = await seedRun({
+        userId: user.userId,
+        status: "running",
+        icp: {},
+        toolCalls: [
+          {
+            toolName: "save_icp",
+            status: "ok",
+            resultSummary: "ICP saved: B2B SaaS Company",
+            resultData: {
+              target_company_type: "B2B SaaS Company",
+              industries: ["Fintech"],
+              geography: ["United States"],
+              headcount_range: "50-200",
+              buyer_persona: "VP of Engineering",
+              business_problem: "Manual reconciliation",
+              hard_filters: ["US-based"],
+              soft_preferences: [],
+              disqualifiers: [],
+            },
+          },
+        ],
+      });
+      await signIn(page, user.email, user.password);
+      await page.goto(`/runs/${run.id}`);
+
+      const row = page.getByRole("button", { name: /save_icp/ });
+      await expect(row).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText("VP of Engineering")).toHaveCount(0);
+
+      await row.click();
+      await expect(page.getByText("VP of Engineering")).toBeVisible();
+      await expect(page.getByText("Manual reconciliation")).toBeVisible();
+
+      // Collapses back on a second click.
+      await row.click();
+      await expect(page.getByText("VP of Engineering")).toHaveCount(0);
+    } finally {
+      await user.cleanup();
+    }
+  });
 });

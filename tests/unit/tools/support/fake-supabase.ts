@@ -138,6 +138,7 @@ export function createFakeSupabase() {
           denial_reason: args.denial_reason ?? null,
           duration_ms: args.duration_ms ?? null,
           estimated_cost_usd: args.estimated_cost_usd ?? null,
+          result_data: args.p_result_data ?? null,
           created_at: new Date().toISOString(),
         };
         tables.tool_calls.push(row);

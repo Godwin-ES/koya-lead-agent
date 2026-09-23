@@ -137,6 +137,7 @@ export async function invoke(
       resultSummary: result.resultSummary,
       estimatedCostUsd: result.estimatedCostUsd,
       durationMs: Date.now() - startedAt,
+      resultData: result.data,
     });
     await bumpToolCallsUsed(ctx, toolName);
     return result;

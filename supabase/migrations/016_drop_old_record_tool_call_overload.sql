@@ -1,0 +1,11 @@
+-- Real bug in 015: CREATE OR REPLACE FUNCTION with a new trailing
+-- parameter did not replace the old 10-parameter record_tool_call - it
+-- added a second overload alongside it (function identity in Postgres is
+-- name + parameter types, and appending a parameter changes that
+-- identity). Calling record_tool_call with named arguments that could
+-- match either overload's defaults then fails with "function ... is not
+-- unique" - confirmed live, breaking every caller using named-argument
+-- syntax (record.test.ts's own direct-SQL tests). Drops the stale
+-- 10-parameter signature so only the 015 version (with p_result_data)
+-- remains.
+drop function if exists record_tool_call(uuid, text, text, text, text, text, text, text, int, numeric);

@@ -27,6 +27,7 @@ export interface SeedRunOptions {
     errorMessage?: string;
     durationMs?: number;
     estimatedCostUsd?: number;
+    resultData?: unknown;
   }>;
 }
 
@@ -84,6 +85,7 @@ export async function seedRun(options: SeedRunOptions) {
       error_message: call.errorMessage ?? null,
       duration_ms: call.durationMs ?? null,
       estimated_cost_usd: call.estimatedCostUsd ?? null,
+      result_data: call.resultData ?? null,
     });
   }
 

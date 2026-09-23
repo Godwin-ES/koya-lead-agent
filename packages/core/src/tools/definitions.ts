@@ -45,7 +45,7 @@ const saveIcp: ToolDefinition = {
   inputSchema: IcpSchema,
   handler: async (ctx, input): Promise<ToolHandlerResult> => {
     await updateRun(ctx.supabase, ctx.run.id, { icp: input });
-    return { resultSummary: `ICP saved: ${String(input.target_company_type)}` };
+    return { resultSummary: `ICP saved: ${String(input.target_company_type)}`, data: input };
   },
 };
 
@@ -70,7 +70,7 @@ const requestClarification: ToolDefinition = {
     // orchestration loop (Task 16) is what owns the run lifecycle; it
     // watches for this tool call and performs that transition, so this
     // handler stays a pure persistence step like every other tool.
-    return { resultSummary: `Clarification requested: ${question}` };
+    return { resultSummary: `Clarification requested: ${question}`, data: { question } };
   },
 };
 
