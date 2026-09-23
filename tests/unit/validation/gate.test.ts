@@ -27,6 +27,7 @@ function fakeSupabase() {
     _rows: rows,
     from(_table: string) {
       const filters: Record<string, unknown> = {};
+      const excludes: Record<string, unknown> = {};
       return {
         select() {
           return this;
@@ -35,9 +36,15 @@ function fakeSupabase() {
           filters[column] = value;
           return this;
         },
+        neq(column: string, value: unknown) {
+          excludes[column] = value;
+          return this;
+        },
         async maybeSingle() {
           const key = `${filters.user_id}:${filters.objective_hash}`;
-          return { data: rows.get(key) ?? null, error: null };
+          const row = rows.get(key) ?? null;
+          const excluded = row && Object.entries(excludes).some(([col, val]) => row[col] === val);
+          return { data: excluded ? null : row, error: null };
         },
         async upsert(row: Record<string, unknown>) {
           const key = `${row.user_id}:${row.objective_hash}`;
@@ -143,6 +150,35 @@ describe("validateObjective (the gate)", () => {
     const second = await validateObjective(db, text, u);
     expect(mockedClassify).toHaveBeenCalledTimes(1); // still 1 - no second call
     expect(second.cached).toBe(true);
+    expect(second.verdict).toBe("valid");
+  });
+
+  // Real bug, found live: `persist()` upserts every result, including an
+  // "unavailable" one, keyed on (user_id, objective_hash) - the very next
+  // check of the exact same text then hit that cached row first and never
+  // called the classifier again, permanently "stuck" on one transient
+  // outage forever. Confirmed against a real Supabase project: a genuine
+  // Gemini 503 got cached this way and every later check of the identical
+  // text kept returning the stale "unavailable" verdict, even minutes
+  // later once the outage had cleared.
+  it("does not permanently cache a classifier outage - retries on the next check instead", async () => {
+    mockedClassify.mockRejectedValueOnce(new Error("503 model unavailable"));
+    mockedClassify.mockResolvedValueOnce({
+      verdict: "valid",
+      confidence: 0.95,
+      reason: "Specific enough.",
+      missing_criteria: [],
+      suggested_rewrite: "",
+    });
+
+    const db = fakeSupabase();
+    const text = "Find 10 US B2B SaaS companies with 10 to 100 employees needing automation";
+
+    const first = await validateObjective(db, text, u);
+    expect(first.verdict).toBe("unavailable");
+
+    const second = await validateObjective(db, text, u);
+    expect(mockedClassify).toHaveBeenCalledTimes(2);
     expect(second.verdict).toBe("valid");
   });
 

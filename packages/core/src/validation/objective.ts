@@ -126,11 +126,21 @@ export async function validateObjective(
 
   const objectiveHash = hashObjective(text);
 
+  // Excludes "unavailable" rows deliberately - a real bug, found live
+  // against production Supabase: a transient classifier outage on one
+  // check got upserted here (below, in the catch block) same as any real
+  // verdict, and every later check of the identical text then hit that
+  // cached row first and never called the classifier again - permanently
+  // "stuck" on one outage that had long since cleared. An "unavailable"
+  // verdict isn't a real judgment about the objective, so it must never
+  // be served as if it were one; the classifier gets a fresh attempt
+  // every time until it actually succeeds (or fails again) for real.
   const { data: cachedRow } = await supabase
     .from("objective_validations")
     .select()
     .eq("user_id", userId)
     .eq("objective_hash", objectiveHash)
+    .neq("verdict", "unavailable")
     .maybeSingle();
 
   if (cachedRow) {
