@@ -28,6 +28,9 @@ function isToolName(name: string): name is ToolName {
 /** list_run_state is read-only and free - the agent can check its own progress without spending budget (§12). */
 export const UNCOUNTED_TOOLS: ReadonlySet<ToolName> = new Set(["list_run_state"]);
 
+/** The hard cap on discover_companies calls per run - see this constant's use in gate() for why. Exported so the tool's own description and the phase prompt can tell the agent about it honestly. */
+export const MAX_DISCOVER_ATTEMPTS = 3;
+
 /**
  * Tools usable before the ICP has been saved - everything else needs ICP
  * criteria to act on. `finalize_run` is exempt too: it's the orchestrator's
@@ -83,6 +86,24 @@ export function gate(run: GateRunState, toolName: string, input: Record<string, 
   }
 
   if (toolName === "discover_companies") {
+    // The primary discovery cap: at most MAX_DISCOVER_ATTEMPTS calls,
+    // each returning at most MAX_CANDIDATES_PER_DISCOVER_CALL results
+    // (enforced in discover_companies' own handler) - a deliberate,
+    // structural bound on both the number of search attempts and total
+    // Apify spend, not left to however many calls the model feels like
+    // making. Chosen after a real run made 13 discover_companies calls
+    // in a row with nothing stopping it.
+    const attemptsUsed = run.counters.discover_calls_used ?? 0;
+    if (attemptsUsed >= MAX_DISCOVER_ATTEMPTS) {
+      return deny(
+        "discovery attempt limit reached",
+        `You have used all ${MAX_DISCOVER_ATTEMPTS} of your discover_companies attempts for this run. Qualify from the candidates you already have, then finalize.`,
+      );
+    }
+
+    // candidate_limit stays as a secondary, generous backstop - not the
+    // primary mechanism anymore, but still real insurance if it's ever
+    // reached before the attempt count is.
     const seen = run.counters.candidates_seen ?? 0;
     if (seen >= run.limits.candidate_limit) {
       return deny(

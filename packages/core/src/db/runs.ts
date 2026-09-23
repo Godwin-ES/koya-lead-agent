@@ -38,6 +38,26 @@ export async function updateRun(supabase: SupabaseClient, id: string, patch: Par
   return data as RunRow;
 }
 
+/**
+ * `merge_run_counters(run_id, patch)` - the only correct way to update
+ * one or more `counters` fields. `updateRun({ counters: {...} })` does a
+ * plain column REPLACE, not a merge - a real bug (found live) came from
+ * exactly that: one caller's write, built from a local snapshot that
+ * didn't know about a field a different call had just written, silently
+ * erased it. This RPC merges at the database level (`counters || patch`),
+ * so no caller's local staleness can ever clobber a field it isn't
+ * itself touching.
+ */
+export async function mergeRunCounters(
+  supabase: SupabaseClient,
+  id: string,
+  patch: Record<string, number>,
+): Promise<RunRow> {
+  const { data, error } = await supabase.rpc("merge_run_counters", { p_run_id: id, p_patch: patch }).single();
+  if (error) throw error;
+  return data as RunRow;
+}
+
 /** `claim_next_run(worker_id)` - returns null when nothing is queued. */
 export async function claimNextRun(supabase: SupabaseClient, workerId: string): Promise<RunRow | null> {
   const { data, error } = await supabase.rpc("claim_next_run", { p_worker_id: workerId }).single();

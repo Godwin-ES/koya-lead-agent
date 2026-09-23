@@ -47,6 +47,8 @@ export interface RunLimits {
 
 export interface RunCounters {
   candidates_seen?: number;
+  /** How many discover_companies calls this run has made - gate()'s primary discovery cap now (max 3), separate from candidates_seen. */
+  discover_calls_used?: number;
   scrapes_used?: number;
   tool_calls_used?: number;
   turns_used?: number;

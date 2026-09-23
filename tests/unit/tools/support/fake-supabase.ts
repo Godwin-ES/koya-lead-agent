@@ -159,6 +159,19 @@ export function createFakeSupabase() {
         };
       }
 
+      if (name === "merge_run_counters") {
+        // Mirrors the real RPC's atomic `counters = counters || patch` -
+        // a full replace here would silently reintroduce the exact bug
+        // this RPC exists to close (see mergeRunCounters' own comment).
+        const runId = args.p_run_id as string;
+        const patch = args.p_patch as Record<string, unknown>;
+        const idx = tables.runs.findIndex((r) => r.id === runId);
+        if (idx === -1) throw new Error(`run ${runId} not found`);
+        const current = (tables.runs[idx]!.counters ?? {}) as Record<string, unknown>;
+        tables.runs[idx] = { ...tables.runs[idx], counters: { ...current, ...patch } };
+        return tables.runs[idx];
+      }
+
       if (name === "finalize_run") {
         const runId = args.p_run_id as string;
         const idx = tables.runs.findIndex((r) => r.id === runId);

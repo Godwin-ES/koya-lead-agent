@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Scraper } from "../domain/types";
 import { recordToolCall } from "../db/tool-calls";
-import { updateRun } from "../db/runs";
+import { updateRun, mergeRunCounters } from "../db/runs";
 import { gate, UNCOUNTED_TOOLS, type GateRunState } from "./gate";
 import { isInjected } from "../providers/failure-injection";
 
@@ -81,7 +81,10 @@ async function bumpToolCallsUsed(ctx: ToolContext, toolName: string): Promise<vo
   if ((UNCOUNTED_TOOLS as ReadonlySet<string>).has(toolName)) return;
   const next = (ctx.run.counters.tool_calls_used ?? 0) + 1;
   ctx.run.counters.tool_calls_used = next;
-  await updateRun(ctx.supabase, ctx.run.id, { counters: { ...ctx.run.counters, tool_calls_used: next } });
+  // mergeRunCounters, not updateRun - this must never clobber a field a
+  // handler wrote moments earlier in the same invoke() call (see that
+  // function's own comment for the real bug this replaced).
+  await mergeRunCounters(ctx.supabase, ctx.run.id, { tool_calls_used: next });
 }
 
 /**

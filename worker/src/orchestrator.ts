@@ -1,4 +1,5 @@
 import type { RunLimits } from "@core/domain/types";
+import { MAX_DISCOVER_ATTEMPTS } from "@core/tools/gate";
 
 /**
  * Shared between both runners (Task 14 Gemini, Task 15 Agent SDK) so the
@@ -22,9 +23,10 @@ export function buildPhasePrompt(run: OrchestratorRun): string {
   lines.push(
     [
       `Target qualified leads: ${run.limits.target_qualified}.`,
-      `Candidate discovery budget: ${run.limits.candidate_limit}.`,
+      `You have at most ${MAX_DISCOVER_ATTEMPTS} discover_companies calls this run - use them deliberately.`,
+      "If your first search doesn't turn up enough qualified leads, don't repeat the same query: change the angle (different phrasing, a different signal like a job board or funding announcement site, a different geography or industry term) before your next attempt, informed by what you saw disqualify candidates so far.",
       `Scrape budget: ${run.limits.scrape_limit}.`,
-      "Work within these limits. Call finalize_run once you have enough qualified leads, or once you've made a reasonable, budget-respecting effort and want to report what you found.",
+      "Work within these limits. Call finalize_run once you have enough qualified leads, or once you've used your discovery attempts and want to report what you found.",
     ].join(" "),
   );
 

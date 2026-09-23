@@ -3,7 +3,7 @@ import { IcpSchema } from "../schemas/icp";
 import { QualificationSchema } from "../schemas/qualification";
 import { computeQualityReport } from "../quality/report";
 import { normalizeDomain, hashObjective } from "../domain/normalize";
-import { updateRun, finalizeRun as finalizeRunRow, getRunSummary } from "../db/runs";
+import { updateRun, mergeRunCounters, finalizeRun as finalizeRunRow, getRunSummary } from "../db/runs";
 import { getDiscoveryCache, setDiscoveryCache, getScrapeCache, setScrapeCache } from "../db/cache";
 import { insertCostLedgerEntry } from "../db/cost";
 import { upsertLead, getLeadById, listLeadsForRun } from "../db/leads";
@@ -13,7 +13,7 @@ import { scrape } from "../providers/scraper";
 import { checkGrounding } from "../safety/grounding";
 import { isInjected } from "../providers/failure-injection";
 import { FatalToolError, type ToolContext, type ToolHandler, type ToolHandlerResult } from "./log";
-import { TOOL_NAMES, type ToolName } from "./gate";
+import { TOOL_NAMES, MAX_DISCOVER_ATTEMPTS, type ToolName } from "./gate";
 
 /**
  * `getDiscoveryCache`/`getScrapeCache` (Task 5) both filter on
@@ -83,13 +83,22 @@ const DiscoverCompaniesInput = z.object({
   requested: z.number().int().positive(),
 });
 
+/**
+ * Fixed per-call cap, independent of any remaining candidate_limit
+ * budget - "at most 3 attempts, at most 15 results each" is a
+ * deliberate structural design (agreed after a real run made 13 calls
+ * with wildly varying result counts), not just a side effect of however
+ * much of the overall budget happens to be left when a given call fires.
+ */
+const MAX_CANDIDATES_PER_DISCOVER_CALL = 15;
+
 const discoverCompanies: ToolDefinition = {
   name: "discover_companies",
-  description: "Search for candidate companies matching a keyword query, respecting this run's candidate budget.",
+  description: `Search for candidate companies matching a keyword query. You get at most ${MAX_DISCOVER_ATTEMPTS} calls to this tool per run, each returning at most ${MAX_CANDIDATES_PER_DISCOVER_CALL} candidates - after your first call, if you haven't found enough qualified leads yet, refine your query based on what you learned (try a different angle, phrasing, or source) before calling again. Use your attempts deliberately; there is no fourth try.`,
   inputSchema: DiscoverCompaniesInput,
   handler: async (ctx, input): Promise<ToolHandlerResult> => {
     const query = input.query as string;
-    const requested = input.requested as number;
+    const requested = Math.min(input.requested as number, MAX_CANDIDATES_PER_DISCOVER_CALL);
     const cacheKey = `apify:${hashObjective(query)}`;
 
     // Task 20 failure injection (§13: "Apify auth/quota error" / "Apify
@@ -103,8 +112,15 @@ const discoverCompanies: ToolDefinition = {
       return { resultSummary: `0 candidates discovered for "${query}"`, data: [] };
     }
 
+    const discoverCallsUsed = (ctx.run.counters.discover_calls_used ?? 0) + 1;
+
     const cached = await getDiscoveryCache(ctx.supabase, cacheKey);
     if (cached) {
+      // mergeRunCounters, not updateRun - see that function's own
+      // comment for the real bug this replaced (a full-column replace
+      // here would have clobbered candidates_seen/tool_calls_used
+      // written by other calls).
+      await mergeRunCounters(ctx.supabase, ctx.run.id, { discover_calls_used: discoverCallsUsed });
       return { resultSummary: `${cached.item_count ?? 0} cached candidates for "${query}" (no spend)`, data: cached.results };
     }
 
@@ -138,10 +154,10 @@ const discoverCompanies: ToolDefinition = {
     }
 
     const candidatesSeen = (ctx.run.counters.candidates_seen ?? 0) + result.itemCount;
-    await updateRun(ctx.supabase, ctx.run.id, { counters: { ...ctx.run.counters, candidates_seen: candidatesSeen } });
+    await mergeRunCounters(ctx.supabase, ctx.run.id, { candidates_seen: candidatesSeen, discover_calls_used: discoverCallsUsed });
 
     return {
-      resultSummary: `${result.candidates.length} candidates discovered for "${query}"`,
+      resultSummary: `${result.candidates.length} candidates discovered for "${query}" (attempt ${discoverCallsUsed} of ${MAX_DISCOVER_ATTEMPTS})`,
       estimatedCostUsd: result.estimatedCostUsd,
       data: result.candidates,
     };
@@ -206,7 +222,8 @@ const scrapeSite: ToolDefinition = {
     }
 
     const scrapesUsed = (ctx.run.counters.scrapes_used ?? 0) + 1;
-    await updateRun(ctx.supabase, ctx.run.id, { counters: { ...ctx.run.counters, scrapes_used: scrapesUsed } });
+    // mergeRunCounters, not updateRun - see mergeRunCounters' own comment.
+    await mergeRunCounters(ctx.supabase, ctx.run.id, { scrapes_used: scrapesUsed });
 
     if (!result.success) {
       return {
