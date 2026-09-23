@@ -1,4 +1,4 @@
-import type { RunLimits, Scraper } from "./types";
+import type { RunLimits } from "./types";
 
 /** SYSTEM-DESIGN-NEXTJS.md §7's "Intake and Visible Defaults" table. */
 export const LIMIT_DEFAULTS: RunLimits = {
@@ -62,63 +62,49 @@ export function clampLimits(requested: Partial<RunLimits>): RunLimits {
 /**
  * The intake form's only user-facing input is `target_qualified` -
  * everything else is derived here, server-side, never trusted from the
- * client (a hidden field is not the same as an enforced one). Ratios are
- * chosen so `target_qualified = 10` reproduces today's exact
- * `LIMIT_DEFAULTS` (25/30/120/60/$0.50) rather than inventing a new
- * policy - this generalizes the existing default down to smaller
- * requests, it doesn't replace it.
+ * client (a hidden field is not the same as an enforced one).
  *
- * `max_spend_usd` is floored at $0.50 regardless of how small the target
- * is, deliberately not scaled down with it: model spend (turns/tokens)
- * is largely independent of how many leads are being asked for - a
- * single Claude Opus session was observed spending $0.49 without
- * producing any leads at all (Task 22's live benchmark pass) - so a
- * tighter floor risks cutting off a small, legitimate request on model
- * cost alone before it can finish.
+ * No dollar-denominated ceiling anywhere in this run - the user's own
+ * call, after a real run showed the spend ceiling firing on an
+ * over-inflated cost estimate rather than a real problem. Real spend is
+ * now bounded structurally instead:
+ *
+ * - `candidate_limit` is a fixed 40 regardless of `target_qualified` -
+ *   not because bigger asks don't need more candidates (they do), but
+ *   because this is sized for the worst case (target_qualified's own max
+ *   of 10) and matched 1:1 to a single Apify actor dispatch's own cap
+ *   (`APIFY_CAP_FIELD_NAME`) - the whole design is "one real discover
+ *   call per run, sized generously enough that if it can't find enough
+ *   candidates, the objective itself needs refining," not "scale the cap
+ *   with how many leads you asked for." A smaller `target_qualified`
+ *   doesn't need a smaller candidate pool to choose from.
+ * - `scrape_limit`/`max_turns`/`max_tool_calls` are fixed, generous
+ *   safety nets, not meant to bind in normal operation against a
+ *   candidate pool this size - insurance against a genuine agent
+ *   malfunction (e.g. a stuck re-scrape loop), not a routine constraint.
+ * - `max_spend_usd` is kept in the type (avoids a schema/UI churn for a
+ *   field that's still useful to *record*, just not to *gate on*) but
+ *   set high enough here that it can never realistically bind; nothing
+ *   in `gate()` or the Apify adapter checks it anymore either.
  */
+const FIXED_CANDIDATE_LIMIT = 40;
+const FIXED_SCRAPE_LIMIT = 80;
+const FIXED_MAX_TOOL_CALLS = 300;
+const FIXED_MAX_TURNS = 150;
+const EFFECTIVELY_UNLIMITED_SPEND_USD = 999;
+
 export function deriveLimitsFromTarget(targetQualifiedRequested: number): RunLimits {
   const range = RANGES.target_qualified!;
   const safeRequested = Number.isFinite(targetQualifiedRequested) ? targetQualifiedRequested : range.min;
   const target = Math.min(range.max, Math.max(range.min, Math.round(safeRequested)));
 
-  const candidateRange = RANGES.candidate_limit!;
-  const scrapeRange = RANGES.scrape_limit!;
-  const candidate_limit = Math.min(candidateRange.max, Math.max(candidateRange.min, Math.ceil(target * 2.5)));
-  const scrape_limit = Math.min(scrapeRange.max, Math.max(scrapeRange.min, Math.ceil(target * 3)));
-  const max_tool_calls = Math.max(FLOORS.max_tool_calls!, scrape_limit * 4);
-  const max_turns = Math.max(FLOORS.max_turns!, Math.round(max_tool_calls / 2));
-  const max_spend_usd = Math.max(0.5, target * 0.08);
-
-  return { target_qualified: target, candidate_limit, scrape_limit, max_turns, max_tool_calls, max_spend_usd };
+  return {
+    target_qualified: target,
+    candidate_limit: FIXED_CANDIDATE_LIMIT,
+    scrape_limit: FIXED_SCRAPE_LIMIT,
+    max_turns: FIXED_MAX_TURNS,
+    max_tool_calls: FIXED_MAX_TOOL_CALLS,
+    max_spend_usd: EFFECTIVELY_UNLIMITED_SPEND_USD,
+  };
 }
 
-export interface SpendUnitCosts {
-  /** Estimated Apify cost per candidate company discovered. */
-  perCandidateUsd: number;
-  /** Estimated scraper cost per website scraped. Ignored for `crawl4ai`. */
-  perScrapeUsd: number;
-}
-
-/**
- * A live, pre-commitment spend estimate for the intake form
- * (SYSTEM-DESIGN-NEXTJS.md §17.8: "a live estimated maximum spend that
- * updates as the candidate and scrape counts change, so cost is visible
- * before committing rather than after").
- *
- * Unit costs are supplied by the caller rather than hardcoded here,
- * because the real Apify per-result price is still pending confirmation
- * in the console (see app/docs/provider-findings.md, Task 1 Step 3) - this
- * function must not silently embed a guessed number.
- *
- * `crawl4ai` is self-hosted and free (§4.4), so its scrape cost is always
- * zero regardless of the supplied unit cost.
- */
-export function estimateMaxSpendUsd(
-  limits: Pick<RunLimits, "candidate_limit" | "scrape_limit"> & { scraper: Scraper },
-  unitCosts: SpendUnitCosts,
-): number {
-  const candidateCost = Math.max(0, limits.candidate_limit) * Math.max(0, unitCosts.perCandidateUsd);
-  const scrapeCost =
-    limits.scraper === "crawl4ai" ? 0 : Math.max(0, limits.scrape_limit) * Math.max(0, unitCosts.perScrapeUsd);
-  return candidateCost + scrapeCost;
-}

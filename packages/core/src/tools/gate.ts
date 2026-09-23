@@ -111,14 +111,17 @@ export function gate(run: GateRunState, toolName: string, input: Record<string, 
   // the resulting ToolDeniedError propagates uncaught out of the runner,
   // and a run that should have ended `completed`/`partial` ends up
   // `failed` instead, for no reason a human would recognize as a failure.
+  // Deliberately no dollar-denominated check here anymore. Real spend is
+  // now bounded structurally instead: candidate_limit (fixed, matched to
+  // the actor's own per-call cap) means at most one real discover_companies
+  // dispatch per run, and scrape_site is free (crawl4ai, self-hosted).
+  // max_tool_calls stays as a generous, count-only circuit breaker - not
+  // meant to bind in normal operation, just insurance against a genuine
+  // malfunction (e.g. a stuck scrape-the-same-URL loop).
   if (!UNCOUNTED_TOOLS.has(toolName) && toolName !== "finalize_run") {
     const toolCallsUsed = run.counters.tool_calls_used ?? 0;
     if (toolCallsUsed >= run.limits.max_tool_calls) {
       return deny("tool call limit reached", "You have used your tool call budget for this run. Finalize with what you have.");
-    }
-
-    if (run.spentUsd >= run.limits.max_spend_usd) {
-      return deny("spend ceiling reached", "You have reached the spend ceiling for this run. Finalize with what you have.");
     }
   }
 

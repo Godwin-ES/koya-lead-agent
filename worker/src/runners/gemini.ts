@@ -31,6 +31,19 @@ function toFunctionDeclarations(): FunctionDeclaration[] {
 interface RawTurnPart {
   text?: string;
   functionCall?: { id?: string; name?: string; args?: Record<string, unknown> };
+  /**
+   * An opaque, per-part signature this Gemini version requires echoed
+   * back verbatim on any later turn's history that includes this same
+   * part - confirmed live: omitting it made every second function call
+   * fail with "Function call is missing a thought_signature in
+   * functionCall parts" (400 INVALID_ARGUMENT), blocking every real run
+   * past its first tool call. Not documented in
+   * docs/provider-findings.md because it wasn't discoverable there - the
+   * bundled docs describe the request/response shapes, not this
+   * server-side statefulness requirement, which only showed up against
+   * the real API.
+   */
+  thoughtSignature?: string;
 }
 
 interface RawTurn {
@@ -70,6 +83,7 @@ async function dispatchGeminiRaw(args: {
     parts: parts.map((p) => ({
       text: p.text,
       functionCall: p.functionCall ? { id: p.functionCall.id, name: p.functionCall.name, args: p.functionCall.args } : undefined,
+      thoughtSignature: p.thoughtSignature,
     })),
     usage: {
       inputTokens: response.usageMetadata?.promptTokenCount ?? 0,
@@ -178,7 +192,15 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
 
     history.push({
       role: "model",
-      parts: turn.parts.map((p) => (p.functionCall ? { functionCall: p.functionCall } : { text: p.text ?? "" })),
+      // `thoughtSignature` must be echoed back on the exact part it
+      // arrived on (see RawTurnPart's own comment) - attached here
+      // regardless of whether that part is a functionCall or plain text,
+      // since the API ties it to the part, not specifically to the
+      // presence of a function call.
+      parts: turn.parts.map((p) => ({
+        ...(p.functionCall ? { functionCall: p.functionCall } : { text: p.text ?? "" }),
+        ...(p.thoughtSignature ? { thoughtSignature: p.thoughtSignature } : {}),
+      })),
     });
 
     const text = turn.parts.find((p) => p.text)?.text;

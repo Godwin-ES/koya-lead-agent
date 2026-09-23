@@ -146,10 +146,13 @@ export interface DiscoverOptions {
 /**
  * The safe, budget-aware entry point every caller (Task 12's
  * discover_companies tool) actually uses. Clamps the requested count to
- * the run's remaining candidate budget, checks the *run-level* spend
- * ceiling (limits.max_spend_usd, already on hand), reads the replay cache
- * before ever dispatching, and reports the estimated cost of whatever it
- * returns.
+ * the run's remaining candidate budget, truncates the result to that same
+ * cap regardless of how many items the actor actually returns (it does
+ * not reliably respect the cap field itself - confirmed live), reads the
+ * replay cache before ever dispatching, and reports the estimated cost of
+ * whatever it returns. No dollar-denominated ceiling gates this call
+ * anymore - real spend is bounded by candidate_limit itself, not a
+ * separate spend check.
  *
  * Deliberately does not write to `cost_ledger` or `discovery_cache`
  * itself, and does not check the day-level cohort-wide spend ceiling -
@@ -177,22 +180,25 @@ export async function discover(
     return { input, candidates: [], itemCount: 0, cacheHit: false, estimatedCostUsd: 0 };
   }
 
-  if (context.limits.max_spend_usd !== undefined && context.limits.max_spend_usd <= 0) {
-    throw new Error("Apify dispatch refused: this run's spend ceiling is already exhausted.");
-  }
-
   const fixtureKey = options.fixtureKeyOverride ?? `apify:discover:${hashObjective(JSON.stringify(input))}`;
 
   const dispatch = options.dispatchOverride ?? dispatchRaw;
   const raw = await withRecording(fixtureKey, () => dispatch({ input }));
 
-  const candidates = raw.items.map(toCandidate).filter((c): c is DiscoveryCandidate => c !== null);
-  const estimatedCostUsd = raw.items.length * ESTIMATED_COST_PER_RESULT_USD;
+  // The actor doesn't reliably respect the cap field we send it -
+  // confirmed live: a call capped at 13 came back with 18 real items,
+  // which then let candidates_seen blow past candidate_limit on a
+  // single call. Truncating here, regardless of what the actor actually
+  // returns, is what makes "the tool enforces it" true rather than
+  // trusting a third party to honor an input field.
+  const items = raw.items.slice(0, cap);
+  const candidates = items.map(toCandidate).filter((c): c is DiscoveryCandidate => c !== null);
+  const estimatedCostUsd = items.length * ESTIMATED_COST_PER_RESULT_USD;
 
   return {
     input,
     candidates,
-    itemCount: raw.items.length,
+    itemCount: items.length,
     cacheHit: false,
     estimatedCostUsd,
   };

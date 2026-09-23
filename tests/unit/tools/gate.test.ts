@@ -52,11 +52,16 @@ describe("gate", () => {
     expect(gate(run, "request_clarification", { question: "which region?" }).kind).toBe("allow");
   });
 
-  it("denies once the spend ceiling is reached", () => {
-    const run = baseRun({ spentUsd: LIMIT_DEFAULTS.max_spend_usd });
-    const d = gate(run, "scrape_site", { url: "https://x.com" });
-    expect(d.kind).toBe("deny");
-    if (d.kind === "deny") expect(d.reason).toMatch(/spend ceiling/i);
+  // Dollar-denominated gating was removed deliberately after a real run
+  // showed it firing on an inflated cost estimate rather than a real
+  // problem (the user's own call: "I don't want to use dollar spend as a
+  // limit anywhere"). Real spend is now bounded structurally instead -
+  // candidate_limit matched to a single Apify dispatch's own cap, and
+  // scrape_site is free (crawl4ai).
+  it("never denies for spend, regardless of how high spentUsd is", () => {
+    const run = baseRun({ spentUsd: 1_000_000 });
+    expect(gate(run, "scrape_site", { url: "https://x.com" }).kind).toBe("allow");
+    expect(gate(run, "discover_companies", { query: "saas" }).kind).toBe("allow");
   });
 
   it("denies once the tool call limit is reached", () => {

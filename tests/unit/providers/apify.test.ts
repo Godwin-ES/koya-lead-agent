@@ -133,13 +133,41 @@ describe("apify discovery adapter", () => {
     expect(result.candidates[0]!.companyDomain).toBe("merriam-webster.com");
   });
 
-  it("refuses to dispatch when the run-level spend ceiling is already exhausted", async () => {
-    await expect(
-      discover(
-        { limits: { candidate_limit: 25, max_spend_usd: 0 }, counters: { candidates_seen: 0 } },
-        { query: "saas companies", requested: 5 },
-        {},
-      ),
-    ).rejects.toThrow(/spend ceiling/i);
+  // Real bug, found live: the chosen actor doesn't strictly respect the
+  // maxResultsPerKeyword cap we send it - a call capped at 13 came back
+  // with 18 real items, letting candidates_seen blow straight past
+  // candidate_limit on a single call, which cascaded into every later
+  // discover_companies call in that run also going through instead of
+  // being denied (their own gate() checks were each individually
+  // correct against a counter that was already wrong). Trusting a
+  // third-party actor's own cap enforcement isn't "the tool enforces
+  // it" (SYSTEM-DESIGN-NEXTJS.md §1) - truncating our own output to the
+  // cap we asked for, regardless of what comes back, is.
+  it("truncates the result to the computed cap even if the actor returns more items than requested", async () => {
+    const key = seed(
+      "apify:discover:actor-overdelivers-test",
+      { run: { defaultDatasetId: "ds1" }, items: Array.from({ length: 18 }, (_, i) => ({ domain: `over-${i}.example`, url: `https://over-${i}.example` })) },
+    );
+    // remaining = 13 - 0 = 13, requested = 18 -> cap should be 13
+    const result = await discover(
+      { limits: { candidate_limit: 13 }, counters: { candidates_seen: 0 } },
+      { query: "b2b saas companies", requested: 18 },
+      { fixtureKeyOverride: key },
+    );
+    expect(result.itemCount).toBe(13);
+    expect(result.candidates).toHaveLength(13);
+  });
+
+  // Dollar-denominated gating was removed deliberately - see gate.test.ts's
+  // equivalent note. max_spend_usd = 0 must no longer refuse a dispatch;
+  // candidate_limit (via cap === 0) is the only thing that still can.
+  it("does not refuse a dispatch for a zero max_spend_usd - only candidate_limit gates this anymore", async () => {
+    const key = seed("apify:discover:spend-ignored-test", { run: { defaultDatasetId: "ds1" }, items: [{ name: "Acme Inc", domain: "acme.example" }] });
+    const result = await discover(
+      { limits: { candidate_limit: 25, max_spend_usd: 0 }, counters: { candidates_seen: 0 } },
+      { query: "saas companies", requested: 5 },
+      { fixtureKeyOverride: key },
+    );
+    expect(result.candidates).toHaveLength(1);
   });
 });

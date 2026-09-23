@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/primitives/status-badge";
 import { useRunStream, type RunStreamData } from "@/lib/realtime/use-run-stream";
 import { RUN_STATUS } from "@core/domain/status";
 import { derivePhases } from "@core/domain/phases";
-import type { RunLimits, RunCounters } from "@core/domain/types";
+import type { RunCounters } from "@core/domain/types";
 
 export interface RunViewProps {
   runId: string;
@@ -25,11 +25,9 @@ const TERMINAL_STATUSES = new Set(["completed", "partial", "failed", "cancelled"
 
 export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts }: RunViewProps) {
   const { data, connectionState, error, refetch } = useRunStream(runId, initial);
-  const { run, toolCalls, agentEvents, costLedger } = data;
+  const { run, toolCalls, agentEvents } = data;
 
   const counters = { qualified_count: 0, ...(run.counters as Record<string, number>) } as RunCounters;
-  const limits = run.limits as RunLimits;
-  const spentUsd = costLedger.reduce((sum, row) => sum + Number(row.estimated_cost_usd), 0);
   const isTerminal = TERMINAL_STATUSES.has(run.status);
 
   const phases = derivePhases({
@@ -73,7 +71,7 @@ export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts }: RunView
 
       <PhaseTracker phases={phases} />
 
-      <BudgetMeters limits={limits} counters={counters} spentUsd={spentUsd} />
+      <BudgetMeters counters={counters} />
 
       {(counters.needs_review_count ?? 0) > 0 && (
         <p className="text-sm text-[var(--color-warning-text)]">

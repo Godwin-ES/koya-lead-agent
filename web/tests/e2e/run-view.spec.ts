@@ -98,19 +98,30 @@ test.describe("run view", () => {
     }
   });
 
-  test("a budget meter turns red and reads limit reached at 100 percent", async ({ page }) => {
+  test("run counters show plain running counts, with no ceiling or spend display", async ({ page }) => {
     const user = await createTestUser();
     try {
       const run = await seedRun({
         userId: user.userId,
         status: "running",
         limits: { scrape_limit: 5 },
-        counters: { scrapes_used: 5 },
+        counters: { scrapes_used: 5, candidates_seen: 12, turns_used: 3, tool_calls_used: 9 },
       });
       await signIn(page, user.email, user.password);
       await page.goto(`/runs/${run.id}`);
 
-      await expect(page.getByText(/limit reached/i)).toBeVisible({ timeout: 10_000 });
+      // Plain counts, not "N / limit" fractions - candidate_limit/
+      // scrape_limit/max_turns/max_tool_calls are fixed, generous safety
+      // nets now, not per-run-tunable ceilings worth surfacing as a
+      // fraction (SYSTEM-DESIGN-NEXTJS.md's original spend-meter design
+      // was superseded by this decision).
+      await expect(page.getByText("Sites scraped")).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText("5", { exact: true })).toBeVisible();
+      await expect(page.getByText("Candidates discovered")).toBeVisible();
+      await expect(page.getByText("12", { exact: true })).toBeVisible();
+      await expect(page.getByText(/\/\s*5\b/)).toHaveCount(0);
+      await expect(page.getByText(/limit reached/i)).toHaveCount(0);
+      await expect(page.getByText("Spend")).toHaveCount(0);
     } finally {
       await user.cleanup();
     }
