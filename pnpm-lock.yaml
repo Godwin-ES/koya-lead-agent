@@ -162,16 +162,16 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.127.0
-        version: 0.127.0
+        version: 0.127.0(zod@4.6.5)
       '@google/genai':
         specifier: ^2.23.0
-        version: 2.23.0
+        version: 2.23.0(@modelcontextprotocol/sdk@1.30.0(supports-color@7.2.0)(zod@4.6.5))(supports-color@7.2.0)
       '@supabase/supabase-js':
         specifier: ^2.116.0
         version: 2.116.0
       apify-client:
         specifier: ^2.25.0
-        version: 2.25.0
+        version: 2.25.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -185,6 +185,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.8.0
         version: 1.8.0(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@core/lead-agent':
+        specifier: workspace:*
+        version: link:../packages/core
       '@supabase/ssr':
         specifier: ^0.12.7
         version: 0.12.7(@supabase/supabase-js@2.116.0)
