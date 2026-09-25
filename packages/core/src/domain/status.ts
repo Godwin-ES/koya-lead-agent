@@ -27,6 +27,7 @@ export const RUN_STATUS = {
   queued: { label: "Queued", icon: "Clock", tone: "info" },
   running: { label: "Running", icon: "Loader2", tone: "info" },
   awaiting_input: { label: "Needs answer", icon: "HelpCircle", tone: "warning" },
+  paused: { label: "Paused", icon: "PauseCircle", tone: "neutral" },
   completed: { label: "Completed", icon: "CheckCircle2", tone: "success" },
   partial: { label: "Partial", icon: "AlertTriangle", tone: "warning" },
   failed: { label: "Failed", icon: "XCircle", tone: "danger" },
@@ -46,6 +47,7 @@ export const TOOL_CALL_STATUS = {
   error: { label: "Error", icon: "XCircle", tone: "danger" },
   denied: { label: "Denied", icon: "ShieldOff", tone: "warning" },
   cache_hit: { label: "Cache hit", icon: "Database", tone: "info" },
+  sent_back: { label: "Sent back to fix", icon: "RotateCcw", tone: "info" },
 } as const satisfies Record<string, StatusEntry>;
 
 /**

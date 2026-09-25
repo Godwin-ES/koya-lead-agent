@@ -11,7 +11,7 @@ import type { ToolCallRow } from "./row-types";
 export interface RecordToolCallInput {
   runId: string;
   toolName: string;
-  status: "ok" | "error" | "denied" | "cache_hit";
+  status: "ok" | "error" | "denied" | "cache_hit" | "sent_back";
   purpose?: string;
   inputSummary?: string;
   resultSummary?: string;
@@ -41,6 +41,19 @@ export async function recordToolCall(supabase: SupabaseClient, input: RecordTool
     .single();
   if (error) throw error;
   return data as ToolCallRow;
+}
+
+/** Successful calls of one tool, oldest first - how handlers read what earlier calls in the same run already found. */
+export async function listOkToolCalls(supabase: SupabaseClient, runId: string, toolName: string): Promise<ToolCallRow[]> {
+  const { data, error } = await supabase
+    .from("tool_calls")
+    .select()
+    .eq("run_id", runId)
+    .eq("tool_name", toolName)
+    .eq("status", "ok")
+    .order("seq", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ToolCallRow[];
 }
 
 export async function listToolCallsForRun(supabase: SupabaseClient, runId: string): Promise<ToolCallRow[]> {

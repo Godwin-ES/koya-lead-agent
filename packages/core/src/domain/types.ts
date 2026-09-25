@@ -9,6 +9,7 @@ export type RunStatus =
   | "queued"
   | "running"
   | "awaiting_input"
+  | "paused"
   | "completed"
   | "partial"
   | "failed"
@@ -16,7 +17,7 @@ export type RunStatus =
 
 export type LeadQualificationStatus = "qualified" | "not_qualified" | "needs_review";
 
-export type ToolCallStatus = "ok" | "error" | "denied" | "cache_hit";
+export type ToolCallStatus = "ok" | "error" | "denied" | "cache_hit" | "sent_back";
 
 /**
  * SYSTEM-DESIGN-NEXTJS.md §7.2, plus "unavailable" from §13's failure
@@ -38,6 +39,8 @@ export type Scraper = "crawl4ai" | "firecrawl";
 /** SYSTEM-DESIGN-NEXTJS.md §7's intake defaults table. */
 export interface RunLimits {
   target_qualified: number;
+  /** LinkedIn searches allowed this run (default 3). Raised by "Continue with more budget". Absent on runs created before it was per-run. */
+  max_discover_attempts?: number;
   candidate_limit: number;
   scrape_limit: number;
   max_turns: number;
@@ -66,17 +69,25 @@ export interface Run {
   counters: RunCounters;
   /** Total leads saved so far, regardless of qualification status. */
   lead_count: number;
+  /** A pause was requested while running; the worker hasn't reached a safe point yet. */
+  pause_requested?: boolean;
+  /** For a finished run: which budget stopped it, and how many more searches it can still be given. */
+  limit_reached?: string | null;
+  searches_left_to_add?: number;
 }
 
-/** The seven actions in SYSTEM-DESIGN-NEXTJS.md §17.5's action matrix. */
+/** SYSTEM-DESIGN-NEXTJS.md §17.5's action matrix. `resume` continues the same run (paused or failed); `rerun` ("Run again") starts a new run from a finished one's objective; `delete` removes the run and everything saved for it. */
 export type RunAction =
   | "start"
   | "cancel"
-  | "retry"
+  | "pause"
+  | "resume"
+  | "extend"
   | "rerun"
   | "editLimits"
   | "answerClarification"
-  | "export";
+  | "export"
+  | "delete";
 
 export type ActionState =
   | { kind: "enabled" }

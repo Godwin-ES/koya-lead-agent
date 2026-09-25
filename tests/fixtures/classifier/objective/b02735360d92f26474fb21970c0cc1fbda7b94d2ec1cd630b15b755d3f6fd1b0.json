@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 1,
+  "reason": "The objective specifies company type (B2B SaaS), funding stage (Series A), geography (United States), and headcount range (50 to 200 employees), which is sufficient to begin searching and qualifying.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

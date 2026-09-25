@@ -9,6 +9,7 @@ import { heartbeat } from "@core/db/runs";
 import { createTestUser, serviceRoleClient } from "../helpers/db";
 import { claimAndProcessOne, validateBootCredentials } from "../../../worker/src/service";
 import { LIMIT_DEFAULTS } from "@core/domain/limits";
+import { seedEmptyFixtureDiscovery, LAST_ATTEMPT_COUNTERS } from "../helpers/discovery";
 
 describe("worker lifecycle", () => {
   const supabase = serviceRoleClient();
@@ -40,11 +41,12 @@ describe("worker lifecycle", () => {
         queued_at: new Date().toISOString(),
         icp: null,
         limits: { ...LIMIT_DEFAULTS, max_turns: overrides.maxTurns ?? LIMIT_DEFAULTS.max_turns },
-        counters: {},
+        counters: LAST_ATTEMPT_COUNTERS,
       })
       .select()
       .single();
     if (error) throw error;
+    await seedEmptyFixtureDiscovery(supabase, data.id);
     return data as { id: string };
   }
 
@@ -57,18 +59,6 @@ describe("worker lifecycle", () => {
   it("claims one run at a time and heartbeats while running", async () => {
     const queued = await createQueuedRun();
     await supabase.from("runs").update({ fixture_set: "specific-objective" }).eq("id", queued.id);
-    await supabase.from("discovery_cache").upsert(
-      {
-        cache_key: `apify:${(await import("@core/domain/normalize")).hashObjective("B2B SaaS ops tools")}`,
-        actor_id: "test-actor",
-        input_json: {},
-        results: [],
-        item_count: 0,
-        expires_at: new Date(Date.now() + 60_000).toISOString(),
-      },
-      { onConflict: "cache_key" },
-    );
-
     const result = await claimAndProcessOne(supabase, "test-worker-1", {
       heartbeatIntervalMs: 200,
     });
@@ -93,7 +83,7 @@ describe("worker lifecycle", () => {
     expect(result.stopReason).toBe("clarification_requested");
     const run = await fetchRun(queued.id);
     expect(run.status).toBe("awaiting_input");
-  });
+  }, 20_000);
 
   it("marks a run failed with a reason on an unrecoverable provider error", async () => {
     const queued = await createQueuedRun();
@@ -106,23 +96,44 @@ describe("worker lifecycle", () => {
     const run = await fetchRun(queued.id);
     expect(run.status).toBe("failed");
     expect(run.failure_reason).toMatch(/fixture missing/i);
-  });
+  }, 20_000);
 
   it("on sigterm finishes the current tool call, marks the run queued, and exits", async () => {
     const queued = await createQueuedRun();
     await supabase.from("runs").update({ fixture_set: "specific-objective" }).eq("id", queued.id);
 
-    // gemini.ts checks shouldStop() only *after* a tool call has fully
-    // committed - always-true here means it stops after exactly one
-    // (save_icp), proving the in-flight call's effect survives.
-    const result = await claimAndProcessOne(supabase, "test-worker-4", { shouldStop: () => true });
+    // The Gemini runner checks for a stop at three safe points: before each
+    // model call, after the reply but before its tool calls run, and after
+    // each tool call commits. Returning true from the third check onward
+    // means the shutdown lands while save_icp is in flight - it finishes,
+    // commits, and only then does the run stop.
+    let checks = 0;
+    const result = await claimAndProcessOne(supabase, "test-worker-4", { shouldStop: () => ++checks >= 3 });
 
     expect(result.stopReason).toBe("cancelled");
     const run = await fetchRun(queued.id);
     expect(run.status).toBe("queued");
     expect(run.worker_id).toBeNull();
     expect(run.icp).not.toBeNull(); // save_icp's effect was preserved, not discarded
-  });
+
+    // Requeued runs get claimed by the next claimAndProcessOne in this file - take it out of the queue.
+    await supabase.from("runs").update({ status: "cancelled" }).eq("id", queued.id);
+  }, 20_000);
+
+  it("pauses at the first safe point when Pause was requested, releases the run, and makes no model call", async () => {
+    const queued = await createQueuedRun();
+    // A run already running when Pause was pressed: claimed, then the
+    // worker's first check (before any model call) sees the request.
+    await supabase.from("runs").update({ fixture_set: "specific-objective", pause_requested_at: new Date().toISOString() }).eq("id", queued.id);
+
+    const result = await claimAndProcessOne(supabase, "test-worker-pause");
+
+    expect(result).toMatchObject({ claimed: true, runId: queued.id, stopReason: "paused" });
+    const run = await fetchRun(queued.id);
+    expect(run).toMatchObject({ status: "paused", worker_id: null, heartbeat_at: null, pause_requested_at: null });
+    const { count } = await supabase.from("tool_calls").select("id", { count: "exact", head: true }).eq("run_id", queued.id);
+    expect(count).toBe(0);
+  }, 20_000);
 
   it("refuses to start when the apify token does not match the expected account", async () => {
     const previous = process.env.APIFY_EXPECTED_ACCOUNT_ID;

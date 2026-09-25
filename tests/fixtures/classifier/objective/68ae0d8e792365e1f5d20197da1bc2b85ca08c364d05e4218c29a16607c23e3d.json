@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 0.95,
+  "reason": "The objective clearly specifies the company type (B2B SaaS), geography (US), headcount range (10 to 100 employees), and the business problem or need (AI automation support), making it actionable for an AI agent.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

@@ -17,6 +17,22 @@ import { z } from "zod";
  * on source_urls/fit_reasons), not duplicated here as a schema-level
  * refinement - Task 4 is where that rule actually lives.
  */
+/**
+ * Below this, a "qualified" verdict is saved as needs_review - a reviewer
+ * decides. Live (Sonnet 5), a company with 209 LinkedIn members against a
+ * 10-100 target was qualified at 0.50.
+ */
+export const MIN_QUALIFIED_CONFIDENCE = 0.6;
+
+/** The status actually saved, and why it differs from the agent's verdict when it does. */
+export function applyConfidenceThreshold(status: "qualified" | "not_qualified" | "needs_review", confidence: number): { status: typeof status; reason: string | null } {
+  if (status !== "qualified" || confidence >= MIN_QUALIFIED_CONFIDENCE) return { status, reason: null };
+  return {
+    status: "needs_review",
+    reason: `The agent qualified this company at ${confidence.toFixed(2)} confidence, below the ${MIN_QUALIFIED_CONFIDENCE} needed to qualify automatically - a reviewer decides.`,
+  };
+}
+
 export const QualificationSchema = z.object({
   company_name: z.string().min(1),
   company_domain: z.string().min(1),
@@ -29,3 +45,13 @@ export const QualificationSchema = z.object({
 });
 
 export type Qualification = z.infer<typeof QualificationSchema>;
+
+/**
+ * Confidence is how well the company fits the ICP - qualified at 0.6 and
+ * above, needs_review below. A not_qualified lead failed a hard criterion
+ * on clear evidence, so its reason is shown instead of a percentage.
+ */
+export function confidenceLabel(status: string, confidence: number | null | undefined): string | null {
+  if (status === "not_qualified" || typeof confidence !== "number") return null;
+  return `${Math.round(confidence * 100)}% confidence`;
+}

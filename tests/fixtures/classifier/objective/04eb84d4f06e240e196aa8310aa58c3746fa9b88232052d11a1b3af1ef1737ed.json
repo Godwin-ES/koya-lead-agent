@@ -1,0 +1,16 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request is extremely brief and provides no details about the target company type, industry, geography, or any other ICP criteria.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find me 10 B2B SaaS companies in the US with 50-200 employees that sell cybersecurity software."
+}

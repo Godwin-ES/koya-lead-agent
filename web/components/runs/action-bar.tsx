@@ -1,15 +1,76 @@
 "use client";
 
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ActionButton } from "@/components/primitives/action-button";
-import { cancelRun, retryRun, rerunRun } from "@/actions/runs";
+import { cancelRun, pauseRun, resumeRun, rerunRun, extendRun } from "@/actions/runs";
 import { deriveRunActions } from "@core/domain/run-actions";
+import { DeleteRunButton } from "./delete-run-button";
 import type { Run } from "@core/domain/types";
 
 export interface ActionBarProps {
   run: Run;
   runId: string;
+  budget?: { searchesLeftToAdd: number; companiesPerSearch: number };
+}
+
+/** The actor's real pay-per-event pricing (providers/discovery/apify.ts) - an estimate shown, never a limit. */
+const COST_PER_SEARCH_START_USD = 0.001;
+const COST_PER_COMPANY_USD = 0.004;
+
+function ContinueControl({ runId, state, budget }: { runId: string; state: ReturnType<typeof deriveRunActions>["extend"]; budget: { searchesLeftToAdd: number; companiesPerSearch: number } }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [searches, setSearches] = useState(Math.min(1, budget.searchesLeftToAdd));
+  const selectId = useId();
+  if (state.kind === "hidden") return null;
+
+  const cost = searches * (COST_PER_SEARCH_START_USD + budget.companiesPerSearch * COST_PER_COMPANY_USD);
+  const options = Array.from({ length: budget.searchesLeftToAdd + 1 }, (_, i) => i);
+
+  if (!open || state.kind === "disabled") {
+    return (
+      <ActionButton idleLabel="Continue with more budget" state={state} action={() => setOpen(true)} />
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2">
+      <label htmlFor={selectId} className="text-sm text-[var(--color-text)]">
+        Add searches
+      </label>
+      <select
+        id={selectId}
+        value={searches}
+        onChange={(e) => setSearches(Number(e.target.value))}
+        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-sm text-[var(--color-text)]"
+      >
+        {options.map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+      <span className="text-xs text-[var(--color-text-muted)]">
+        {searches > 0 ? `up to ${searches * budget.companiesPerSearch} more companies, about $${cost.toFixed(2)} on Apify` : "no new searches - only more room for the limit it hit"}
+      </span>
+      <ActionButton
+        idleLabel="Continue"
+        pendingLabel="Queuing…"
+        action={async () => {
+          const result = await extendRun(runId, searches);
+          if (result.error) throw new Error(result.error);
+          setOpen(false);
+          router.refresh();
+        }}
+        onError={(err) => toast.error(err instanceof Error ? err.message : "Couldn't continue the run.")}
+      />
+      <button type="button" onClick={() => setOpen(false)} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+        Cancel
+      </button>
+    </div>
+  );
 }
 
 /**
@@ -22,7 +83,7 @@ export interface ActionBarProps {
  * so their action callbacks exist only to satisfy `ActionButtonProps`'
  * required shape and are never expected to actually run.
  */
-export function ActionBar({ run, runId }: ActionBarProps) {
+export function ActionBar({ run, runId, budget = { searchesLeftToAdd: 0, companiesPerSearch: 0 } }: ActionBarProps) {
   const router = useRouter();
   const actions = deriveRunActions(run);
 
@@ -58,18 +119,31 @@ export function ActionBar({ run, runId }: ActionBarProps) {
         onError={showError}
       />
       <ActionButton
-        idleLabel="Retry"
-        pendingLabel="Retrying…"
-        state={actions.retry}
+        idleLabel={actions.pause.kind === "disabled" ? "Pausing…" : "Pause"}
+        pendingLabel="Pausing…"
+        variant="secondary"
+        state={actions.pause}
         action={async () => {
-          const result = await retryRun(runId);
+          const result = await pauseRun(runId);
           if (result.error) throw new Error(result.error);
           router.refresh();
         }}
         onError={showError}
       />
       <ActionButton
-        idleLabel="Re-run"
+        idleLabel="Resume"
+        pendingLabel="Resuming…"
+        state={actions.resume}
+        action={async () => {
+          const result = await resumeRun(runId);
+          if (result.error) throw new Error(result.error);
+          router.refresh();
+        }}
+        onError={showError}
+      />
+      <ContinueControl runId={runId} state={actions.extend} budget={budget} />
+      <ActionButton
+        idleLabel="Run again"
         pendingLabel="Starting new run…"
         state={actions.rerun}
         action={async () => {
@@ -94,6 +168,7 @@ export function ActionBar({ run, runId }: ActionBarProps) {
           router.push(`/runs/${runId}/sample-pack`);
         }}
       />
+      <DeleteRunButton runId={runId} state={actions.delete} afterDelete="runs" />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeQualityReport } from "@core/quality/report";
-import { buildSamplePackMarkdown } from "@core/quality/sample-pack";
+import { buildSamplePack, samplePackToMarkdown, samplePackToText } from "@core/quality/sample-pack";
 import type { LeadRow, OutreachDraftRow } from "@core/db/row-types";
 
 function lead(overrides: Partial<LeadRow> = {}): LeadRow {
@@ -19,6 +19,10 @@ function lead(overrides: Partial<LeadRow> = {}): LeadRow {
     scraper_used: "crawl4ai",
     injection_flagged: false,
     evidence_gap_reason: null,
+    agent_qualification_status: null,
+    decided_by: "agent",
+    review_reason: null,
+    reviewed_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -36,6 +40,10 @@ function draft(leadId: string, overrides: Partial<OutreachDraftRow> = {}): Outre
     personalization_note: "note",
     grounding_check: { flagged: false, unsupportedClaims: [] },
     flagged_unsupported: false,
+    original_subject: null,
+    original_body: null,
+    edited_at: null,
+    approved_at: null,
     created_at: new Date().toISOString(),
     ...overrides,
   };
@@ -141,7 +149,7 @@ describe("computeQualityReport", () => {
   });
 });
 
-describe("buildSamplePackMarkdown", () => {
+describe("sample pack", () => {
   it("renders a sample pack containing objective, sources, reasoning, and three emails per lead", () => {
     const qualifiedLead = lead({
       id: "a",
@@ -150,37 +158,52 @@ describe("buildSamplePackMarkdown", () => {
       source_urls: ["https://acme.example/about", "https://acme.example/careers"],
     });
     const drafts = [
-      draft("a", { channel: "email", step: 1, subject: "Quick question", body: "Step one body." }),
+      draft("a", { channel: "email", step: 1, subject: "Quick question", body: "Step one body.", personalization_note: "EVIDENCE-ONLY-MARKER (acme.example/about)" }),
       draft("a", { channel: "email", step: 2, subject: "Following up", body: "Step two body." }),
       draft("a", { channel: "email", step: 3, subject: "Last note", body: "Step three body." }),
       draft("a", { channel: "linkedin", step: 1, subject: null, body: "LinkedIn body." }),
     ];
 
-    const markdown = buildSamplePackMarkdown({
+    const markdown = samplePackToMarkdown(buildSamplePack({
       objective: "Find 10 US B2B SaaS companies, 10-100 employees",
       qualifiedLeads: [qualifiedLead],
       draftsByLeadId: draftsMap([["a", drafts]]),
       generatedAt: "2026-01-01T00:00:00.000Z",
-    });
+    }));
 
     expect(markdown).toContain("Find 10 US B2B SaaS companies, 10-100 employees");
     expect(markdown).toContain("https://acme.example/about");
     expect(markdown).toContain("https://acme.example/careers");
     expect(markdown).toContain("B2B SaaS");
-    expect(markdown).toContain("### Email 1: Quick question");
-    expect(markdown).toContain("### Email 2: Following up");
-    expect(markdown).toContain("### Email 3: Last note");
+    expect(markdown).toContain("### Email 1\n\n**Subject:** Quick question");
+    expect(markdown).toContain("### Email 2\n\n**Subject:** Following up");
+    expect(markdown).toContain("### Email 3\n\n**Subject:** Last note");
     expect(markdown).toContain("### LinkedIn message");
     expect(markdown).toContain("Step one body.");
     expect(markdown).toContain("LinkedIn body.");
+    // The stored evidence behind the personalization isn't part of any message.
+    expect(markdown).not.toContain("EVIDENCE-ONLY-MARKER");
+  });
+
+  it("copies as plain text - no markdown syntax where it's pasted", () => {
+    const text = samplePackToText(
+      buildSamplePack({
+        objective: "objective",
+        qualifiedLeads: [lead({ id: "a", company_name: "Acme Robotics" })],
+        draftsByLeadId: draftsMap([["a", [draft("a", { channel: "email", step: 1, subject: "acme onboarding", body: "Good day,\n\nBody.\n\nBest,\nJordan Reyes\nKoya Talent" })]]]),
+      }),
+    );
+    expect(text).toContain("Subject: acme onboarding");
+    expect(text).toContain("Best,\nJordan Reyes\nKoya Talent");
+    expect(text).not.toMatch(/\*\*|^#/m);
   });
 
   it("excludes leads that are not qualified - only qualifiedLeads passed in are rendered", () => {
-    const markdown = buildSamplePackMarkdown({
+    const markdown = samplePackToMarkdown(buildSamplePack({
       objective: "test objective",
       qualifiedLeads: [],
       draftsByLeadId: draftsMap([]),
-    });
+    }));
 
     expect(markdown).toContain("**Qualified leads:** 0");
     expect(markdown).not.toContain("## ");

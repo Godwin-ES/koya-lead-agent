@@ -37,6 +37,8 @@ import { createFakeSupabase } from "../../unit/tools/support/fake-supabase";
  * around them is thin and SDK-owned.
  */
 
+const DISCOVERY_FILTERS_INPUT = { linkedin_industries: ["Software Development"], headcount_min: 10, headcount_max: 100, locations: ["United States"] };
+
 function baseRun(overrides: Partial<ToolRunState> = {}): ToolRunState {
   return {
     id: "run-1",
@@ -71,12 +73,15 @@ describe("agent-sdk runner: buildTools", () => {
         hard_filters: [],
         soft_preferences: [],
         disqualifiers: [],
+        discovery_filters: DISCOVERY_FILTERS_INPUT,
       },
       {},
     );
 
     expect(result.isError).toBeFalsy();
     expect(ctxRef.current.icp).not.toBeNull();
+    // The model gets the handler's modelOutput, not just the one-line summary.
+    expect((result.content[0] as { text: string }).text).toMatch(/Every discover_companies search will apply: industries Software Development \(4\)/);
   });
 
   it("a denied tool call still writes a tool_calls row via invoke(), and returns isError", async () => {
@@ -97,7 +102,7 @@ describe("agent-sdk runner: buildTools", () => {
   it("marks state.finalized after a successful finalize_run call", async () => {
     const { client, tables } = createFakeSupabase();
     tables.runs.push({ id: "run-1", status: "running", icp: {}, counters: {}, limits: { ...LIMIT_DEFAULTS, target_qualified: 0 } });
-    const ctxRef = { current: baseRun() };
+    const ctxRef = { current: baseRun({ limits: { ...LIMIT_DEFAULTS, target_qualified: 0 } }) };
     const state: LoopState = { finalized: false, clarificationRequested: false, cancelled: false };
 
     const tools = buildTools(ctxRef, state, client);
@@ -337,6 +342,7 @@ describe("agent-sdk runner: recordSession / replaySession", () => {
                 hard_filters: [],
                 soft_preferences: [],
                 disqualifiers: [],
+                discovery_filters: DISCOVERY_FILTERS_INPUT,
               },
             },
           ],

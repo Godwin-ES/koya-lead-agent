@@ -8,6 +8,7 @@ import { TargetQualifiedField } from "@/components/intake/target-qualified-field
 import { createRun } from "@/actions/runs";
 import type { Runner, Scraper } from "@core/domain/types";
 import type { ValidationResult } from "@core/validation/objective";
+import { isProduction } from "@core/domain/environment";
 
 const RUNNER_DEFAULT = (process.env.NEXT_PUBLIC_RUNNER_DEFAULT as Runner | undefined) ?? "gemini";
 const SCRAPER_DEFAULT = (process.env.NEXT_PUBLIC_SCRAPER_DEFAULT as Scraper | undefined) ?? "crawl4ai";
@@ -37,7 +38,7 @@ export default function NewRunPage() {
   const [dismissed, setDismissed] = useState(false);
   const [targetQualified, setTargetQualified] = useState(TARGET_QUALIFIED_DEFAULT);
   const [runner, setRunner] = useState<Runner>(RUNNER_DEFAULT);
-  const [model, setModel] = useState("claude-opus-5");
+  const [model, setModel] = useState("claude-sonnet-5");
   const [scraper, setScraper] = useState<Scraper>(SCRAPER_DEFAULT);
   const [error, setError] = useState<string | null>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -60,16 +61,15 @@ export default function NewRunPage() {
   // whatever is currently typed, and re-locks the moment that text
   // changes again.
   //
-  // Only a real "flag" verdict (vague/incoherent/not_a_request/
-  // out_of_scope/out_of_scope_unsafe) needs dismissal - "advisory"
-  // severity (a low-confidence verdict, or the classifier being
-  // unavailable) must never block, per this project's own explicit rule
-  // (SYSTEM-DESIGN-NEXTJS.md §13: "validation degrades permissive - it
-  // must never be the reason a user cannot start a run"). Gating on
-  // "checked" is new; gating on the flag itself still has to respect
-  // that rule exactly as it did before.
+  // A "flag" verdict (vague/incoherent/not_a_request/out_of_scope) needs
+  // dismissal; an "advisory" one (a low-confidence verdict) never blocks.
+  // Two results block outright: a confident out_of_scope_unsafe, and the
+  // check being unavailable - decided before deployment, so no run starts
+  // on an objective nobody could check.
   const objectiveChecked = validation !== null;
-  const hasUnresolvedFlag = objectiveChecked && validation!.severity === "flag" && !dismissed;
+  // A blocking result (an unsafe objective, or the check being unavailable) can't be dismissed.
+  const blocked = objectiveChecked && validation!.blocking;
+  const hasUnresolvedFlag = objectiveChecked && validation!.severity === "flag" && (!dismissed || blocked);
   const tooShort = objectiveText.trim().length < MIN_OBJECTIVE_LENGTH;
   const submitDisabled = tooShort || !objectiveChecked || hasUnresolvedFlag;
 
@@ -77,6 +77,7 @@ export default function NewRunPage() {
     if (!tooShort && objectiveChecked && !hasUnresolvedFlag) return undefined;
     if (tooShort) return "Write a fuller objective before starting.";
     if (!objectiveChecked) return "Check the objective before starting.";
+    if (validation!.verdict === "unavailable") return "The objective check is unavailable - check again in a minute.";
     return "Resolve the flag above before starting.";
   }
 
@@ -107,6 +108,8 @@ export default function NewRunPage() {
 
         <TargetQualifiedField value={targetQualified} onChange={setTargetQualified} />
 
+        {/* Local only - production always runs Claude (Sonnet) with Firecrawl. */}
+        {!isProduction() && (
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label htmlFor="runner" className="block text-xs font-medium text-[var(--color-text-muted)]">
@@ -159,6 +162,7 @@ export default function NewRunPage() {
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">{SCRAPER_NOTE[scraper]}</p>
           </div>
         </div>
+        )}
 
         {error && (
           <p role="alert" className="text-sm text-[var(--color-danger-text)]">

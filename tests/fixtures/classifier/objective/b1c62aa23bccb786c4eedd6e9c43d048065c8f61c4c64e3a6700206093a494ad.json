@@ -1,0 +1,16 @@
+{
+  "verdict": "vague",
+  "confidence": 1,
+  "reason": "The request is extremely broad and lacks nearly all ICP details needed to search for and qualify companies.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find Series A B2B SaaS companies in the United States with 50 to 200 employees that are currently hiring sales representatives."
+}

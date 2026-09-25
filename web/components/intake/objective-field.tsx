@@ -37,7 +37,8 @@ export function ObjectiveField({
 }) {
   const [lastCheckedText, setLastCheckedText] = useState<string | null>(null);
   const trimmed = value.trim();
-  const alreadyCheckedThisText = validation !== null && lastCheckedText === trimmed;
+  // An unavailable check can be retried on the same text - there's no result to keep.
+  const alreadyCheckedThisText = validation !== null && validation.verdict !== "unavailable" && lastCheckedText === trimmed;
 
   // Excluding severity "none" here isn't just for the success-message
   // case below: ValidationFlag already renders nothing for that verdict
@@ -92,23 +93,18 @@ export function ObjectiveField({
               setLastCheckedText(trimmed);
               onValidationChange(result);
             } catch {
-              // A validation-check failure must never block typing or
-              // submission (SYSTEM-DESIGN-NEXTJS.md §13: validation
-              // degrades permissive) - surface it as the same
-              // "unavailable, proceeding without validation" advisory the
-              // server side already produces for its own classifier
-              // failures, rather than leaving the click looking like it
-              // did nothing.
+              // The check couldn't run: the run stays blocked until it can
+              // (the same result the server returns for its own outage).
               setLastCheckedText(trimmed);
               onValidationChange({
                 verdict: "unavailable",
                 confidence: null,
-                reason: "Could not check this objective right now - proceeding without validation.",
+                reason: "The objective check is unavailable right now - try again in a minute. A run can't start until its objective has been checked.",
                 missingCriteria: [],
                 suggestedRewrite: null,
-                dismissible: true,
-                blocking: false,
-                severity: "advisory",
+                dismissible: false,
+                blocking: true,
+                severity: "flag",
                 cached: false,
               });
             }

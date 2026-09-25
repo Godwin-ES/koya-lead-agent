@@ -1,0 +1,15 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The objective mentions a target company type ('widget companies') but lacks almost all other necessary criteria for precise AI research such as geography, industry nuances, size, and buyer personas.",
+  "missing_criteria": [
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find me 10 widget manufacturing companies in North America with 50 to 200 employees that use legacy supply chain software."
+}

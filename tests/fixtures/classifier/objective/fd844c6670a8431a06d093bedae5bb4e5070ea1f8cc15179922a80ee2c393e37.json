@@ -1,0 +1,15 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request mentions widget companies, but lacks details on geography, size, buyer persona, and other key ICP criteria.",
+  "missing_criteria": [
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 widget manufacturing companies in North America with 50 to 200 employees that are currently looking to upgrade their supply chain software."
+}

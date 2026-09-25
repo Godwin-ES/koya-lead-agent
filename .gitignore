@@ -10,3 +10,11 @@ test-results/
 playwright-report/
 blob-report/
 .claude/settings.local.json
+
+# Recordings of real (live) runs: no test replays them, and they hold
+# everything the agent read plus local paths. Test fixtures stay tracked.
+tests/fixtures/agent-sdk/
+tests/fixtures/gemini/live/
+tests/fixtures/gemini/live-drafting/
+# Throwaway probe scripts
+*.tmp.ts

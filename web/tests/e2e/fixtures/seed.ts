@@ -19,6 +19,8 @@ export interface SeedRunOptions {
   limits?: Record<string, number>;
   failureReason?: string;
   clarificationQuestion?: string;
+  /** Sets pause_requested_at - a running run whose Pause hasn't reached a safe point yet. */
+  pauseRequested?: boolean;
   toolCalls?: Array<{
     toolName: string;
     status: "ok" | "error" | "denied" | "cache_hit";
@@ -54,6 +56,7 @@ export async function seedRun(options: SeedRunOptions) {
       limits: { ...LIMIT_DEFAULTS, ...options.limits },
       failure_reason: options.failureReason ?? null,
       clarification_question: options.clarificationQuestion ?? null,
+      pause_requested_at: options.pauseRequested ? new Date().toISOString() : null,
       queued_at: new Date().toISOString(),
     })
     .select()

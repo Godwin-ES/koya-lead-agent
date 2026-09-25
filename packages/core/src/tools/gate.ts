@@ -28,8 +28,13 @@ function isToolName(name: string): name is ToolName {
 /** list_run_state is read-only and free - the agent can check its own progress without spending budget (§12). */
 export const UNCOUNTED_TOOLS: ReadonlySet<ToolName> = new Set(["list_run_state"]);
 
-/** The hard cap on discover_companies calls per run - see this constant's use in gate() for why. Exported so the tool's own description and the phase prompt can tell the agent about it honestly. */
+/** The default number of discover_companies calls per run. A run can be given more ("Continue with more budget") - read it with searchLimit(). */
 export const MAX_DISCOVER_ATTEMPTS = 3;
+
+/** This run's search allowance: its own limit, or the default for runs created before searches were a per-run limit. */
+export function searchLimit(limits: Partial<RunLimits>): number {
+  return limits.max_discover_attempts ?? MAX_DISCOVER_ATTEMPTS;
+}
 
 /**
  * Tools usable before the ICP has been saved - everything else needs ICP
@@ -94,10 +99,10 @@ export function gate(run: GateRunState, toolName: string, input: Record<string, 
     // making. Chosen after a real run made 13 discover_companies calls
     // in a row with nothing stopping it.
     const attemptsUsed = run.counters.discover_calls_used ?? 0;
-    if (attemptsUsed >= MAX_DISCOVER_ATTEMPTS) {
+    if (attemptsUsed >= searchLimit(run.limits)) {
       return deny(
         "discovery attempt limit reached",
-        `You have used all ${MAX_DISCOVER_ATTEMPTS} of your discover_companies attempts for this run. Qualify from the candidates you already have, then finalize.`,
+        `You have used all ${searchLimit(run.limits)} of your discover_companies attempts for this run. Qualify from the candidates you already have, then finalize.`,
       );
     }
 

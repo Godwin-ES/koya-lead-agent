@@ -1,21 +1,19 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getLeadById } from "@core/db/leads";
-import { listDraftsForLead } from "@core/db/drafts";
 import { listScrapeCacheForUrls } from "@core/db/cache";
-import { EvidenceDrawer } from "@/components/leads/evidence-drawer";
+import { LeadDetail, LEAD_TABS, type LeadTab } from "@/components/review/lead-detail";
 
-export default async function LeadEvidencePage(props: PageProps<"/runs/[id]/leads/[leadId]">) {
+export default async function LeadPage(props: PageProps<"/runs/[id]/leads/[leadId]">) {
   const { id, leadId } = await props.params;
+  const requestedTab = (await props.searchParams).tab;
   const supabase = await createClient();
 
   const lead = await getLeadById(supabase, leadId);
   if (!lead || lead.run_id !== id) notFound();
 
-  const [drafts, scrapedPages] = await Promise.all([
-    listDraftsForLead(supabase, leadId),
-    listScrapeCacheForUrls(supabase, lead.source_urls),
-  ]);
+  const scrapedPages = await listScrapeCacheForUrls(supabase, lead.source_urls);
+  const tab: LeadTab = LEAD_TABS.find((t) => t === requestedTab) ?? "decision";
 
-  return <EvidenceDrawer runId={id} lead={lead} drafts={drafts} scrapedPages={scrapedPages} />;
+  return <LeadDetail runId={id} lead={lead} scrapedPages={scrapedPages} tab={tab} />;
 }

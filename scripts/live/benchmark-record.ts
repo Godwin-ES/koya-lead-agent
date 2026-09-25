@@ -41,7 +41,7 @@ const { listLeadsForRun } = await import("../../packages/core/src/db/leads");
 const { listToolCallsForRun } = await import("../../packages/core/src/db/tool-calls");
 const { sumCostForRun } = await import("../../packages/core/src/db/cost");
 
-for (const key of ["GOOGLE_AI_API_KEY", "ANTHROPIC_API_KEY", "APIFY_ACTOR_ID", "APIFY_API_KEY"]) {
+for (const key of ["GOOGLE_AI_API_KEY", "ANTHROPIC_API_KEY", "APIFY_API_KEY"]) {
   if (!process.env[key]) {
     console.error(`${key} is not set in .env.local - nothing to run.`);
     process.exit(1);

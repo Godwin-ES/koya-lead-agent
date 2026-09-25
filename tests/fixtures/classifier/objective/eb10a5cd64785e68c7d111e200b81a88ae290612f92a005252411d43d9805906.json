@@ -1,0 +1,14 @@
+{
+  "verdict": "vague",
+  "confidence": 0.99,
+  "reason": "The request asks to find companies but lacks all necessary ICP details such as industry, geography, and company size.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem"
+  ],
+  "suggested_rewrite": "Find 10 B2B SaaS companies in the United States with 50 to 200 employees that struggle with sales pipeline generation."
+}

@@ -2,15 +2,17 @@
 
 import { WifiOff } from "lucide-react";
 import { PhaseTracker } from "@/components/runs/phase-tracker";
-import { BudgetMeters } from "@/components/runs/budget-meters";
+import { RunPipeline } from "@/components/runs/run-pipeline";
 import { Timeline } from "@/components/runs/timeline";
 import { ActionBar } from "@/components/runs/action-bar";
 import { ClarificationCard } from "@/components/runs/clarification-card";
 import { ErrorBanner } from "@/components/runs/error-banner";
+import { StopBanner } from "@/components/runs/stop-banner";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { useRunStream, type RunStreamData } from "@/lib/realtime/use-run-stream";
 import { RUN_STATUS } from "@core/domain/status";
 import { derivePhases } from "@core/domain/phases";
+import { derivePipeline } from "@core/domain/pipeline";
 import type { RunCounters } from "@core/domain/types";
 
 export interface RunViewProps {
@@ -19,16 +21,23 @@ export interface RunViewProps {
   hasIcp: boolean;
   hasLeads: boolean;
   hasDrafts: boolean;
+  /** domain -> status for leads a reviewer decided; they aren't in the tool-call stream. */
+  reviewerDecisions: Record<string, string>;
+  /** For "Continue with more budget" - worked out on the server. */
+  budget: { searchesLeftToAdd: number; companiesPerSearch: number };
 }
 
-const TERMINAL_STATUSES = new Set(["completed", "partial", "failed", "cancelled"]);
+/** Failed and partial runs aren't final - one can be resumed, the other continued with more budget. */
+const FINAL_STATUSES = new Set(["completed", "cancelled"]);
 
-export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts }: RunViewProps) {
+export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts, reviewerDecisions, budget }: RunViewProps) {
   const { data, connectionState, error, refetch } = useRunStream(runId, initial);
   const { run, toolCalls, agentEvents } = data;
 
   const counters = { qualified_count: 0, ...(run.counters as Record<string, number>) } as RunCounters;
-  const isTerminal = TERMINAL_STATUSES.has(run.status);
+  const isTerminal = FINAL_STATUSES.has(run.status);
+  const pipeline = derivePipeline(toolCalls, counters.candidates_seen ?? 0, reviewerDecisions);
+  const leadCount = pipeline.qualified + pipeline.needsReview + pipeline.notQualified;
 
   const phases = derivePhases({
     status: run.status,
@@ -49,9 +58,29 @@ export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts }: RunView
             {isTerminal && (
               <span className="text-xs text-[var(--color-text-muted)]">This run is finished - the view below is final.</span>
             )}
+            {run.status === "paused" && (
+              <span className="text-xs text-[var(--color-text-muted)]">Paused. Resume continues from where it stopped - saved leads and progress are kept.</span>
+            )}
+            {run.status === "running" && run.pause_requested_at != null && (
+              <span className="text-xs text-[var(--color-text-muted)]">Pausing after the current step finishes.</span>
+            )}
+            {run.status === "failed" && (
+              <span className="text-xs text-[var(--color-text-muted)]">Resume continues from where it stopped once the problem below is fixed.</span>
+            )}
           </div>
         </div>
-        <ActionBar run={{ status: run.status, counters, lead_count: hasLeads ? 1 : 0 }} runId={runId} />
+        <ActionBar
+          run={{
+            status: run.status,
+            counters,
+            lead_count: Math.max(leadCount, hasLeads ? 1 : 0),
+            pause_requested: run.pause_requested_at != null,
+            limit_reached: run.stop_details?.limit_reached ?? null,
+            searches_left_to_add: budget.searchesLeftToAdd,
+          }}
+          runId={runId}
+          budget={budget}
+        />
       </div>
 
       {connectionState !== "connected" && (
@@ -65,19 +94,22 @@ export function RunView({ runId, initial, hasIcp, hasLeads, hasDrafts }: RunView
 
       {run.status === "failed" && run.failure_reason && <ErrorBanner message={run.failure_reason} />}
 
+      {(run.status === "partial" || run.status === "completed") && run.stop_details && (
+        <StopBanner details={run.stop_details} canContinue={run.status === "partial"} />
+      )}
+
       {run.status === "awaiting_input" && run.clarification_question && (
         <ClarificationCard runId={runId} question={run.clarification_question} />
       )}
 
       <PhaseTracker phases={phases} />
 
-      <BudgetMeters counters={counters} />
-
-      {(counters.needs_review_count ?? 0) > 0 && (
-        <p className="text-sm text-[var(--color-warning-text)]">
-          {counters.needs_review_count} lead(s) flagged needs_review so far.
-        </p>
-      )}
+      <RunPipeline
+        runId={runId}
+        pipeline={pipeline}
+        turns={counters.turns_used ?? 0}
+        toolCalls={counters.tool_calls_used ?? 0}
+      />
 
       <div>
         <h2 className="mb-2 text-sm font-semibold text-[var(--color-text)]">Agent timeline</h2>

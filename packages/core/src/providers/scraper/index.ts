@@ -42,7 +42,7 @@ export async function scrape(request: ScrapeRequest, options: ScrapeOptions = {}
   const raw = await withRecording<RawScrapeResult>(fixtureKey, () => dispatch(request.url));
 
   if (!raw.success) {
-    return { success: false, scraper, url: request.url, httpStatus: raw.httpStatus, errorMessage: raw.errorMessage };
+    return { success: false, scraper, url: request.url, httpStatus: raw.httpStatus, errorMessage: raw.errorMessage, providerError: raw.providerError };
   }
 
   const { flagged } = scanForInjection(raw.contentMd);

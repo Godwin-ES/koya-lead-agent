@@ -2,6 +2,7 @@ import type { ZodType } from "zod";
 import { callClaudeStructured } from "./claude";
 import { callGeminiStructured } from "./gemini";
 import type { StructuredCallResult } from "./types";
+import { cheapModel, isProduction } from "../../domain/environment";
 
 export interface CheapModelOpts {
   /** A short identifier for the call, e.g. "objective-verdict", "source-summary". */
@@ -33,10 +34,11 @@ export async function callCheapModel<T>(
   schema: ZodType<T>,
   opts: CheapModelOpts,
 ): Promise<StructuredCallResult<T>> {
-  const runner = opts.runner ?? (process.env.RUNNER_DEFAULT === "agent-sdk" ? "agent-sdk" : "gemini");
+  // Production is always Claude (Haiku); locally RUNNER_DEFAULT picks, so Gemini stays usable for development.
+  const runner = isProduction() ? "agent-sdk" : (opts.runner ?? (process.env.RUNNER_DEFAULT === "agent-sdk" ? "agent-sdk" : "gemini"));
 
   if (runner === "agent-sdk") {
-    const model = process.env.ANTHROPIC_CHEAP_MODEL ?? "claude-haiku-4-5";
+    const model = cheapModel();
     return callClaudeStructured({ prompt, schema, schemaName: opts.schemaName, system: opts.system, model });
   }
 

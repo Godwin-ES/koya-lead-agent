@@ -83,13 +83,12 @@ export interface SystemPromptOptions {
 }
 
 /**
- * The Agent SDK discovers skills natively from `worker/.claude/skills`
- * (docs/provider-findings.md, Task 1 Step 1, finding #3) - it only needs
- * `outreach-safety` inlined, since that's a standing behavioral
- * constraint the agent should never have to remember to invoke, not
- * something conditionally loaded like the other four. Gemini has no
- * native skill discovery at all, so every skill body is concatenated
- * into its system prompt instead (SYSTEM-DESIGN-NEXTJS.md §13).
+ * Both runners get every skill body in the system prompt, the same text
+ * from the first turn. The Agent SDK could discover skills natively and
+ * open them on demand, but live it opened lead-qualification only after
+ * three companies were already scraped - the two runners should start from
+ * the same rules (SYSTEM-DESIGN-NEXTJS.md §13). `runner` is kept so a
+ * runner-specific line can be added without changing callers.
  */
 export function buildSystemPrompt(options: SystemPromptOptions): string {
   const safety = loadSkill("outreach-safety");
@@ -100,10 +99,6 @@ export function buildSystemPrompt(options: SystemPromptOptions): string {
     "",
     safety.body,
   ].join("\n");
-
-  if (options.runner === "agent-sdk") {
-    return base;
-  }
 
   const otherBodies = SKILL_NAMES.filter((name) => name !== "outreach-safety").map((name) => loadSkill(name).body);
   return [base, ...otherBodies].join("\n\n---\n\n");

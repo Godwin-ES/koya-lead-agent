@@ -1,0 +1,15 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request is extremely broad, only mentioning a generic product ('widget companies') without specifying geography, industry details, headcount range, or other necessary qualifying criteria.",
+  "missing_criteria": [
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 B2B widget manufacturing companies in North America with 50 to 200 employees that use legacy supply chain software."
+}

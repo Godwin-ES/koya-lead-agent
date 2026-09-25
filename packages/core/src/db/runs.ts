@@ -58,9 +58,29 @@ export async function mergeRunCounters(
   return data as RunRow;
 }
 
-/** `claim_next_run(worker_id)` - returns null when nothing is queued. */
-export async function claimNextRun(supabase: SupabaseClient, workerId: string): Promise<RunRow | null> {
-  const { data, error } = await supabase.rpc("claim_next_run", { p_worker_id: workerId }).single();
+/**
+ * Pause. A queued run is paused on the spot, conditional on it still being
+ * queued so it can't race a worker's claim; a run already running only
+ * gets `pause_requested_at`, and the worker pauses it at its next safe
+ * point. Returns what happened, or null if the run was in neither state.
+ */
+export async function requestPause(supabase: SupabaseClient, id: string): Promise<"paused" | "requested" | null> {
+  const queued = await supabase.from("runs").update({ status: "paused", queued_at: null }).eq("id", id).eq("status", "queued").select("id");
+  if (queued.error) throw queued.error;
+  if (queued.data?.length) return "paused";
+
+  const running = await supabase.from("runs").update({ pause_requested_at: new Date().toISOString() }).eq("id", id).eq("status", "running").select("id");
+  if (running.error) throw running.error;
+  return running.data?.length ? "requested" : null;
+}
+
+/**
+ * `claim_next_run(worker_id, replay_mode)` - returns null when nothing is
+ * queued for this worker's mode. A live worker never claims a replay (test)
+ * run, and a replay worker never claims a live one.
+ */
+export async function claimNextRun(supabase: SupabaseClient, workerId: string, replayMode: boolean): Promise<RunRow | null> {
+  const { data, error } = await supabase.rpc("claim_next_run", { p_worker_id: workerId, p_replay_mode: replayMode }).single();
   if (error) throw error;
   const row = data as RunRow;
   return row?.id ? row : null;

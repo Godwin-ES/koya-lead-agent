@@ -16,6 +16,8 @@ export interface UntrustedSourceInput {
   url: string;
   scraper: string;
   text: string;
+  /** Defaults to 20,000. Marked `truncated="true"` on the boundary whenever it applies. */
+  maxChars?: number;
 }
 
 function escapeAttr(value: string): string {
@@ -33,8 +35,9 @@ function escapeBoundaryTags(text: string): string {
 export function wrapUntrusted(input: UntrustedSourceInput): string {
   let text = escapeBoundaryTags(input.text);
   let truncated = false;
-  if (text.length > MAX_CONTENT_CHARS) {
-    text = text.slice(0, MAX_CONTENT_CHARS);
+  const maxChars = input.maxChars ?? MAX_CONTENT_CHARS;
+  if (text.length > maxChars) {
+    text = text.slice(0, maxChars);
     truncated = true;
   }
 

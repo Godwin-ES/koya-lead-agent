@@ -1,0 +1,22 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "draft-2",
+        "name": "save_outreach",
+        "args": {
+          "lead_id": "5f0c3f8e-0000-4000-8000-00000000d001",
+          "channel": "email",
+          "step": 2,
+          "body": "One more angle on NextStage: pipeline tracking for federal contractors usually means someone keeping records current as opportunities move, which is steady, repetitive work that grows with each new customer.\n\nA Koya Talent automation assistant could own that upkeep so your team spends its time on the product. Would a short conversation be useful?",
+          "personalization_evidence": "AI-Powered Proposal Suite with an AI compliance matrix (nextstage.ai)",
+          "subject": "NextStage pipeline upkeep"
+        }
+      }
+    }
+  ],
+  "usage": {
+    "inputTokens": 900,
+    "outputTokens": 150
+  }
+}

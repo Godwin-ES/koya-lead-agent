@@ -32,6 +32,8 @@ WORKDIR /app/worker
 RUN node -e "require('@anthropic-ai/claude-agent-sdk')"
 
 ENV NODE_ENV=production
+# Production rules: Claude + Firecrawl only, live unless REPLAY_MODE=true, no recordings (domain/environment.ts).
+ENV APP_ENV=production
 EXPOSE 8080
 
 # No separate compile step: the worker runs its TypeScript source

@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 1,
+  "reason": "The objective clearly specifies the company type, industry, geography, and headcount range, making it sufficiently detailed for an AI agent to research and qualify companies.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

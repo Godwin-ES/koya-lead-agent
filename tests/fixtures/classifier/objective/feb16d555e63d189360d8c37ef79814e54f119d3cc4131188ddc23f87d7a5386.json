@@ -1,0 +1,16 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request asks to find companies but completely lacks any targeting criteria such as industry, geography, or size.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 Series A B2B SaaS companies in the United States with 10-50 employees that use Salesforce."
+}

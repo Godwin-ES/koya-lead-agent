@@ -3,16 +3,21 @@ import type { Content, FunctionDeclaration } from "@google/genai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { RunLimits, RunCounters, Scraper } from "@core/domain/types";
-import { TOOL_DEFINITIONS } from "@core/tools/definitions";
+import { TOOL_DEFINITIONS, FORCE_FINALIZE } from "@core/tools/definitions";
 import { invoke, ToolDeniedError, FatalToolError, type ToolRunState } from "@core/tools/log";
 import { buildSystemPrompt } from "@core/skills/loader";
 import { appendAgentEvent } from "@core/db/events";
 import { insertCostLedgerEntry } from "@core/db/cost";
 import { sumCostForRun } from "@core/db/cost";
-import { getRunById, updateRun } from "@core/db/runs";
+import { getRunById, mergeRunCounters } from "@core/db/runs";
 import { withRecording } from "@core/providers/replay/recorder";
-import { isInjected } from "@core/providers/failure-injection";
-import { buildPhasePrompt, type OrchestratorRun } from "../orchestrator";
+import { buildPhasePrompt, type AgentSession, type OrchestratorRun } from "../orchestrator";
+import { withGeminiRetry, statusOf } from "./gemini-retry";
+import { classifyHttpFailure, RunFailure } from "@core/domain/failure";
+import { errorMessage } from "@core/domain/errors";
+import { HistoryTrimmer, type ToolOutcome } from "./history-trim";
+import { buildResumeBrief } from "@core/tools/resume-brief";
+import { interruptibleSleep, readStopRequest, RunStopRequested, type StopKind } from "../run-control";
 
 let cachedClient: GoogleGenAI | null = null;
 function getClient(): GoogleGenAI {
@@ -20,8 +25,8 @@ function getClient(): GoogleGenAI {
   return cachedClient;
 }
 
-function toFunctionDeclarations(): FunctionDeclaration[] {
-  return TOOL_DEFINITIONS.map((def) => ({
+function toFunctionDeclarations(tools?: readonly string[]): FunctionDeclaration[] {
+  return TOOL_DEFINITIONS.filter((def) => !tools || tools.includes(def.name)).map((def) => ({
     name: def.name,
     description: def.description,
     parametersJsonSchema: z.toJSONSchema(def.inputSchema, { target: "draft-7" }),
@@ -126,9 +131,15 @@ export interface RunGeminiAgentParams {
    * out with whatever partial data it happened to have.
    */
   shouldStop?: () => boolean;
+  /** Run a focused session (e.g. drafting one lead's outreach) instead of the full workflow. */
+  session?: AgentSession;
 }
 
-export type GeminiStopReason = "finalized" | "max_turns" | "clarification_requested" | "cancelled";
+/** `cancelled` = the worker is shutting down (the run is requeued); `user_cancelled` = the user pressed Cancel; `paused` = the user pressed Pause. */
+export type GeminiStopReason = "finalized" | "max_turns" | "clarification_requested" | "cancelled" | "paused" | "user_cancelled" | "session_done";
+
+const STOP_REASON: Record<StopKind, GeminiStopReason> = { shutdown: "cancelled", pause: "paused", user_cancel: "user_cancelled" };
+const STOPPED: ReadonlySet<GeminiStopReason> = new Set(["cancelled", "paused", "user_cancelled", "session_done"]);
 
 export interface RunGeminiAgentResult {
   turnsUsed: number;
@@ -149,33 +160,70 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
   if (!model) throw new Error("GEMINI_MODEL is not set - see .env.example.");
 
   const systemInstruction = buildSystemPrompt({ runner: "gemini" });
-  const functionDeclarations = toFunctionDeclarations();
-  const history: Content[] = [createUserContent(buildPhasePrompt(params.run))];
+  const session = params.session;
+  const functionDeclarations = toFunctionDeclarations(session?.tools);
+  // A run with saved work (resumed after a pause, failure or worker
+  // restart) starts from a handover note - its old conversation is gone.
+  const opening = session ? session.prompt : buildPhasePrompt({ ...params.run, resumeBrief: await buildResumeBrief(params.supabase, params.run.id) });
+  const history: Content[] = [createUserContent(opening)];
+  const trimmer = new HistoryTrimmer(history);
 
   let run = params.run;
-  let turnsUsed = 0;
+  // Cumulative across resumes, so max_turns bounds the whole run, not each session.
+  let turnsUsed = run.counters.turns_used ?? 0;
+  let sessionTurns = 0;
   let stopReason: GeminiStopReason | null = null;
+  // A session belongs to the reviewer, not the run: only a worker shutdown
+  // stops it - a finished or cancelled run's lead can still get drafts.
+  const checkStop = session
+    ? async () => (params.shouldStop?.() ? ("shutdown" as const) : null)
+    : () => readStopRequest(params.supabase, run.id, params.shouldStop);
+  const withinTurnLimit = () => (session ? sessionTurns < session.maxTurns : turnsUsed < run.limits.max_turns);
 
-  while (turnsUsed < run.limits.max_turns && !stopReason) {
-    turnsUsed += 1;
-    // Written for the run view's budget meters (Task 17) - counters.turns_used
-    // otherwise never exists anywhere, only ever held in this loop's local variable.
-    await updateRun(params.supabase, run.id, { counters: { ...run.counters, turns_used: turnsUsed } });
-
-    // Task 20 failure injection (§13: "Model API 429 / 5xx"). Checked
-    // once, on the first turn, before any real or replayed dispatch -
-    // simulates the model provider itself failing, which propagates up
-    // through claimAndProcessOne's catch and marks the run failed with
-    // the reason, the same terminal state a genuine persistent 429
-    // would produce.
-    if (turnsUsed === 1 && isInjected("model_429", run.injectedFailure)) {
-      throw new Error("Gemini API error: 429 Too Many Requests (rate limit exceeded).");
+  while (withinTurnLimit() && !stopReason) {
+    // Safe point: before asking the model for the next step.
+    const stopBeforeTurn = await checkStop();
+    if (stopBeforeTurn) {
+      stopReason = STOP_REASON[stopBeforeTurn];
+      break;
     }
 
-    const fixtureKey = `gemini:${params.run.fixtureSet ?? "live"}:turn:${turnsUsed}`;
-    const turn = await withRecording(fixtureKey, () =>
-      dispatchGeminiRaw({ model, systemInstruction, functionDeclarations, history }),
-    );
+    turnsUsed += 1;
+    sessionTurns += 1;
+    // Written for the run view's budget meters (Task 17) - counters.turns_used
+    // otherwise never exists anywhere. A merge, not a full-column write from
+    // this loop's snapshot, so it can't clobber a counter a tool just wrote.
+    await mergeRunCounters(params.supabase, run.id, { turns_used: turnsUsed });
+
+    const fixtureKey = session ? `gemini:${session.fixtureSet}:turn:${sessionTurns}` : `gemini:${params.run.fixtureSet ?? "live"}:turn:${turnsUsed}`;
+    let turn: RawTurn;
+    try {
+      turn = await withRecording(fixtureKey, () =>
+        withGeminiRetry(() => dispatchGeminiRaw({ model, systemInstruction, functionDeclarations, history }), {
+          onRetry: ({ attempt, delayMs, reason }) =>
+            appendAgentEvent(params.supabase, run.id, "system", { message: `Gemini ${reason} - waiting ${Math.round(delayMs / 1000)}s before retry ${attempt}` }).then(() => undefined),
+          // A pause or cancel during a rate-limit wait stops the run straight away.
+          sleep: interruptibleSleep(checkStop),
+        }),
+      );
+    } catch (err) {
+      if (err instanceof RunStopRequested) {
+        stopReason = STOP_REASON[err.kind];
+        break;
+      }
+      // Retries are used up: the same failure kinds as Claude, so the worker handles both runners alike.
+      if (err instanceof RunFailure) throw err;
+      const status = statusOf(err);
+      const message = errorMessage(err);
+      if (status === 429 && /PerDay/i.test(message)) {
+        throw new RunFailure("account", "gemini", `The daily Gemini quota is used up - resume tomorrow or raise the quota. ${message}`);
+      }
+      if (status !== null) throw classifyHttpFailure("gemini", status, message);
+      // No HTTP status: temporary only if it's really the network; anything
+      // else (a missing replay fixture, a bug) fails as it is.
+      if (/fetch failed|ECONN|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket|network|timed? ?out/i.test(message)) throw classifyHttpFailure("gemini", null, message);
+      throw err;
+    }
 
     const totalTokens = turn.usage.inputTokens + turn.usage.outputTokens;
     if (totalTokens > 0) {
@@ -211,11 +259,24 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
     const calls = turn.parts.filter((p) => p.functionCall).map((p) => p.functionCall!);
 
     if (calls.length === 0) {
+      if (session) {
+        stopReason = "session_done";
+        break;
+      }
       history.push(createUserContent("Continue using your tools, or call finalize_run if you believe you're done."));
       continue;
     }
 
-    const responseParts: Content["parts"] = [];
+    // Safe point: the model has decided its next steps but none has run.
+    // Dropping them loses nothing - the resumed model decides again.
+    const stopBeforeCalls = await checkStop();
+    if (stopBeforeCalls) {
+      stopReason = STOP_REASON[stopBeforeCalls];
+      break;
+    }
+
+    const responseParts: NonNullable<Content["parts"]> = [];
+    const outcomes: ToolOutcome[] = [];
 
     for (const call of calls) {
       const toolName = call.name ?? "";
@@ -226,6 +287,7 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
       try {
         const def = TOOL_DEFINITIONS.find((d) => d.name === toolName);
         if (!def) throw new ToolDeniedError(`"${toolName}" is not a recognized tool.`);
+        if (session && !session.tools.includes(def.name)) throw new ToolDeniedError(`Only ${session.tools.join(", ")} can be used here.`);
 
         // Schema validation happens *inside* the handler invoke() wraps,
         // not before it - a malformed tool call still needs a tool_calls
@@ -238,15 +300,21 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
         });
 
         await appendAgentEvent(params.supabase, run.id, "tool_result", { tool: toolName, summary: result.resultSummary });
+        outcomes.push({ toolName, args, data: result.data, partIndex: responseParts.length });
         responseParts.push({
-          functionResponse: { id: call.id, name: toolName, response: { output: result.resultSummary ?? "ok" } },
+          functionResponse: { id: call.id, name: toolName, response: { output: result.modelOutput ?? result.resultSummary ?? "ok" } },
         });
 
         run = await refreshRunState(params.supabase, run);
 
         if (toolName === "finalize_run") stopReason = "finalized";
         if (toolName === "request_clarification") stopReason = "clarification_requested";
-        if (!stopReason && params.shouldStop?.()) stopReason = "cancelled";
+        if (!stopReason) {
+          // Safe point: this step has committed; later calls in the same turn are skipped.
+          const stopAfterCall = await checkStop();
+          if (stopAfterCall) stopReason = STOP_REASON[stopAfterCall];
+          else if (session && (await session.isDone())) stopReason = "session_done";
+        }
       } catch (err) {
         // A FatalToolError (Task 20: an auth failure, a dead provider)
         // is not something the agent can work around by trying again or
@@ -256,19 +324,25 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
         // recoverable: fed back as a functionResponse error so the
         // model can self-correct (§13: malformed tool input).
         if (err instanceof FatalToolError) throw err;
-        const message = err instanceof ToolDeniedError ? err.agentMessage : err instanceof Error ? err.message : String(err);
+        const message = err instanceof ToolDeniedError ? err.agentMessage : errorMessage(err);
         await appendAgentEvent(params.supabase, run.id, "tool_result", { tool: toolName, error: message });
         responseParts.push({ functionResponse: { id: call.id, name: toolName, response: { error: message } } });
       }
 
-      if (stopReason === "cancelled") break;
+      if (stopReason && STOPPED.has(stopReason)) break;
     }
 
     history.push({ role: "user", parts: responseParts });
+    trimmer.recordTurn(history.length - 1, outcomes);
   }
 
-  if (stopReason === "cancelled") {
+  if (stopReason && STOPPED.has(stopReason)) {
     return { turnsUsed, stopReason };
+  }
+
+  if (!stopReason && session) {
+    // A session never finalizes the run - it only ran out of turns.
+    return { turnsUsed, stopReason: "max_turns" };
   }
 
   if (!stopReason) {
@@ -277,7 +351,7 @@ export async function runGeminiAgent(params: RunGeminiAgentParams): Promise<RunG
     await invoke(
       { supabase: params.supabase, run },
       "finalize_run",
-      { summary: `Stopped at the ${run.limits.max_turns}-turn limit; finalizing with what was found.` },
+      { summary: `Stopped at the ${run.limits.max_turns}-turn limit; finalizing with what was found.`, [FORCE_FINALIZE]: true },
       finalizeDef.handler,
     );
     stopReason = "max_turns";

@@ -5,9 +5,9 @@ import { RUN_STATUS, LEAD_STATUS, TOOL_CALL_STATUS, VALIDATION_VERDICT } from "@
 // has a single source of truth" - every status maps to a label, an icon,
 // and a tone, and nothing else in the app may hardcode one.
 describe("status registries", () => {
-  it("RUN_STATUS covers exactly the eight states in the run lifecycle (§6)", () => {
+  it("RUN_STATUS covers exactly the nine states in the run lifecycle (§6, plus paused)", () => {
     expect(Object.keys(RUN_STATUS).sort()).toEqual(
-      ["draft", "queued", "running", "awaiting_input", "completed", "partial", "failed", "cancelled"].sort(),
+      ["draft", "queued", "running", "awaiting_input", "paused", "completed", "partial", "failed", "cancelled"].sort(),
     );
   });
 
@@ -15,8 +15,8 @@ describe("status registries", () => {
     expect(Object.keys(LEAD_STATUS).sort()).toEqual(["qualified", "not_qualified", "needs_review"].sort());
   });
 
-  it("TOOL_CALL_STATUS covers exactly the four tool-call outcomes", () => {
-    expect(Object.keys(TOOL_CALL_STATUS).sort()).toEqual(["ok", "error", "denied", "cache_hit"].sort());
+  it("TOOL_CALL_STATUS covers exactly the five tool-call outcomes", () => {
+    expect(Object.keys(TOOL_CALL_STATUS).sort()).toEqual(["ok", "error", "denied", "cache_hit", "sent_back"].sort());
   });
 
   it("VALIDATION_VERDICT covers exactly the seven objective-validation verdicts (§7.2, §13)", () => {

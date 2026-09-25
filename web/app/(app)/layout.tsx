@@ -18,5 +18,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     redirect("/login");
   }
 
-  return <AppShell email={user.email ?? "Signed in"}>{children}</AppShell>;
+  const displayName = typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name.trim() : "";
+  return <AppShell email={displayName || user.email || "Signed in"}>{children}</AppShell>;
 }

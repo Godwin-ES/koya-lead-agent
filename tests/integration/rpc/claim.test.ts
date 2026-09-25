@@ -48,6 +48,22 @@ describe("claim_next_run", () => {
     expect(result.rows[0]!.id).toBeNull();
   });
 
+  // Real incident: a developer's live worker claimed test runs from the
+  // shared queue and ran them live, spending real money and overwriting
+  // committed fixtures. Test runs are replay runs (the column default).
+  it("only claims runs made for the worker's own mode - a live worker never takes a replay (test) run", async () => {
+    const replayRun = await queuedRun();
+
+    // Rolled back: in the shared database a live-mode claim could otherwise take a real queued run.
+    await db.query("begin");
+    const live = await db.query("select * from claim_next_run($1, $2)", ["live-worker", false]);
+    await db.query("rollback");
+    expect(live.rows[0]!.id).not.toBe(replayRun);
+
+    const replay = await db.query("select * from claim_next_run($1, $2)", ["replay-worker", true]);
+    expect(replay.rows[0]!.id).toBe(replayRun);
+  });
+
   it("claims the oldest queued run, sets status/worker_id/heartbeat_at/started_at", async () => {
     const older = await queuedRun(new Date(Date.now() - 60_000).toISOString());
     await queuedRun();

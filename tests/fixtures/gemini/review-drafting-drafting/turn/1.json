@@ -1,0 +1,22 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "draft-1",
+        "name": "save_outreach",
+        "args": {
+          "lead_id": "5f0c3f8e-0000-4000-8000-00000000d001",
+          "channel": "email",
+          "step": 1,
+          "body": "NextStage gives government contractors federal procurement data, pipeline tracking and AI-assisted proposals in one place, which puts your team close to a lot of document-heavy work.\n\nAt Koya Talent we place trained AI automation assistants inside teams to take on repetitive work like that - preparing first-pass compliance matrices, or keeping pipeline data tidy.\n\nIs that kind of support something your team has considered?",
+          "personalization_evidence": "AI-Powered Proposal Suite with an AI compliance matrix (nextstage.ai)",
+          "subject": "proposal prep at NextStage"
+        }
+      }
+    }
+  ],
+  "usage": {
+    "inputTokens": 900,
+    "outputTokens": 150
+  }
+}

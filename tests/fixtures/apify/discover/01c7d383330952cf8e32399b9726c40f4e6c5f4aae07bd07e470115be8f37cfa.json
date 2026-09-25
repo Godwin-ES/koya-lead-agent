@@ -1,0 +1,2011 @@
+{
+  "run": {
+    "defaultDatasetId": "nuXFSHfTCMnDsyx2I"
+  },
+  "items": [
+    {
+      "id": "108395015",
+      "universalName": "smbops",
+      "linkedinUrl": "https://www.linkedin.com/company/smbops/",
+      "name": "SMB Ops - Workflow Automation",
+      "tagline": "Smarter systems for SMBs — we automate sales, ops, and admin so you save time, cut costs, and scale faster.",
+      "website": "https://www.smb-ops.com/",
+      "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_400_400/B4EaAf_jLWHEAU-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=Jy2S4fqTjWRZjIlikVRryGm3NNlFgRQ-GJkrTtUJZlo",
+      "employeeCount": 1,
+      "employeeCountRange": {
+        "start": 2,
+        "end": 10
+      },
+      "followerCount": 144,
+      "description": "At SMB Ops, we help small and mid-sized businesses run smarter by automating the busywork that slows growth. Our focus is simple: design and manage workflows that give owners back their time while improving accuracy, speed, and customer experience.\n\nWhy it matters: Studies show 89% of small businesses now use some form of AI or automation, and companies that adopt automation see an average of $5.44 return for every $1 invested. For SMB owners juggling sales, operations, and admin, this shift is no longer optional — it’s the new baseline for efficiency and growth.\n\nWhat we do:\n• Automate invoicing, payments, and reporting to keep cash flow healthy.\n• Build AI-powered sales and marketing workflows that qualify leads, send personalized follow-ups, and boost conversion rates.\n• Connect tools like QuickBooks, Jobber, Stripe, Airtable, and Google Workspace into one seamless system.\n• Design dashboards that give real-time visibility into KPIs and savings.\n• Provide ongoing automation management and documentation so your team always stays in sync.\n\nOur edge: We don’t just “set up zaps.” We combine low-code platforms with AI and process design to create sustainable, documented systems tailored to your business. Think of us as a fractional operations team — giving you enterprise-level automation without enterprise-level cost.\n\nWhether you run a home services company, med spa, law firm, or retail operation, SMB Ops is here to streamline your workflows, reduce overhead, and help you grow with confidence.",
+      "companyType": "Privately Held",
+      "locations": [
+        {
+          "country": "US",
+          "city": "Massapequa",
+          "geographicArea": "New York",
+          "line1": null,
+          "line2": null,
+          "postalCode": "11758",
+          "headquarter": true,
+          "description": "Headquarters",
+          "parsed": {
+            "text": "New York City, NY, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "New York",
+            "city": "New York City"
+          }
+        }
+      ],
+      "specialities": [
+        "Business Process Automation",
+        "AI-Powered Workflow Automation",
+        "No-Code & Low-Code Systems",
+        "Zapier, Make & Airtable Integrations",
+        "CRM & Customer Data Automation",
+        "Marketing Automation & Email Drip Campaigns",
+        "Sales Lead Scoring & Follow-Up Automation",
+        "Finance & Invoicing Automation (QuickBooks, Stripe, etc.)",
+        "Operations Dashboards & KPI Tracking",
+        "Appointment & Scheduling Automation",
+        "AI Chatbots & Customer Messaging",
+        "Document & eSignature Automation",
+        "Data Sync Across Apps (Google Workspace, Slack, etc.)",
+        "Team Workflows & Collaboration Tools",
+        "Workflow Design & Optimization",
+        "Automation Documentation & Training",
+        "Ongoing Automation Management",
+        "ROI Tracking & Savings Reports",
+        "Digital Admin / Virtual Operations Support",
+        "Workflow Automation"
+      ],
+      "industries": [
+        {
+          "id": "4",
+          "name": "Software Development",
+          "urn": "urn:li:fsd_industryV2:4",
+          "title": "Software Development",
+          "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+        }
+      ],
+      "logos": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_400_400/B4EaAf_jLWHEAU-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=Jy2S4fqTjWRZjIlikVRryGm3NNlFgRQ-GJkrTtUJZlo",
+          "width": 400,
+          "height": 400
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_200_200/B4EaAf_jLWHEAE-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=2rf-F3Ur4ury1RY1W44pKNt56F6sUjsjzBEj07jt4ic",
+          "width": 200,
+          "height": 200
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_100_100/B4EaAf_jLWHEAI-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=1Z9u5xRhlLcxBvqANCgaIj3dh-ZvNaaB6VNRoSzjqps",
+          "width": 100,
+          "height": 100
+        }
+      ],
+      "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_10000/B56ZkGgyliH8Ac-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=xv8v_DQfRuYV3VK1HOMHie3jAOP4avfrlpe2iS-eTTU",
+      "backgroundCovers": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_10000/B56ZkGgyliH8Ac-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=xv8v_DQfRuYV3VK1HOMHie3jAOP4avfrlpe2iS-eTTU",
+          "width": 1584,
+          "height": 396
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_400/B56ZkGgyliH8Ag-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=ycNOtrOfz3tXyF5mnBSjzIZ_jZR-GyR3eDq0y747WEE",
+          "width": 400,
+          "height": 100
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_200/B56ZkGgyliH8Ak-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=-z-VqFDz8Ekz5vf6anO4mSLC9aaG6s8Ivpgv6ISSFB4",
+          "width": 200,
+          "height": 50
+        }
+      ],
+      "active": true,
+      "jobSearchUrl": "https://www.linkedin.com/jobs/search?geoId=92000000&f_C=108395015",
+      "pageVerified": false,
+      "pageType": "COMPANY",
+      "showcase": false,
+      "paidCompany": false,
+      "autoGenerated": false,
+      "callToActionUrl": null,
+      "similarOrganizations": [
+        {
+          "id": "71769415",
+          "universalName": "big-s-odyssey-consults",
+          "linkedinUrl": "https://www.linkedin.com/company/big-s-odyssey-consults/",
+          "name": "Big's Odyssey International",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4D0BAQHw2oVPckicpg/company-logo_400_400/company-logo_400_400/0/1630579984915?e=1792022400&v=beta&t=JSW8fQYZ5n3SsfU-yVqYAO1G2nSsQK5FmrPSP36KbXg",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 395,
+          "description": "Knowledge Management Services at Big’s Odyssey\n\n1.\tWork Readiness Series\n\nThis 5-week course with course contents on Soft Skills, Etiquette, and Work Ethics is specially packaged with tools to help you prepare for the corporate journey ahead. \n It also serves as a refresher course for those working executives who want to update and upgrade themselves.     \n\n2.\tEducator Training \n\nThe Teaching Ethics course prepares and equips the teacher in the 21st century with tools to surmount the challenges they face and will face in the world of teaching. \nCreative Writing for Educators Workshop furnishes the teacher with actionable solutions for the creative writing classroom and gives parents more leverage when dealing with children who have a flair for writing but cannot seem to get it right. \n\n3.\tTraining for kids\n\nEtiquette for kids:  This 4-week exposure to the world of etiquette equips your child with knowledge and tools to comfortably adapt to a world of rules. This course is fully engaging and activity-filled with topics on General etiquette, Telephone/Mobile Etiquette, and Dining Etiquette. \nReading and Writing for kids: This self-paced course is geared to guide your young ones to embrace the world of reading and writing; watch your kids dive into the imaginations and learn to read and write amazing stories by themselves!\n\n4.\tLanguages\n\nLanguage learning remains one of the most potent ways to delay dementia aside from reading (Stephen Krashen, 2019). Learn a language today! Would you like to learn another language? Do you have a child or ward who cannot speak your native language or mother tongue? Join the Self-paced Language classes today and watch yourself become bilingual or multilingual.  \nElementary Igbo\nElementary Yoruba\nEnglish Language Tutorials\nFrench Language Tutorial\n",
+          "industries": [
+            {
+              "id": "1999",
+              "name": "Education",
+              "urn": "urn:li:fsd_industryV2:1999",
+              "title": "Education",
+              "hierarchy": "Education"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/C4D1BAQGaXxetF30mbQ/company-background_10000/company-background_10000/0/1626778633808/big_s_odyssey_consults_cover?e=1790953200&v=beta&t=8nXNBk68D-R8HxDQZcJ_HzUNVkKvRUI7K39Myi71wLo",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "108066316",
+          "universalName": "saint-monica-university-institute",
+          "linkedinUrl": "https://www.linkedin.com/company/saint-monica-university-institute/",
+          "name": "Saint Monica University Institute",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQFASX72lZb17Q/company-logo_400_400/B4EZhcAJ9lHIAk-/0/1753890202539?e=1792022400&v=beta&t=djJ0KcrDpuseJiH4XuVzQ-PmwxJxiYbhD5mOwgz336g",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 227,
+          "description": "Saint Monica University Institute (SMUI) is a modern higher education institution in Buea, Cameroon, specializing in Information Technology and career-focused programs.What Makes SMUI Special:Technology-focused curriculum designed for today's job marketModern campus with state-of-the-art IT facilitiesStrong industry partnerships for internships and job placementPractical, hands-on learning approachLocated in Buea, Cameroon's educational hubPrograms & Focus:IT and computer science programsIndustry-relevant skills trainingReal-world project experienceCareer preparation and job placement supportWhy Students Choose SMUI:Quality education at affordable ratesHigh graduate employment ratesModern facilities and technologySupportive learning environmentStrong connections to tech industryMission: Preparing students for successful careers in technology while contributing to Cameroon's digital economy growth.SMUI combines academic excellence with practical training, making graduates job-ready from day one.",
+          "industries": [
+            {
+              "id": "68",
+              "name": "Higher Education",
+              "urn": "urn:li:fsd_industryV2:68",
+              "title": "Higher Education",
+              "hierarchy": "Education > Higher Education"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQFCxPk9QhIMAg/company-background_400/B4EZhcWyTqGwAw-/0/1753896134382/saint_monica_university_institute_cover?e=1790953200&v=beta&t=_CKATWfMgfgw-nwey9UAKt_91yTlThhVIlOS8BjxKaw",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "4806867",
+          "universalName": "rsmstudio",
+          "linkedinUrl": "https://www.linkedin.com/company/rsmstudio/",
+          "name": "RSM Studio",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D560BAQGM5mORNkkViw/company-logo_400_400/B56aCRNOPQGcAY-/0/1789142557900/rsmstudio_logo?e=1792022400&v=beta&t=z5dPzqAk8H1VoVw5lwxisLIT2ZQaQJZg5XYGsW7AK7o",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 2068,
+          "description": "Whether you’re shaping a new idea or scaling an established business, our technical team architects, builds, and monitors your app, game, AR/VR experience, or AI-powered workflow. We use agentic AI to accelerate delivery without sacrificing quality. From concept to launch, you get a team that turns vision into reality.\n\nEvery project is led by senior engineers who bring strategic thinking, scalable architecture, and hands-on execution from discovery through delivery. Build it once. Build it well.",
+          "industries": [
+            {
+              "id": "3102",
+              "name": "IT System Custom Software Development",
+              "urn": "urn:li:fsd_industryV2:3102",
+              "title": "IT System Custom Software Development",
+              "hierarchy": "Professional Services > IT Services and IT Consulting > IT System Custom Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQEw7OTIxkaj9A/company-background_10000/B56Z4w1utJIYAI-/0/1778935852043/rsmstudio_cover?e=1790953200&v=beta&t=3CsN2MBUOKAGccvXs3TiC6NU1LS44UGh93VQzg3Fwqo",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "107942608",
+          "universalName": "aivaultsystem",
+          "linkedinUrl": "https://www.linkedin.com/company/aivaultsystem/",
+          "name": "AIVault System",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQGhoI1Ea36dLg/company-logo_400_400/B4DZr5Ds2KG4AY-/0/1765115090688/aivaultsystem_logo?e=1792022400&v=beta&t=Y0VbScT7If1xLAMK5ek2RLOoApLXZIqiqnPMGahVZsg",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 145,
+          "description": " 𝐖𝐞 𝐁𝐮𝐢𝐥𝐝 𝐒𝐩𝐞𝐞𝐝 & 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧 𝐟𝐨𝐫 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬𝐞𝐬\n\n𝐀𝐈𝐕𝐚𝐮𝐥𝐭 𝐒𝐲𝐬𝐭𝐞𝐦 is a next-generation automation and AI solutions company focused on helping businesses scale without increasing workload.\n\nOur mission is simple:\nTurn complex business processes into automated, intelligent, and reliable systems.\n\nWith a mix of AI, automation tools, integrations, and custom workflows, we help brands run smoother, respond faster, and make better decisions—all with minimal human effort.\n\n🔥 𝐖𝐡𝐚𝐭 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 𝐘𝐨𝐮 𝐏𝐫𝐨𝐯𝐢𝐝𝐞\n\n1️⃣ 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐀𝐈 𝐀𝐠𝐞𝐧𝐭\nInstant replies, lead handling, follow-ups, and client support—fully automated.\n\n2️⃣ 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧𝐬 (𝐧𝟖𝐧 / 𝐙𝐚𝐩𝐢𝐞𝐫)\nCRM updates, emails, reminders, file handling, and daily operations running automatically.\n\n3️⃣ 𝗪𝗲𝗯𝘀𝗶𝘁𝗲 & 𝗣𝗼𝗿𝘁𝗳𝗼𝗹𝗶𝗼 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁\nFast, modern, and professional websites that build trust and convert visitors.\n\n4️⃣ 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 & 𝐂𝐮𝐬𝐭𝐨𝐦 𝐀𝐈 𝐒𝐲𝐬𝐭𝐞𝐦𝐬\nBot-based onboarding, triggers, notifications, and automated operations.\n\n",
+          "industries": [
+            {
+              "id": "1594",
+              "name": "Technology, Information and Media",
+              "urn": "urn:li:fsd_industryV2:1594",
+              "title": "Technology, Information and Media",
+              "hierarchy": "Technology, Information and Media"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGxK47RvrSViw/company-background_10000/B4DZr5R257IEAY-/0/1765118801170/aivaultsystem_cover?e=1790953200&v=beta&t=w1Oo2q26db7ACqSLT32sU8gic4UL5AwtMddSObI0Xc0",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "106072867",
+          "universalName": "mouldshop-benelux",
+          "linkedinUrl": "https://www.linkedin.com/company/mouldshop-benelux/",
+          "name": "Mouldshop BeNeLux",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQGpZ9yE0iQIaw/company-logo_400_400/company-logo_400_400/0/1738079889098?e=1792022400&v=beta&t=Z92Tr8_EzAxHe0dAdy10NbBVETkklLju6_C_psTqARQ",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 254,
+          "description": "Call today or visit our website to discover why Mouldshop is the primary supplier of consumables and supplies to the plastics injection moulding industry in Belgium, Netherlands & Luxembourg\n\nWith over 20 years experience in the industry Mouldshop are able to offer competitive prices and next day delivery on a wide range of high-quality products.\n\nMouldshop.nl is part of AJ Solutions BV. www.ajsolutions.be",
+          "industries": [
+            {
+              "id": "1187",
+              "name": "Wholesale Machinery",
+              "urn": "urn:li:fsd_industryV2:1187",
+              "title": "Wholesale Machinery",
+              "hierarchy": "Wholesale > Wholesale Machinery"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQEaTx4pv94Cqw/company-background_10000/B4EZ_LvqEXGoAI-/0/1785829695993/mouldshop_benelux_cover?e=1790953200&v=beta&t=INnUOvHCSOKW4QcQo6bmoMP4lnmW-M1-GqGtWuew6Ww",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "66272981",
+          "universalName": "plamako",
+          "linkedinUrl": "https://www.linkedin.com/company/plamako/",
+          "name": "Mouldshop - Powered by Plamako",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQHq4QK948zCPg/company-logo_400_400/B4DZe_pE0zGsAY-/0/1751266905744/plamako_logo?e=1792022400&v=beta&t=DL3bDs3e653tM6NCCc-0R1RRNVvLODC-iB4dJka6sbE",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 367,
+          "description": "Ring oss idag eller besök vår webshop och upptäck varför Mouldshop är den ledande webbaserade leverantören av tillbehör och förbrukningsvaror för plast och verktygsindustrin i Sverige och Norge.\n\nMouldshop är kundnära dvs, nära på dina villkor. \n•\tVår webshop är tillgänglig dygnet runt.\n•\tVi kommer till dig när du kallar. För presentation, projektering eller montage.\n•\tMed över 10 års erfarenhet kan vi erbjuda konkurrenskraftiga priser och dagen- efter leveranser på ett stort antal högkvalitativa produkter. \n\nMouldshop - Powered by Plamako\n",
+          "industries": [
+            {
+              "id": "117",
+              "name": "Plastics Manufacturing",
+              "urn": "urn:li:fsd_industryV2:117",
+              "title": "Plastics Manufacturing",
+              "hierarchy": "Manufacturing > Plastics and Rubber Product Manufacturing > Plastics Manufacturing"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGXeHC-NMbxlw/company-background_10000/B4DZyuvZibGwAU-/0/1772458187335/plamako_cover?e=1790953200&v=beta&t=ZOj5ohfD3XVeRkgBBp_6p_adLZpGldHRZKHtYWKnSlk",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "110058236",
+          "universalName": "eventværk",
+          "linkedinUrl": "https://www.linkedin.com/company/eventv%C3%A6rk/",
+          "name": "Eventværk",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQF-qbmLdYFDeQ/company-logo_400_400/B4DZqcK91.KIAc-/0/1763556712800/eventvrk_logo?e=1792022400&v=beta&t=6yO5BAm69KAzpHEhaIOBNBgklAFnNmWPp4YVTMFbgw4",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 24,
+          "description": "Eventværk er en intuitiv og brugervenlig platform til planlægning og håndtering af arrangementer, og er udviklet af Ephort ApS (https://ephort.dk).\n\nPlatformen gør det nemt at oprette events, administrere tilmeldinger og holde styr på deltagere fra start til slut. Med Eventværk kan arrangører arbejde med fleksible tilmeldingsformularer, deltagerkategorier, ventelister, tilkøb, afmeldinger og redigering af deltageroplysninger samlet ét sted.\n\nEventværk er skabt til organisationer, foreninger og virksomheder, der ønsker en enkel, effektiv overskuelig løsning til eventadministration uden unødvendig kompleksitet.\n\nDet giver din virksomhed mere overskud i hverdagen og gør det lettere at holde styr på de mange praktiske opgaver, så I kan fokusere på det, der virkelig betyder noget: at skabe og afholde gode events! \n\nLæs mere omkring Eventværk på vores hjemmeside: https://www.eventvaerk.dk/",
+          "industries": [
+            {
+              "id": "110",
+              "name": "Events Services",
+              "urn": "urn:li:fsd_industryV2:110",
+              "title": "Events Services",
+              "hierarchy": "Administrative and Support Services > Events Services"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQFJQFNb6y8paA/company-background_10000/B4EZ38SJ4tJQAI-/0/1778054111088/eventvrk_cover?e=1790953200&v=beta&t=Qugc34zHCcNwzHLMExvDvH7VyipLS6xyTKHktKNUD1Q",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "68814374",
+          "universalName": "xrayautomation",
+          "linkedinUrl": "https://www.linkedin.com/company/xrayautomation/",
+          "name": "XRAY • Workflow Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_400_400/B4EZpQTZk1GoAc-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=62ZN8VcckuYV0jC-WvcPt1SYH94JeO_HrQ6_DyZEWnU",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 796,
+          "description": "XRAY is a workflow optimization research and consultancy firm that specializes in building low-code automations to eliminate robotic tasks and support mindful work.  ",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_10000/B4EZpQUJ07J0AU-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=3dcu0czvoiLDApmrlNSTB4EG2Se21f4spwTLNxadMgY",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "77001225",
+          "universalName": "planitid",
+          "linkedinUrl": "https://www.linkedin.com/company/planitid/",
+          "name": "Planeo",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQFWLqxcojITjg/company-logo_400_400/B4DZ.n9AwnJ4AY-/0/1785229217118/planitid_logo?e=1792022400&v=beta&t=WwCP7In_G1aAfq2IqxA6YwVQfPiqhxxrdoPsDCVNMBI",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 449,
+          "description": "Vi tilbyr et samlet og enhetlig system for hele planprosessen, som ivaretar utvikling og historikk i prosessen. Planeo visualiserer en plan på en forståelig og intuitiv måte for alle berørte parter, både underveis i prosessen, i samhandlingsrommet med det offentlige og for berørt publikum. Dette sikrer gode utredninger, gode beslutninger og demokratisk medvirkning.\n\nArealplanprosesser er kompliserte, tidkrevende og kostbare. De består ofte av en enorm mengde og versjoner av dokumenter, filer, data og kart som ikke “snakker” godt nok sammen. Underveis i utviklingen av en plan får man en ganske uoversiktlig og kompleks situasjon knyttet til både å forstå hva som gjelder og hvor man er i planprosessen. Dette forlenger planprosessen og kompliserer ytterligere muligheten det offentlige og samfunnet for øvrig har til å sette seg inn i og forstå planen som foreligger. Dette resulterer i dårligere planprosesser som ofte drar unødvendig ut i tid, som igjen fører til unødvendig lang kapitalbinding og til slutt dyrere boliger. Planeo skal være en samhandlingsplattform for tiltakshaver og alle fag som bidrar underveis i prosessen. Vi skal ha integrert kartløsninger og hente data fra offentlige registre og fagverktøy. Planeo skal også presentere en plan på en mer visuell og forståelig måte, for å sikre åpenhet og medvirkning fra alle berørte parter.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGFlFIaUvB7ig/company-background_10000/B4DZUTUjTnHkAU-/0/1739785910175/planitid_cover?e=1790953200&v=beta&t=fj9tJRppA6pZwZkQnWnIiWlynel_qzSs5zch3IlERig",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "111070949",
+          "universalName": "pustibarnehagen-as",
+          "linkedinUrl": "https://www.linkedin.com/company/pustibarnehagen-as/",
+          "name": "Barnepust",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHIXxRopq5PLQ/company-logo_400_400/B4EZ2rF6rmGkAY-/0/1776691948962/pustibarnehagen_as_logo?e=1792022400&v=beta&t=sUQQymFkp24k8XiZY8CSNB668fFTMLpKYBR9Mj7SSrs",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 36,
+          "description": "Vi tilbyr e-læringskurs, sertifisering av ansatte i barnehager, kurs, foredrag og workshops",
+          "industries": [
+            {
+              "id": "1999",
+              "name": "Education",
+              "urn": "urn:li:fsd_industryV2:1999",
+              "title": "Education",
+              "hierarchy": "Education"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQH60elHn3Dh6g/company-background_10000/B4EZ2rDAGSJUAU-/0/1776691184432/pustibarnehagen_as_cover?e=1790953200&v=beta&t=ZQVUcCN8n70twQNMlE_SUCHCx1HY5WwMOvFGzlrUdms",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "80513780",
+          "universalName": "havets-verdiskapere",
+          "linkedinUrl": "https://www.linkedin.com/company/havets-verdiskapere/",
+          "name": "Havets Verdiskapere",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4D0BAQGWUpnt4O3rmw/company-logo_400_400/company-logo_400_400/0/1648586384048?e=1792022400&v=beta&t=Y5LnF22PlrXsn_jGyBg3VBiqcZMytDFgg8H2K8NLmcI",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 968,
+          "description": "Selskapets virksomhet er:\n\nÅ arbeide for likestilling i sjømatnæringen gjennom aktiviteter som seminarer, konferanser og andre hensiktsmessige former for informasjonsarbeid og nettverksbygging.",
+          "industries": [
+            {
+              "id": "66",
+              "name": "Fisheries",
+              "urn": "urn:li:fsd_industryV2:66",
+              "title": "Fisheries",
+              "hierarchy": "Farming, Ranching, Forestry > Ranching and Fisheries > Fisheries"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/C4D1BAQFcxl-kUpr0vg/company-background_10000/company-background_10000/0/1648586717655/havets_verdiskapere_cover?e=1790953200&v=beta&t=lW8KNyck9g9rjWYic2baT4EqWkEvEYJtxWo570k80PU",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "143020969",
+          "universalName": "netwalk-community",
+          "linkedinUrl": "https://www.linkedin.com/company/netwalk-community/",
+          "name": "NETWALK Community",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQE5euNF3OCWOw/company-logo_400_400/B4EaBEoxHDHkAc-/0/1787857933005/netwalk_community_logo?e=1792022400&v=beta&t=fiTsPCiMbsne4tbDgcO5olzy24a_8kaUN7kIcvbTnaU",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 194,
+          "description": "NETWALK Community er et professionelt community, der bringer ledere, virksomheder og mennesker sammen gennem relationer, videndeling og inspirerende oplevelser.\n\nVi tror på, at de stærkeste forbindelser skabes, når mennesker mødes i øjenhøjde. Derfor skaber vi rum for dialog, refleksion og udvikling – både gennem netværksgåture, ledernetværk, virksomhedsbesøg, oplæg, workshops og andre aktiviteter, der styrker relationer og åbner nye perspektiver.\n\nVores fælles mantra er enkelt:\n\n\"Giv mere end du tager.\"\n\nDet er fundamentet for alt, hvad vi gør.\n\nNETWALK Community favner både åbne arrangementer, faglige fællesskaber og strategiske samarbejder med virksomheder og organisationer. Uanset om du er erfaren leder, ny i lederrollen, mellem to job eller blot ønsker inspiration og et stærkt professionelt ledernetværk, er du velkommen.\n\nBliv en del af fællesskabet:\n\n🔹 NETWALK – netværk for ledere i transition (Midt- og Østjylland) HOVEDGRUPPEN\n👉 https://www.linkedin.com/groups/10085429/\n\n🔹 NETWALK - netværk for ledere i transition (Syd- og Vestjylland)\n👉 https://www.linkedin.com/groups/17544016/\n\n🔹 LederNetværket på Kirstinelund, Lystrup\n👉 https://kirstinelund.nu/kontorplads/ledernetvaerket-paa-kirstinelund/\n\n🔹 NETWALK Alumne - netværk for tidligere medlemmer i NETWALK\n👉 Kontakt os hvis det har din interesse\n\nAnd more to come....\n\n📍 Aarhus | Danmark",
+          "industries": [
+            {
+              "id": "3127",
+              "name": "Social Networking Platforms",
+              "urn": "urn:li:fsd_industryV2:3127",
+              "title": "Social Networking Platforms",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Social Networking Platforms"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVFgBxP-U9nA/company-background_10000/B4EaBEoi54IkAI-/0/1787857874783/netwalk_community_cover?e=1790953200&v=beta&t=6kNevyd_vzFer263YHQewAxBgW5a7kxyGHB2vyW4xq4",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        }
+      ],
+      "affiliatedPages": [],
+      "peopleStats": [
+        {
+          "statTitle": "Locations",
+          "values": [
+            {
+              "title": "Massapequa, NY",
+              "count": 1
+            },
+            {
+              "title": "United States",
+              "count": 1
+            },
+            {
+              "title": "New York, United States",
+              "count": 1
+            },
+            {
+              "title": "New York City Metropolitan Area",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "School",
+          "values": [
+            {
+              "title": "Turing School of Software & Design",
+              "count": 1
+            },
+            {
+              "title": "Hunter College",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Current Function",
+          "values": [
+            {
+              "title": "Business Development",
+              "count": 1
+            },
+            {
+              "title": "Engineering",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Skill Explicit",
+          "values": [
+            {
+              "title": "Agile Methodologies",
+              "count": 1
+            },
+            {
+              "title": "jQuery",
+              "count": 1
+            },
+            {
+              "title": "Social Networking",
+              "count": 1
+            },
+            {
+              "title": "Business Process Automation",
+              "count": 1
+            },
+            {
+              "title": "Business Process Improvement",
+              "count": 1
+            },
+            {
+              "title": "Systems Design",
+              "count": 1
+            },
+            {
+              "title": "Team Leadership",
+              "count": 1
+            },
+            {
+              "title": "PostgreSQL",
+              "count": 1
+            },
+            {
+              "title": "JavaScript",
+              "count": 1
+            },
+            {
+              "title": "Web Analytics",
+              "count": 1
+            },
+            {
+              "title": "Ruby on Rails",
+              "count": 1
+            },
+            {
+              "title": "Ruby",
+              "count": 1
+            },
+            {
+              "title": "HTML",
+              "count": 1
+            },
+            {
+              "title": "Cascading Style Sheets (CSS)",
+              "count": 1
+            },
+            {
+              "title": "Test-Driven Development",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Service categories",
+          "values": []
+        },
+        {
+          "statTitle": "Field of Study",
+          "values": [
+            {
+              "title": "Computer Science",
+              "count": 1
+            },
+            {
+              "title": "Computational Science",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "pagination": {
+          "totalElements": 4,
+          "totalPages": 1,
+          "pageNumber": 1,
+          "previousElements": 0,
+          "pageSize": 50,
+          "totalResultCount": 4
+        }
+      }
+    },
+    {
+      "id": "16264553",
+      "universalName": "budgetdesktopautomation",
+      "linkedinUrl": "https://www.linkedin.com/company/budgetdesktopautomation/",
+      "name": "Budget Workflow Automation",
+      "website": "https://budgetworkflowautomation.wordpress.com/",
+      "logo": "https://media.licdn.com/dms/image/v2/C4D0BAQF44879R7uD2A/company-logo_400_400/company-logo_400_400/0/1631330192250?e=1792022400&v=beta&t=L47CPs8AQFuV8LNGwhDySlObaYO7pMsUlVVnujWKbOU",
+      "foundedOn": {
+        "month": null,
+        "year": 2017,
+        "day": null
+      },
+      "employeeCount": 0,
+      "employeeCountRange": {
+        "start": 0,
+        "end": 1
+      },
+      "followerCount": 4,
+      "description": "Budget Workflow Automation offers inexpensive, easy to use solutions focusing on business process automation. Any task performed on a computer can be automated without replacing the software you already use with robotic process automation. Repetitive tasks can be automated, allowing staff to get more done. The need to hire temporary staff can also be avoided or greatly reduced. Our scripts take control of a workstation just like someone is at the keyboard. Scripts can be programmed to make routine decisions and can interact with a user as needed. They are more than macro recordings; they are like an invisible person at the keyboard.\n\nFor many offices, budget constraints mean paying people to repeat tasks rather than paying to purchase or develop more efficient software. We customize free automation software to control the programs you already use on the hardware you already own.",
+      "companyType": "Self-Employed",
+      "locations": [
+        {
+          "country": null,
+          "city": "Greensboro",
+          "geographicArea": "North Carolina",
+          "line1": "1118 Summer Pl",
+          "line2": null,
+          "postalCode": "27410",
+          "headquarter": true,
+          "description": null,
+          "parsed": {
+            "text": "Greensboro, NC, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "North Carolina",
+            "city": "Greensboro"
+          }
+        },
+        {
+          "country": "US",
+          "city": "Greensboro",
+          "geographicArea": null,
+          "line1": null,
+          "line2": null,
+          "postalCode": null,
+          "headquarter": false,
+          "description": null,
+          "parsed": {
+            "text": "Greensboro, NC, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "North Carolina",
+            "city": "Greensboro"
+          }
+        }
+      ],
+      "specialities": [
+        "Business Process Automation",
+        "Computer Automation"
+      ],
+      "industries": [
+        {
+          "id": "4",
+          "name": "Software Development",
+          "urn": "urn:li:fsd_industryV2:4",
+          "title": "Software Development",
+          "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+        }
+      ],
+      "logos": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D0BAQF44879R7uD2A/company-logo_400_400/company-logo_400_400/0/1631330192250?e=1792022400&v=beta&t=L47CPs8AQFuV8LNGwhDySlObaYO7pMsUlVVnujWKbOU",
+          "width": 400,
+          "height": 400
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D0BAQF44879R7uD2A/company-logo_200_200/company-logo_200_200/0/1631330192249?e=1792022400&v=beta&t=iRHxfBGFRDGh8ocxt2hEkNwdzcCXpfyB8DMNQusBJkc",
+          "width": 200,
+          "height": 200
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D0BAQF44879R7uD2A/company-logo_100_100/company-logo_100_100/0/1631330192250?e=1792022400&v=beta&t=WTeg3Jmv5fsOjYLYd_joPkvhHnZm3pV4sCOkbpegXGs",
+          "width": 100,
+          "height": 100
+        }
+      ],
+      "backgroundCover": "https://media.licdn.com/dms/image/v2/C4D1BAQEaDPsN0_ijPw/company-background_10000/company-background_10000/0/1583342425244?e=1790953200&v=beta&t=vq4upDaD0ebJQfczdz2G-gGgzxiRxnYA8axoAzUSamI",
+      "backgroundCovers": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D1BAQEaDPsN0_ijPw/company-background_10000/company-background_10000/0/1583342425244?e=1790953200&v=beta&t=vq4upDaD0ebJQfczdz2G-gGgzxiRxnYA8axoAzUSamI",
+          "width": 2560,
+          "height": 1213
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D1BAQEaDPsN0_ijPw/company-background_1536_768/company-background_1536_768/0/1583171146482?e=1790953200&v=beta&t=HAy_Juvv7kLSKD2p8i1IkprW3df4SpKyGEm57BqH-uI",
+          "width": 1536,
+          "height": 728
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D1BAQEaDPsN0_ijPw/company-background_400/company-background_400/0/1583342425289?e=1790953200&v=beta&t=cHXOF4XJUUTTX3mMPUUFKMsqWGVHKXt5g_RRW9o8fdA",
+          "width": 400,
+          "height": 189
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/C4D1BAQEaDPsN0_ijPw/company-background_200/company-background_200/0/1583342425349?e=1790953200&v=beta&t=Fn30ld7XNSwo2mUFq3VqFKLByHQQwWq27RXHXItMqiA",
+          "width": 200,
+          "height": 94
+        }
+      ],
+      "active": true,
+      "jobSearchUrl": "https://www.linkedin.com/jobs/search?geoId=92000000&f_C=16264553",
+      "pageVerified": false,
+      "pageType": "COMPANY",
+      "showcase": false,
+      "paidCompany": false,
+      "autoGenerated": false,
+      "callToActionUrl": "https://budgetworkflowautomation.wordpress.com/",
+      "similarOrganizations": [
+        {
+          "id": "107942608",
+          "universalName": "aivaultsystem",
+          "linkedinUrl": "https://www.linkedin.com/company/aivaultsystem/",
+          "name": "AIVault System",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQGhoI1Ea36dLg/company-logo_400_400/B4DZr5Ds2KG4AY-/0/1765115090688/aivaultsystem_logo?e=1792022400&v=beta&t=Y0VbScT7If1xLAMK5ek2RLOoApLXZIqiqnPMGahVZsg",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 145,
+          "description": " 𝐖𝐞 𝐁𝐮𝐢𝐥𝐝 𝐒𝐩𝐞𝐞𝐝 & 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧 𝐟𝐨𝐫 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬𝐞𝐬\n\n𝐀𝐈𝐕𝐚𝐮𝐥𝐭 𝐒𝐲𝐬𝐭𝐞𝐦 is a next-generation automation and AI solutions company focused on helping businesses scale without increasing workload.\n\nOur mission is simple:\nTurn complex business processes into automated, intelligent, and reliable systems.\n\nWith a mix of AI, automation tools, integrations, and custom workflows, we help brands run smoother, respond faster, and make better decisions—all with minimal human effort.\n\n🔥 𝐖𝐡𝐚𝐭 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 𝐘𝐨𝐮 𝐏𝐫𝐨𝐯𝐢𝐝𝐞\n\n1️⃣ 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐀𝐈 𝐀𝐠𝐞𝐧𝐭\nInstant replies, lead handling, follow-ups, and client support—fully automated.\n\n2️⃣ 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧𝐬 (𝐧𝟖𝐧 / 𝐙𝐚𝐩𝐢𝐞𝐫)\nCRM updates, emails, reminders, file handling, and daily operations running automatically.\n\n3️⃣ 𝗪𝗲𝗯𝘀𝗶𝘁𝗲 & 𝗣𝗼𝗿𝘁𝗳𝗼𝗹𝗶𝗼 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁\nFast, modern, and professional websites that build trust and convert visitors.\n\n4️⃣ 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 & 𝐂𝐮𝐬𝐭𝐨𝐦 𝐀𝐈 𝐒𝐲𝐬𝐭𝐞𝐦𝐬\nBot-based onboarding, triggers, notifications, and automated operations.\n\n",
+          "industries": [
+            {
+              "id": "1594",
+              "name": "Technology, Information and Media",
+              "urn": "urn:li:fsd_industryV2:1594",
+              "title": "Technology, Information and Media",
+              "hierarchy": "Technology, Information and Media"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGxK47RvrSViw/company-background_10000/B4DZr5R257IEAY-/0/1765118801170/aivaultsystem_cover?e=1790953200&v=beta&t=w1Oo2q26db7ACqSLT32sU8gic4UL5AwtMddSObI0Xc0",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "108395015",
+          "universalName": "smbops",
+          "linkedinUrl": "https://www.linkedin.com/company/smbops/",
+          "name": "SMB Ops - Workflow Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_400_400/B4EaAf_jLWHEAU-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=Jy2S4fqTjWRZjIlikVRryGm3NNlFgRQ-GJkrTtUJZlo",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 144,
+          "description": "At SMB Ops, we help small and mid-sized businesses run smarter by automating the busywork that slows growth. Our focus is simple: design and manage workflows that give owners back their time while improving accuracy, speed, and customer experience.\n\nWhy it matters: Studies show 89% of small businesses now use some form of AI or automation, and companies that adopt automation see an average of $5.44 return for every $1 invested. For SMB owners juggling sales, operations, and admin, this shift is no longer optional — it’s the new baseline for efficiency and growth.\n\nWhat we do:\n• Automate invoicing, payments, and reporting to keep cash flow healthy.\n• Build AI-powered sales and marketing workflows that qualify leads, send personalized follow-ups, and boost conversion rates.\n• Connect tools like QuickBooks, Jobber, Stripe, Airtable, and Google Workspace into one seamless system.\n• Design dashboards that give real-time visibility into KPIs and savings.\n• Provide ongoing automation management and documentation so your team always stays in sync.\n\nOur edge: We don’t just “set up zaps.” We combine low-code platforms with AI and process design to create sustainable, documented systems tailored to your business. Think of us as a fractional operations team — giving you enterprise-level automation without enterprise-level cost.\n\nWhether you run a home services company, med spa, law firm, or retail operation, SMB Ops is here to streamline your workflows, reduce overhead, and help you grow with confidence.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_10000/B56ZkGgyliH8Ac-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=xv8v_DQfRuYV3VK1HOMHie3jAOP4avfrlpe2iS-eTTU",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "92931233",
+          "universalName": "nimbusnext",
+          "linkedinUrl": "https://www.linkedin.com/company/nimbusnext/",
+          "name": "Nimbusnext",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4E0BAQExAaQc0H1o-Q/company-logo_400_400/company-logo_400_400/0/1676293413981/nimbusnext_logo?e=1792022400&v=beta&t=RVVFVW6LfEfgpO7Swh9L4J7qGl8p8rVcZ0ClizyjcC0",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 6522,
+          "description": "At Nimbusnext, we believe AI should empower every business, not just the largest enterprises. We are an AI-first innovation company helping small and mid-sized businesses (SMBs) simplify, adopt, and scale Generative and Agentic AI solutions — responsibly, efficiently, and at speed.\n\nOur mission is to bridge the gap between business intent and AI execution, enabling organizations to transform operations, drive growth, and make smarter, data-driven decisions — without requiring deep technical expertise.\n\nWe are the creators of Yavi.ai, a next-generation no-code Generative AI platform built for the era of RAG (Retrieval-Augmented Generation) and Agentic AI. Yavi empowers non-technical users with single-click AI workflows while offering deep control and flexibility for technical teams.\n\nWhat We Do:\n• Empower SMBs with no-code AI workflows that deliver measurable impact.\n• Simplify AI adoption through ready-to-use industry accelerators.\n• Provide Construction and Legal industry solutions. \n• Integrate seamlessly with leading LLMs, vector and graph databases, and enterprise systems.\n• Ensure enterprise-grade security, transparency, and responsible AI governance.\n\nAt Nimbusnext, our people are our advantage — technologists, designers, and innovators driven by curiosity and collaboration. We foster a diverse, people-first culture built on empathy, integrity, and continuous learning. Innovation thrives here because we believe AI should work for humans, not replace them.\n\nTogether, we are helping businesses reimagine what’s possible — turning data into decisions, decisions into intelligence, and intelligence into growth.\n\nIndustries: Construction | Legal | Professional Services | Financial Services | Industrial Automation | ESG\n\nVision: To democratize AI and enable every business to thrive in the era of intelligent transformation.\n\nSchedule a Call: https://cal.com/yavi.ai ",
+          "industries": [
+            {
+              "id": "84",
+              "name": "Information Services",
+              "urn": "urn:li:fsd_industryV2:84",
+              "title": "Information Services",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Information Services"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQGRkhgc3EUPKw/company-background_10000/B56ZotypcTJ8AU-/0/1761704843889/nimbusnext_cover?e=1790953200&v=beta&t=8_0XtLKi5B6wjaIKsuNRU1hC778qKGdzUDPlCMwvmbI",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "107962322",
+          "universalName": "n8n-lab",
+          "linkedinUrl": "https://www.linkedin.com/company/n8n-lab/",
+          "name": "n8n Lab",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQHgrTVuYFGSzw/company-logo_400_400/B4DZrwRPcwH4AY-/0/1764967643273/n8n_lab_logo?e=1792022400&v=beta&t=fLTLV5gUpxZxaNzgA6_n7KlzWC6P-H71GhF41AVRbNQ",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 413,
+          "description": "n8n Lab is a specialized automation agency that designs, builds, and deploys custom AI agents and enterprise-grade workflow automation using the n8n platform.\n\nWe partner with growth-stage companies to eliminate repetitive, low value work, so their teams can focus on strategic activities that drive revenue and competitive advantage.\n\nWe focus exclusively on n8n. This deep specialization means we build more robust, scalable, and intelligent solutions than agencies spread across multiple platforms.\n\nCore services:\n- Custom AI Agent Development\n- n8n Workflow Automation\n- Strategic Automation Consulting\n- n8n Setup & Integration\n\nWe work with SaaS companies, marketing agencies, e-commerce businesses, and healthcare organizations ready to transform fragmented processes into unified, intelligent systems.\n",
+          "industries": [
+            {
+              "id": "1594",
+              "name": "Technology, Information and Media",
+              "urn": "urn:li:fsd_industryV2:1594",
+              "title": "Technology, Information and Media",
+              "hierarchy": "Technology, Information and Media"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQF70KB7FVuY4g/company-background_10000/B4DZrwsHexGsAU-/0/1764974689359/n8n_lab_cover?e=1790953200&v=beta&t=EfvUPflbifP5JpDzPrkdyFWncRWBOhKGK73bgCJJ8ts",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "106116086",
+          "universalName": "theautomationpartner",
+          "linkedinUrl": "https://www.linkedin.com/company/theautomationpartner/",
+          "name": "The Automation Partner",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQFmBZJffLVILw/company-logo_400_400/B4DZo52.9qHwAY-/0/1761907307614/theautomationpartner_logo?e=1792022400&v=beta&t=wrXqRbLw8G1PwhP1dGzfhYycokLlavRhXD4F5iKfEww",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 1420,
+          "description": "The Automation Partner is a monday.com Bronze Partner (CRM Expert and Advanced Workflow badges), a Make Silver Partner (Certified Service Tier), and a Softr Certified Partner. Based in Argentina, we have delivered 70+ automation implementations and work with 100+ companies on monday.com across Latin America, the United States, Europe and Australia.\n\nWe help operations, finance and administrative teams at companies of 20 to 500 employees replace manual, spreadsheet-driven processes with systems that are simple, scalable and auditable.\n\nWhat we do:\n\nmonday.com implementation and optimization — CRM, project delivery, and company-wide operating systems.\nMake (Make.com) automation — no-code workflows and custom API integrations connecting your entire stack.\nAI agents — document reading and classification, three-way reconciliation, automated communication.\nERP and accounting integrations — NetSuite, QuickBooks, Xero, Cin7.\nSoftr client and vendor portals connected directly to monday.com or Airtable data.\n\nDocumented results:\n\nConstrucciones VDV (construction, Argentina) — 300 to 500 purchase documents processed automatically per month, replacing manual three-way matching of purchase order, delivery note and invoice.\n\nPolifroni Aberturas (manufacturing, Argentina) — 93% reduction in quote turnaround time.\n\nRiggs Distributing (appliance distribution, US) — custom monday.com CRM with bidirectional NetSuite integration.\n\nIndustries where we have working cases: construction, insurance brokerage, distribution, professional services and manufacturing.\n\nBook a 30-minute discovery call and we will map where the hidden cost sits in your operation: www.theautomationpartner.com",
+          "industries": [
+            {
+              "id": "11",
+              "name": "Business Consulting and Services",
+              "urn": "urn:li:fsd_industryV2:11",
+              "title": "Business Consulting and Services",
+              "hierarchy": "Professional Services > Business Consulting and Services"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQFaq4APILnOZA/company-background_10000/B56aBplPPBGsAI-/0/1788477764773/theautomationpartner_cover?e=1790953200&v=beta&t=rkUZtSakpOhYvUnmyFn4WqkYY4BFTdDixYFpocjwDhM",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "68814374",
+          "universalName": "xrayautomation",
+          "linkedinUrl": "https://www.linkedin.com/company/xrayautomation/",
+          "name": "XRAY • Workflow Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_400_400/B4EZpQTZk1GoAc-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=62ZN8VcckuYV0jC-WvcPt1SYH94JeO_HrQ6_DyZEWnU",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 796,
+          "description": "XRAY is a workflow optimization research and consultancy firm that specializes in building low-code automations to eliminate robotic tasks and support mindful work.  ",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_10000/B4EZpQUJ07J0AU-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=3dcu0czvoiLDApmrlNSTB4EG2Se21f4spwTLNxadMgY",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "98633549",
+          "universalName": "leatechnologies",
+          "linkedinUrl": "https://www.linkedin.com/company/leatechnologies/",
+          "name": "LEA Technologies",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQEOzI_vR6-AeA/company-logo_400_400/company-logo_400_400/0/1693512753750?e=1792022400&v=beta&t=LDvMlIbCm8O3gxTKKquIdnzliC6K6ZmQR0ZMHDlKMqk",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 526,
+          "description": "LEA is the AI infrastructure platform for wealth management. Trusted by leading firms including Pure Financial, Mission Wealth and Farther Finance, LEA helps your team manage client relationships, connect disparate systems, own your data, and use AI on your terms.\n\nBacked by Social Leverage (Robinhood, Alpaca, Fiscal.ai, Ribbon, Seeds Investor).",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVyUdgxm_9eg/company-background_10000/B4EZ4jI96KIwAI-/0/1778706014120/getlea_cover?e=1790953200&v=beta&t=hYoGyX5tDPJ8ndOE168lihCIW9kjHYmYDmoD7fCZSYA",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "104551627",
+          "universalName": "turgomarketer",
+          "linkedinUrl": "https://www.linkedin.com/company/turgomarketer/",
+          "name": "Turgo.ai",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQFxbvdBb6zpYw/company-logo_400_400/B4DZ7laJ3.KwAU-/0/1781965299568/turgomarketer_logo?e=1792022400&v=beta&t=14xIUAbsgPWiYWN8zO7KzWehSmUUUWXWyZcKXL3qn2o",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 4290,
+          "description": "Turgo is an AI-powered marketing execution platform built to turn everyday marketers into super marketers.\n\nIt starts with a live AI browser agent that performs real actions across the web from natural-language goals. Turgo connects AI intelligence, task-based agents, and agentic workflows to automate up to 80% of end-to-end marketing, while humans stay in control of strategy and approvals. These workflows extend into live AI voice agents that automate personalized inbound and outbound conversations at scale.\n\nBuilt with 30+ companies, informed by 500+ conversations, and already live with 15 customers pre-launch.",
+          "industries": [
+            {
+              "id": "6",
+              "name": "Technology, Information and Internet",
+              "urn": "urn:li:fsd_industryV2:6",
+              "title": "Technology, Information and Internet",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGJlwfalM45eA/company-background_10000/B4DZ7lVqZRK4AI-/0/1781964121909/turgomarketer_cover?e=1790953200&v=beta&t=n_MMYdB-O5yz_D90HSxS_f8bmtIM9ksBGKsfGoO5wKA",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "76718489",
+          "universalName": "hellosmartsuite",
+          "linkedinUrl": "https://www.linkedin.com/company/hellosmartsuite/",
+          "name": "SmartSuite",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4E0BAQHw54aq09-tUw/company-logo_400_400/company-logo_400_400/0/1630648913223/hellosmartsuite_logo?e=1792022400&v=beta&t=74DgsY_0l-828fEbm4T3HHp6MCfmxqGK5Jq8PEBSPc8",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 9715,
+          "description": "SmartSuite is an AI-native work platform that connects the workflows that run your business. Think of SmartSuite as a Work Operating System (Work OS)—a unified foundation for data, automation, AI, permissions, integrations, and reporting that helps teams build, manage, and scale work across the organization.\n\nMost teams start with a single workflow—then expand as they see the power of connected work across departments. SmartSuite makes it easy to standardize processes, assign clear ownership, automate follow-through, and gain real-time visibility from leadership dashboards down to the details in every record.\n\nSmartSuite includes purpose-built solution suites across four core areas:\n\n• Governance, Risk, Compliance & Resilience — unify risk, compliance, audit, third-party risk, operational resilience, business continuity, regulatory readiness, privacy, AI governance, and ESG.\n• IT Service Management (ITSM) — manage incidents, changes, requests, assets, and service operations, with direct connections to evidence, issues, and remediation.\n• Project & Portfolio Management — align teams on priorities, track execution across initiatives, and report progress against goals and OKRs in real time.\n• Business Operations — run processes across sales, marketing, product, operations, HR, finance, procurement, and more.\n\nWith a modern UI and enterprise-grade governance, SmartSuite helps organizations replace spreadsheets and fragmented point tools with connected workflows, accountable execution, and measurable outcomes.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQE219P_pqfeiQ/company-background_10000/B56Z3uBmPUJ4AU-/0/1777814889761/hellosmartsuite_cover?e=1790953200&v=beta&t=TewbcjDQInTNCL6yChSSniJYYOIKqDqzplTyEKa4_bM",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "515240",
+          "universalName": "fori-automation-inc-",
+          "linkedinUrl": "https://www.linkedin.com/company/fori-automation-inc-/",
+          "name": "Fori Automation, LLC A Lincoln Electric Company",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D560BAQHqU3EO_upB0w/company-logo_400_400/B56ZiKwkKMG4AY-/0/1754674643902/fori_automation_inc__logo?e=1792022400&v=beta&t=uPASc5Rg2e1Fuoj0TYL61X0jAuY_FQT-1KYOZSZQ_go",
+          "employeeCountRange": {
+            "start": 501,
+            "end": 1000
+          },
+          "followerCount": 26141,
+          "description": "Fori Automation, LLC is a global leader in the design, build, and integration of custom material handling, assembly, testing, and welding systems. Fori Automation founded in 1984, and located in Shelby Township, MI has built a strong reputation by designing and integrating state-of-the-art automated systems for the aerospace, automotive, defense, and general industries. With design and manufacturing facilities on multiple continents, Fori Automation is positioned to supply and support systems around the globe. ",
+          "industries": [
+            {
+              "id": "3216",
+              "name": "Industrial Automation",
+              "urn": "urn:li:fsd_industryV2:3216",
+              "title": "Industrial Automation",
+              "hierarchy": null
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/C4E1BAQHqczQ3pegyuA/company-background_10000/company-background_10000/0/1598023864747/fori_automation_inc__cover?e=1790953200&v=beta&t=Ty7vvNa63AkPOJ4DxSY8KJOhRVlKaOxZhRnAjpESozk",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "81569672",
+          "universalName": "huloop-automation",
+          "linkedinUrl": "https://www.linkedin.com/company/huloop-automation/",
+          "name": "HuLoop Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C560BAQETSMCBUDV1NQ/company-logo_400_400/company-logo_400_400/0/1653431110570/huloop_automation_logo?e=1792022400&v=beta&t=eOSQKgW0s8rknVDEzolEDjLLfDoOkyvtJPY3TgZ_1Rs",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 9132,
+          "description": "At HuLoop, we believe AI should empower people, not replace them. Our Human-in-the-Loop, AI-based Work Optimization platform helps organizations continuously Identify, Transform, Validate, and Measure how work gets done.\n\nHuLoop eliminates broken work by combining Intelligent Agents, guided workflows, and AI-powered tools that streamline operations, improve efficiency, and free teams to focus on higher-value, human work.\n\nOur Mission\nWe build future-of-work innovations that are radically simple, fast, and affordable. By keeping humans in the loop, we help organizations optimize work safely, achieve measurable outcomes, and unlock the full potential of their workforce.\n\nHow HuLoop Works\n\nIdentify where work breaks down by uncovering bottlenecks, inefficiencies, and wasted effort across people, processes, and systems.\n\nTransform work through workflow orchestration, Intelligent Agents, automation, and document processing, while keeping humans in control.\n\nValidate changes using automated testing, human oversight, and continuous verification to ensure accuracy, reliability, and compliance.\n\nMeasure results across productivity, cycle time, cost savings, quality, and compliance to prove ROI and drive continuous improvement.\n\nWhat We Do\nHuLoop delivers a unified platform including Intelligent Productivity Discovery, Workflow Orchestration, Process Automation, Document Processing, and Test Automation, all purpose-built to support continuous work optimization.\n\nIndustries We Serve\nFinancial Services including banks and credit unions\nRetail, Wholesale, and CPG\nCollections and Revenue Optimization\n\nThe future of work is not humans versus machines. It is humans maximizing machines. HuLoop makes that future practical, measurable, and empowering.\n\nReady to transform the way your team works?\nLet’s HuLoop that sh!t.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQE9-MC7BIj8yA/company-background_10000/B56ZvYP5c_HcAU-/0/1768859605098/huloop_automation_cover?e=1790953200&v=beta&t=Xj_jltKYG4OmHlKBKAvTiZg7mmYiKN_-ou7PKhBBxzk",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "77657717",
+          "universalName": "keragon",
+          "linkedinUrl": "https://www.linkedin.com/company/keragon/",
+          "name": "Keragon",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQFizHRcUTXbug/company-logo_400_400/company-logo_400_400/0/1664544415650/keragon_logo?e=1792022400&v=beta&t=2Zv6VvJRg7pDEDkvEz2E-KDRTQUSOu1F6S1gO-_7BfQ",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 6097,
+          "description": "Keragon is the #1 HIPAA-compliant automation platform for healthcare.\n\nWith more than 300+ integrations with EHRs, HIPAA-compliant CRMs and AI medical tools you can use the no-code editor to create automations that save time and drive revenue growth at scale.\n\nTo learn more about Keragon, visit https://www.linkedin.com/redir/suspicious-page?url=https%3A%2F%2Fwww%2ekeragon%2ecom",
+          "industries": [
+            {
+              "id": "14",
+              "name": "Hospitals and Health Care",
+              "urn": "urn:li:fsd_industryV2:14",
+              "title": "Hospitals and Health Care",
+              "hierarchy": "Hospitals and Health Care"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGYev29nbOzIA/company-background_10000/B4DZT44KcGHYAU-/0/1739342260401/keragon_cover?e=1790953200&v=beta&t=h2Mez5iWK0eQ3F3-yXTJcWspzJXknlO_clyKhfRmRao",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        }
+      ],
+      "affiliatedPages": [],
+      "peopleStats": [
+        {
+          "statTitle": "Locations",
+          "values": []
+        },
+        {
+          "statTitle": "School",
+          "values": []
+        },
+        {
+          "statTitle": "Current Function",
+          "values": []
+        },
+        {
+          "statTitle": "Skill Explicit",
+          "values": []
+        },
+        {
+          "statTitle": "Service categories",
+          "values": []
+        },
+        {
+          "statTitle": "Field of Study",
+          "values": []
+        }
+      ],
+      "_meta": {
+        "pagination": {
+          "totalElements": 4,
+          "totalPages": 1,
+          "pageNumber": 1,
+          "previousElements": 0,
+          "pageSize": 50,
+          "totalResultCount": 4
+        }
+      }
+    },
+    {
+      "id": "13718681",
+      "universalName": "form-automation-workflow-adeptforms",
+      "linkedinUrl": "https://www.linkedin.com/company/form-automation-workflow-adeptforms/",
+      "name": "Form Automation Workflow - AdeptForms",
+      "website": "http://adeptforms.com",
+      "employeeCount": 1,
+      "employeeCountRange": {
+        "start": 11,
+        "end": 50
+      },
+      "followerCount": 5,
+      "description": "Simplify tasks with share forms across departments without manual process of distributing paper, make your forms accessible for anyone in your company with our workflow form automation. Monitor Progress, track problems, and find bottlenecks easily with workflow form automation so you can accomplish more tasks with just one click.",
+      "companyType": "Public Company",
+      "locations": [
+        {
+          "country": "US",
+          "city": "Wake Village",
+          "geographicArea": "Texas",
+          "line1": "Singapore Dr",
+          "line2": null,
+          "postalCode": null,
+          "headquarter": true,
+          "description": null,
+          "parsed": {
+            "text": "Wake Village, TX, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "Texas",
+            "city": "Wake Village"
+          }
+        }
+      ],
+      "specialities": [],
+      "industries": [
+        {
+          "id": "4",
+          "name": "Software Development",
+          "urn": "urn:li:fsd_industryV2:4",
+          "title": "Software Development",
+          "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+        }
+      ],
+      "active": true,
+      "jobSearchUrl": "https://www.linkedin.com/jobs/search?geoId=92000000&f_C=13718681",
+      "pageVerified": false,
+      "pageType": "COMPANY",
+      "showcase": false,
+      "paidCompany": false,
+      "autoGenerated": false,
+      "callToActionUrl": "http://adeptforms.com",
+      "similarOrganizations": [
+        {
+          "id": "107942608",
+          "universalName": "aivaultsystem",
+          "linkedinUrl": "https://www.linkedin.com/company/aivaultsystem/",
+          "name": "AIVault System",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQGhoI1Ea36dLg/company-logo_400_400/B4DZr5Ds2KG4AY-/0/1765115090688/aivaultsystem_logo?e=1792022400&v=beta&t=Y0VbScT7If1xLAMK5ek2RLOoApLXZIqiqnPMGahVZsg",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 145,
+          "description": " 𝐖𝐞 𝐁𝐮𝐢𝐥𝐝 𝐒𝐩𝐞𝐞𝐝 & 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧 𝐟𝐨𝐫 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬𝐞𝐬\n\n𝐀𝐈𝐕𝐚𝐮𝐥𝐭 𝐒𝐲𝐬𝐭𝐞𝐦 is a next-generation automation and AI solutions company focused on helping businesses scale without increasing workload.\n\nOur mission is simple:\nTurn complex business processes into automated, intelligent, and reliable systems.\n\nWith a mix of AI, automation tools, integrations, and custom workflows, we help brands run smoother, respond faster, and make better decisions—all with minimal human effort.\n\n🔥 𝐖𝐡𝐚𝐭 𝐒𝐞𝐫𝐯𝐢𝐜𝐞𝐬 𝐘𝐨𝐮 𝐏𝐫𝐨𝐯𝐢𝐝𝐞\n\n1️⃣ 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐀𝐈 𝐀𝐠𝐞𝐧𝐭\nInstant replies, lead handling, follow-ups, and client support—fully automated.\n\n2️⃣ 𝐁𝐮𝐬𝐢𝐧𝐞𝐬𝐬 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧𝐬 (𝐧𝟖𝐧 / 𝐙𝐚𝐩𝐢𝐞𝐫)\nCRM updates, emails, reminders, file handling, and daily operations running automatically.\n\n3️⃣ 𝗪𝗲𝗯𝘀𝗶𝘁𝗲 & 𝗣𝗼𝗿𝘁𝗳𝗼𝗹𝗶𝗼 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁\nFast, modern, and professional websites that build trust and convert visitors.\n\n4️⃣ 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 & 𝐂𝐮𝐬𝐭𝐨𝐦 𝐀𝐈 𝐒𝐲𝐬𝐭𝐞𝐦𝐬\nBot-based onboarding, triggers, notifications, and automated operations.\n\n",
+          "industries": [
+            {
+              "id": "1594",
+              "name": "Technology, Information and Media",
+              "urn": "urn:li:fsd_industryV2:1594",
+              "title": "Technology, Information and Media",
+              "hierarchy": "Technology, Information and Media"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQGxK47RvrSViw/company-background_10000/B4DZr5R257IEAY-/0/1765118801170/aivaultsystem_cover?e=1790953200&v=beta&t=w1Oo2q26db7ACqSLT32sU8gic4UL5AwtMddSObI0Xc0",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "108395015",
+          "universalName": "smbops",
+          "linkedinUrl": "https://www.linkedin.com/company/smbops/",
+          "name": "SMB Ops - Workflow Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_400_400/B4EaAf_jLWHEAU-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=Jy2S4fqTjWRZjIlikVRryGm3NNlFgRQ-GJkrTtUJZlo",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 144,
+          "description": "At SMB Ops, we help small and mid-sized businesses run smarter by automating the busywork that slows growth. Our focus is simple: design and manage workflows that give owners back their time while improving accuracy, speed, and customer experience.\n\nWhy it matters: Studies show 89% of small businesses now use some form of AI or automation, and companies that adopt automation see an average of $5.44 return for every $1 invested. For SMB owners juggling sales, operations, and admin, this shift is no longer optional — it’s the new baseline for efficiency and growth.\n\nWhat we do:\n• Automate invoicing, payments, and reporting to keep cash flow healthy.\n• Build AI-powered sales and marketing workflows that qualify leads, send personalized follow-ups, and boost conversion rates.\n• Connect tools like QuickBooks, Jobber, Stripe, Airtable, and Google Workspace into one seamless system.\n• Design dashboards that give real-time visibility into KPIs and savings.\n• Provide ongoing automation management and documentation so your team always stays in sync.\n\nOur edge: We don’t just “set up zaps.” We combine low-code platforms with AI and process design to create sustainable, documented systems tailored to your business. Think of us as a fractional operations team — giving you enterprise-level automation without enterprise-level cost.\n\nWhether you run a home services company, med spa, law firm, or retail operation, SMB Ops is here to streamline your workflows, reduce overhead, and help you grow with confidence.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQFnCxK4y_lmKg/company-background_10000/B56ZkGgyliH8Ac-/0/1756750884322/smbops_cover?e=1790953200&v=beta&t=xv8v_DQfRuYV3VK1HOMHie3jAOP4avfrlpe2iS-eTTU",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "92931233",
+          "universalName": "nimbusnext",
+          "linkedinUrl": "https://www.linkedin.com/company/nimbusnext/",
+          "name": "Nimbusnext",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4E0BAQExAaQc0H1o-Q/company-logo_400_400/company-logo_400_400/0/1676293413981/nimbusnext_logo?e=1792022400&v=beta&t=RVVFVW6LfEfgpO7Swh9L4J7qGl8p8rVcZ0ClizyjcC0",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 6522,
+          "description": "At Nimbusnext, we believe AI should empower every business, not just the largest enterprises. We are an AI-first innovation company helping small and mid-sized businesses (SMBs) simplify, adopt, and scale Generative and Agentic AI solutions — responsibly, efficiently, and at speed.\n\nOur mission is to bridge the gap between business intent and AI execution, enabling organizations to transform operations, drive growth, and make smarter, data-driven decisions — without requiring deep technical expertise.\n\nWe are the creators of Yavi.ai, a next-generation no-code Generative AI platform built for the era of RAG (Retrieval-Augmented Generation) and Agentic AI. Yavi empowers non-technical users with single-click AI workflows while offering deep control and flexibility for technical teams.\n\nWhat We Do:\n• Empower SMBs with no-code AI workflows that deliver measurable impact.\n• Simplify AI adoption through ready-to-use industry accelerators.\n• Provide Construction and Legal industry solutions. \n• Integrate seamlessly with leading LLMs, vector and graph databases, and enterprise systems.\n• Ensure enterprise-grade security, transparency, and responsible AI governance.\n\nAt Nimbusnext, our people are our advantage — technologists, designers, and innovators driven by curiosity and collaboration. We foster a diverse, people-first culture built on empathy, integrity, and continuous learning. Innovation thrives here because we believe AI should work for humans, not replace them.\n\nTogether, we are helping businesses reimagine what’s possible — turning data into decisions, decisions into intelligence, and intelligence into growth.\n\nIndustries: Construction | Legal | Professional Services | Financial Services | Industrial Automation | ESG\n\nVision: To democratize AI and enable every business to thrive in the era of intelligent transformation.\n\nSchedule a Call: https://cal.com/yavi.ai ",
+          "industries": [
+            {
+              "id": "84",
+              "name": "Information Services",
+              "urn": "urn:li:fsd_industryV2:84",
+              "title": "Information Services",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Information Services"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQGRkhgc3EUPKw/company-background_10000/B56ZotypcTJ8AU-/0/1761704843889/nimbusnext_cover?e=1790953200&v=beta&t=8_0XtLKi5B6wjaIKsuNRU1hC778qKGdzUDPlCMwvmbI",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "68814374",
+          "universalName": "xrayautomation",
+          "linkedinUrl": "https://www.linkedin.com/company/xrayautomation/",
+          "name": "XRAY • Workflow Automation",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_400_400/B4EZpQTZk1GoAc-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=62ZN8VcckuYV0jC-WvcPt1SYH94JeO_HrQ6_DyZEWnU",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 796,
+          "description": "XRAY is a workflow optimization research and consultancy firm that specializes in building low-code automations to eliminate robotic tasks and support mindful work.  ",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_10000/B4EZpQUJ07J0AU-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=3dcu0czvoiLDApmrlNSTB4EG2Se21f4spwTLNxadMgY",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "106116086",
+          "universalName": "theautomationpartner",
+          "linkedinUrl": "https://www.linkedin.com/company/theautomationpartner/",
+          "name": "The Automation Partner",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4D0BAQFmBZJffLVILw/company-logo_400_400/B4DZo52.9qHwAY-/0/1761907307614/theautomationpartner_logo?e=1792022400&v=beta&t=wrXqRbLw8G1PwhP1dGzfhYycokLlavRhXD4F5iKfEww",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 1420,
+          "description": "The Automation Partner is a monday.com Bronze Partner (CRM Expert and Advanced Workflow badges), a Make Silver Partner (Certified Service Tier), and a Softr Certified Partner. Based in Argentina, we have delivered 70+ automation implementations and work with 100+ companies on monday.com across Latin America, the United States, Europe and Australia.\n\nWe help operations, finance and administrative teams at companies of 20 to 500 employees replace manual, spreadsheet-driven processes with systems that are simple, scalable and auditable.\n\nWhat we do:\n\nmonday.com implementation and optimization — CRM, project delivery, and company-wide operating systems.\nMake (Make.com) automation — no-code workflows and custom API integrations connecting your entire stack.\nAI agents — document reading and classification, three-way reconciliation, automated communication.\nERP and accounting integrations — NetSuite, QuickBooks, Xero, Cin7.\nSoftr client and vendor portals connected directly to monday.com or Airtable data.\n\nDocumented results:\n\nConstrucciones VDV (construction, Argentina) — 300 to 500 purchase documents processed automatically per month, replacing manual three-way matching of purchase order, delivery note and invoice.\n\nPolifroni Aberturas (manufacturing, Argentina) — 93% reduction in quote turnaround time.\n\nRiggs Distributing (appliance distribution, US) — custom monday.com CRM with bidirectional NetSuite integration.\n\nIndustries where we have working cases: construction, insurance brokerage, distribution, professional services and manufacturing.\n\nBook a 30-minute discovery call and we will map where the hidden cost sits in your operation: www.theautomationpartner.com",
+          "industries": [
+            {
+              "id": "11",
+              "name": "Business Consulting and Services",
+              "urn": "urn:li:fsd_industryV2:11",
+              "title": "Business Consulting and Services",
+              "hierarchy": "Professional Services > Business Consulting and Services"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQFaq4APILnOZA/company-background_10000/B56aBplPPBGsAI-/0/1788477764773/theautomationpartner_cover?e=1790953200&v=beta&t=rkUZtSakpOhYvUnmyFn4WqkYY4BFTdDixYFpocjwDhM",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "98633549",
+          "universalName": "leatechnologies",
+          "linkedinUrl": "https://www.linkedin.com/company/leatechnologies/",
+          "name": "LEA Technologies",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQEOzI_vR6-AeA/company-logo_400_400/company-logo_400_400/0/1693512753750?e=1792022400&v=beta&t=LDvMlIbCm8O3gxTKKquIdnzliC6K6ZmQR0ZMHDlKMqk",
+          "employeeCountRange": {
+            "start": 2,
+            "end": 10
+          },
+          "followerCount": 526,
+          "description": "LEA is the AI infrastructure platform for wealth management. Trusted by leading firms including Pure Financial, Mission Wealth and Farther Finance, LEA helps your team manage client relationships, connect disparate systems, own your data, and use AI on your terms.\n\nBacked by Social Leverage (Robinhood, Alpaca, Fiscal.ai, Ribbon, Seeds Investor).",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVyUdgxm_9eg/company-background_10000/B4EZ4jI96KIwAI-/0/1778706014120/getlea_cover?e=1790953200&v=beta&t=hYoGyX5tDPJ8ndOE168lihCIW9kjHYmYDmoD7fCZSYA",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "35595252",
+          "universalName": "zencongroup",
+          "linkedinUrl": "https://www.linkedin.com/company/zencongroup/",
+          "name": "Zencon Group Inc.",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHLTKy29C3LMw/company-logo_400_400/B4EZYAyWc5HgAY-/0/1743769921841/zencongroup_logo?e=1792022400&v=beta&t=4OJ6MR7H9M8hQgtgCx0CQpHYPeIn-l3IT5oQ7Nkmfao",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 68674,
+          "description": "ZENCON GROUP: Empowering Digital Transformation, Service Excellence & Workforce Innovation\n\nZencon Group is a global IT consulting firm and certified Microsoft Partner delivering high-performance digital solutions that help organizations modernize operations, elevate customer and citizen experiences, and scale with confidence. We specialize in Microsoft Dynamics 365, Power Platform, Microsoft 365, SharePoint, and ServiceNow implementations—designing secure, end-to-end cloud solutions that streamline workflows and drive measurable ROI.\n\nOur GovTech practice empowers public-sector agencies with mission-ready platforms including Grant Management, Ticketing & Work Order Systems, Citizen Engagement Portals, and Cloud Contact Centers. We help government organizations improve transparency, responsiveness, and service delivery while meeting compliance requirements.\n\nIn addition to technology solutions, Zencon Group provides IT Talent Staffing & Staff Augmentation, connecting clients with highly skilled professionals across application development, cloud engineering, data analytics, cybersecurity, and project management. Our flexible, scalable staffing model ensures organizations can deliver critical programs on time and within budget.\n\nBacked by deep technical expertise, global delivery capabilities, and a proven implementation methodology, Zencon Group enables enterprise and public-sector clients to accelerate transformation, reduce operational friction, and achieve lasting mission and business success.",
+          "industries": [
+            {
+              "id": "96",
+              "name": "IT Services and IT Consulting",
+              "urn": "urn:li:fsd_industryV2:96",
+              "title": "IT Services and IT Consulting",
+              "hierarchy": "Professional Services > IT Services and IT Consulting"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQFa03hDl8c2BQ/company-background_10000/B4EZc76J6gHYAU-/0/1749056790872/zencongroup_cover?e=1790953200&v=beta&t=f8hwcw-TYD7JbccyfefW9XnQDuRUEGwLhzh1Xxa73qI",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "18246783",
+          "universalName": "deeplearningai",
+          "linkedinUrl": "https://www.linkedin.com/company/deeplearningai/",
+          "name": "DeepLearning.AI",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQEeku3eYbZ5_Q/company-logo_400_400/B4EaChOr35IUAY-/0/1789411376900/deeplearningai_logo?e=1792022400&v=beta&t=E7KXhghpMf7D8EG0jSOj-DUtSH7k7EbUijmr3fm394M",
+          "employeeCountRange": {
+            "start": 11,
+            "end": 50
+          },
+          "followerCount": 1367811,
+          "description": "DeepLearning.AI is making a world-class AI education accessible to people around the globe. DeepLearning.AI was founded by Andrew Ng, a global leader in AI. ",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D561BAQGditrGh_qYLA/company-background_10000/company-background_10000/0/1724801661041/deeplearningai_cover?e=1790953200&v=beta&t=PUq00jwxYbvpfir_c5UviLx6HbFe-LUX7W_Q9c15IzA",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "9956",
+          "universalName": "realpage",
+          "linkedinUrl": "https://www.linkedin.com/company/realpage/",
+          "name": "Realpage",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHkguP9kkWqvg/company-logo_400_400/B4EZ_xM.k8KwAY-/0/1786458139170/realpage_logo?e=1792022400&v=beta&t=IFXQnE0gfyY5yJJyxiJ8RC5O1IZ8bEYHl1qdlcjvaxs",
+          "employeeCountRange": {
+            "start": 5001,
+            "end": 10000
+          },
+          "followerCount": 277615,
+          "description": "RealPage is the leading global provider of AI-enabled software platforms to the real estate industry. By using RealPage solutions for operational excellence in the front office and throughout property operations, many leading property owners, operators and investors gain transparency into asset performance with data insights, enhancing experiences with customized tools and improving efficiencies to generate incremental yield. In 2021, 2022, 2023 and 2024, RealPage was recognized as ENERGY STAR® Partner of the Year for Sustained Excellence from the Environmental Protection Agency (EPA) and the U.S. Department of Energy. In 2024, RealPage was recognized as one of America’s Best Employers by Forbes and America’s Best Employers for Women by Forbes and one of America’s Greatest Workplaces for Women by Newsweek. RealPage has been recognized as The TITAN Innovation Awards’ 2024 Gold Winner in the Innovation in Services and Solutions – Real Estate category for LOFT™. \n\nFounded in 1998 and headquartered in Richardson, Texas, RealPage joined the ThomaBravo portfolio of market-leading enterprise software firms in 2021 to realize faster growth and innovation in serving more than 24 million rental units from offices in North America, Europe and Asia. RealPage has been certified as a Great Place to Work™ in India, the Philippines, the UK and the U.S.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQEneIWOpTs_GA/company-background_10000/B4EZ_82WjrJ8AI-/0/1786653534755/realpage_cover?e=1790953200&v=beta&t=swItEERGNGHUcAOCrwGBAfUzb73ZWu_f0hq42YcQvAw",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "20353970",
+          "universalName": "creatioglobal",
+          "linkedinUrl": "https://www.linkedin.com/company/creatioglobal/",
+          "name": "Creatio",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/C4E0BAQEb4tJ_G2FeVQ/company-logo_400_400/company-logo_400_400/0/1630647936872/creatioglobal_logo?e=1792022400&v=beta&t=GK17xilg7c-Ugmd2cWBuKkuWiToIGZzrSTnq4EmTEpA",
+          "employeeCountRange": {
+            "start": 501,
+            "end": 1000
+          },
+          "followerCount": 141274,
+          "description": "AI CRM and workflow platform where people and AI agents work together — with no limits on users, agents, or scale. We help midsize and large organizations run customer workflows in the AI era. \n\nGenuine care is at the heart of our culture. We build lasting, sincere relationships with clients and partners through warm, transparent communication and an ongoing focus on delivering value and strong business outcomes. ",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQHxIbTxyr5K0g/company-background_10000/B4EZ_14SeaGoAI-/0/1786536601749/creatioglobal_cover?e=1790953200&v=beta&t=QPhuH22l2B_66ED5COWP3vYqzS9yZ8TYw0GelpLHsGo",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "28491094",
+          "universalName": "n8n",
+          "linkedinUrl": "https://www.linkedin.com/company/n8n/",
+          "name": "n8n",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQH--FgKVJA8yg/company-logo_400_400/B4EZxlxTeBI0AY-/0/1771233949987/n8n_logo?e=1792022400&v=beta&t=USmXBv_DTmtJ4FC9u3qVMJaPI9FJL04Ez3TT9nhuU0Q",
+          "employeeCountRange": {
+            "start": 51,
+            "end": 200
+          },
+          "followerCount": 430255,
+          "description": "n8n is a workflow automation platform that uniquely combines AI capabilities with business process automation. The platform enables connection to any app or API while maintaining the flexibility of code with the speed of no-code.\n\nReleased under a fair-code license, n8n can be self-hosted and is supported by a vibrant community of developers and builders. Users can start simple and layer complexity as needed - utilizing the visual builder for quick wins, and adding custom Javascript or Python code where more control is required, enabling the connection of anything to everything.\n\nn8n is privately held, with funding from Sequoia, Felicis Ventures, Firstminute Capital, Harpoon Ventures, and others. Individual investors include Eventbrite's Kevin Hartz and Supercell's IIkka Paananen. n8n was founded in 2019 and is headquartered in Berlin.",
+          "industries": [
+            {
+              "id": "4",
+              "name": "Software Development",
+              "urn": "urn:li:fsd_industryV2:4",
+              "title": "Software Development",
+              "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/D4D1BAQEAnvOd7iQrhA/company-background_10000/B4DaCCBKa3GkAM-/0/1788887738324/n8n_cover?e=1790953200&v=beta&t=RlPH1fD5l6Ft92Qd9rbCOVeiS-IWEfimCUolIWS7Ijw",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        },
+        {
+          "id": "515240",
+          "universalName": "fori-automation-inc-",
+          "linkedinUrl": "https://www.linkedin.com/company/fori-automation-inc-/",
+          "name": "Fori Automation, LLC A Lincoln Electric Company",
+          "website": null,
+          "logo": "https://media.licdn.com/dms/image/v2/D560BAQHqU3EO_upB0w/company-logo_400_400/B56ZiKwkKMG4AY-/0/1754674643902/fori_automation_inc__logo?e=1792022400&v=beta&t=uPASc5Rg2e1Fuoj0TYL61X0jAuY_FQT-1KYOZSZQ_go",
+          "employeeCountRange": {
+            "start": 501,
+            "end": 1000
+          },
+          "followerCount": 26141,
+          "description": "Fori Automation, LLC is a global leader in the design, build, and integration of custom material handling, assembly, testing, and welding systems. Fori Automation founded in 1984, and located in Shelby Township, MI has built a strong reputation by designing and integrating state-of-the-art automated systems for the aerospace, automotive, defense, and general industries. With design and manufacturing facilities on multiple continents, Fori Automation is positioned to supply and support systems around the globe. ",
+          "industries": [
+            {
+              "id": "3216",
+              "name": "Industrial Automation",
+              "urn": "urn:li:fsd_industryV2:3216",
+              "title": "Industrial Automation",
+              "hierarchy": null
+            }
+          ],
+          "backgroundCover": "https://media.licdn.com/dms/image/v2/C4E1BAQHqczQ3pegyuA/company-background_10000/company-background_10000/0/1598023864747/fori_automation_inc__cover?e=1790953200&v=beta&t=Ty7vvNa63AkPOJ4DxSY8KJOhRVlKaOxZhRnAjpESozk",
+          "callToActionUrl": null,
+          "affiliatedPages": []
+        }
+      ],
+      "affiliatedPages": [],
+      "peopleStats": [
+        {
+          "statTitle": "Locations",
+          "values": [
+            {
+              "title": "Singapore",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "School",
+          "values": []
+        },
+        {
+          "statTitle": "Current Function",
+          "values": [
+            {
+              "title": "Marketing",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Skill Explicit",
+          "values": []
+        },
+        {
+          "statTitle": "Service categories",
+          "values": []
+        },
+        {
+          "statTitle": "Field of Study",
+          "values": []
+        }
+      ],
+      "_meta": {
+        "pagination": {
+          "totalElements": 4,
+          "totalPages": 1,
+          "pageNumber": 1,
+          "previousElements": 0,
+          "pageSize": 50,
+          "totalResultCount": 4
+        }
+      }
+    },
+    {
+      "id": "68814374",
+      "universalName": "xrayautomation",
+      "linkedinUrl": "https://www.linkedin.com/company/xrayautomation/",
+      "name": "XRAY • Workflow Automation",
+      "tagline": "We build workflows worthy of human attention. ",
+      "website": "http://xray.tech",
+      "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_400_400/B4EZpQTZk1GoAc-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=62ZN8VcckuYV0jC-WvcPt1SYH94JeO_HrQ6_DyZEWnU",
+      "foundedOn": {
+        "month": null,
+        "year": 2020,
+        "day": null
+      },
+      "employeeCount": 37,
+      "employeeCountRange": {
+        "start": 11,
+        "end": 50
+      },
+      "followerCount": 796,
+      "description": "XRAY is a workflow optimization research and consultancy firm that specializes in building low-code automations to eliminate robotic tasks and support mindful work.  ",
+      "companyType": "Privately Held",
+      "locations": [
+        {
+          "country": "US",
+          "city": "New York",
+          "geographicArea": "New York",
+          "line1": null,
+          "line2": null,
+          "postalCode": null,
+          "headquarter": true,
+          "description": null,
+          "parsed": {
+            "text": "New York City, NY, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "New York",
+            "city": "New York City"
+          }
+        },
+        {
+          "country": "US",
+          "city": "Boston",
+          "geographicArea": "MA",
+          "line1": null,
+          "line2": null,
+          "postalCode": null,
+          "headquarter": false,
+          "description": null,
+          "parsed": {
+            "text": "Boston, MA, United States",
+            "countryCode": "US",
+            "regionCode": null,
+            "country": "United States",
+            "countryFull": "United States of America",
+            "state": "Massachusetts",
+            "city": "Boston"
+          }
+        }
+      ],
+      "specialities": [
+        "Business Process Automation",
+        "No-Code & Low-Code Systems",
+        "Zapier",
+        "Mindful Work",
+        "Operational Databases",
+        "Team Workflows",
+        "Workflow Optimization",
+        "Workflow Design",
+        "Automation Infrastructure",
+        "Automation Documentation",
+        "Automation Management",
+        "Fractional COO"
+      ],
+      "industries": [
+        {
+          "id": "4",
+          "name": "Software Development",
+          "urn": "urn:li:fsd_industryV2:4",
+          "title": "Software Development",
+          "hierarchy": "Technology, Information and Media > Technology, Information and Internet > Software Development"
+        }
+      ],
+      "logos": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_400_400/B4EZpQTZk1GoAc-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=62ZN8VcckuYV0jC-WvcPt1SYH94JeO_HrQ6_DyZEWnU",
+          "width": 400,
+          "height": 400
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_200_200/B4EZpQTZk1GoAM-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=zcFCgQk2B_euN_hlHI1OqNNhCZ7owUztjDt0-I6ltuI",
+          "width": 200,
+          "height": 200
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E0BAQHs4V04RI757Q/company-logo_100_100/B4EZpQTZk1GoAU-/0/1762283854452/xrayautomation_logo?e=1792022400&v=beta&t=4jT-5WmWY0NJWwe801Jmf6Z7_i4_-2vXYeMzWqp0tWs",
+          "width": 100,
+          "height": 100
+        }
+      ],
+      "backgroundCover": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_10000/B4EZpQUJ07J0AU-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=3dcu0czvoiLDApmrlNSTB4EG2Se21f4spwTLNxadMgY",
+      "backgroundCovers": [
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_10000/B4EZpQUJ07J0AU-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=3dcu0czvoiLDApmrlNSTB4EG2Se21f4spwTLNxadMgY",
+          "width": 1820,
+          "height": 496
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_400/B4EZpQUJ07J0AY-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=Nc7OXEB7MQmHuLQzN5Q12XYiISsJPXZ-x8JFIAEaQdk",
+          "width": 400,
+          "height": 109
+        },
+        {
+          "url": "https://media.licdn.com/dms/image/v2/D4E1BAQGVwZQLoa2s8Q/company-background_200/B4EZpQUJ07J0Ac-/0/1762284052468/xrayautomation_cover?e=1790953200&v=beta&t=z38r-3fvdINkRA9hnTDfr39QMvGlY1l8sxZA0z_qYOk",
+          "width": 200,
+          "height": 54
+        }
+      ],
+      "pageVerified": false,
+      "pageType": "COMPANY",
+      "showcase": false,
+      "paidCompany": false,
+      "autoGenerated": false,
+      "callToActionUrl": "http://xray.tech",
+      "similarOrganizations": [
+        {
+          "id": "108395015",
+          "name": "SMB Ops - Workflow Automation",
+          "linkedinUrl": "https://www.linkedin.com/company/smbops",
+          "followerCount": 144,
+          "logo": "https://media.licdn.com/dms/image/v2/D4E0BAQG2aedoyFiIGw/company-logo_400_400/B4EaAf_jLWHEAU-/0/1787243148364/smbops_logo?e=1792022400&v=beta&t=Jy2S4fqTjWRZjIlikVRryGm3NNlFgRQ-GJkrTtUJZlo"
+        },
+        {
+          "id": "98815382",
+          "name": "BizMagnets – WhatsApp Ticketing & Workflow Automation",
+          "linkedinUrl": "https://www.linkedin.com/company/bizmagnets",
+          "followerCount": 2594,
+          "logo": "https://media.licdn.com/dms/image/v2/D560BAQHL4ppaNY8RFQ/company-logo_400_400/B56ZgS7TKPG4Ac-/0/1752664192075/bizmagnets_logo?e=1792022400&v=beta&t=oeH0OgIs1uM7aqeKy5jXb0mPT9J3kL73E0OySsWsxHE"
+        },
+        {
+          "id": "106801701",
+          "name": "BuildFlows.AI | AI Workflows | Custom Workflow | AI Consulting | Flow Automation | n8n | AI Agent",
+          "linkedinUrl": "https://www.linkedin.com/company/buildflows-ai",
+          "followerCount": 305,
+          "logo": "https://media.licdn.com/dms/image/v2/D560BAQFfY6McJ94jXw/company-logo_400_400/B56ZdYGBEkG0AY-/0/1749529662368/buildflows_ai_logo?e=1792022400&v=beta&t=PFIAkAvud5wUWHTG92qTLo0IcFXZguW2KlY9YQxaZfU"
+        }
+      ],
+      "affiliatedPages": [],
+      "peopleStats": [
+        {
+          "statTitle": "Locations",
+          "values": [
+            {
+              "title": "United States",
+              "count": 20
+            },
+            {
+              "title": "India",
+              "count": 10
+            },
+            {
+              "title": "New York City Metropolitan Area",
+              "count": 4
+            },
+            {
+              "title": "New York, United States",
+              "count": 3
+            },
+            {
+              "title": "Tamil Nadu, India",
+              "count": 2
+            },
+            {
+              "title": "California, United States",
+              "count": 2
+            },
+            {
+              "title": "Texas, United States",
+              "count": 2
+            },
+            {
+              "title": "Washington, United States",
+              "count": 2
+            },
+            {
+              "title": "Maharashtra, India",
+              "count": 2
+            },
+            {
+              "title": "Greater Boston",
+              "count": 2
+            },
+            {
+              "title": "Leavenworth, WA",
+              "count": 1
+            },
+            {
+              "title": "Calabarzon, Philippines",
+              "count": 1
+            },
+            {
+              "title": "Saudi Arabia",
+              "count": 1
+            },
+            {
+              "title": "Bavaria, Germany",
+              "count": 1
+            },
+            {
+              "title": "Pine Bluff, AR",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "School",
+          "values": [
+            {
+              "title": "Quinnipiac University",
+              "count": 2
+            },
+            {
+              "title": "Western Washington University",
+              "count": 1
+            },
+            {
+              "title": "Northcoders",
+              "count": 1
+            },
+            {
+              "title": "UNIVERSIDAD IBEROAMERICANA TORREÓN",
+              "count": 1
+            },
+            {
+              "title": "Grand Valley State University",
+              "count": 1
+            },
+            {
+              "title": "ITESO Universidad Jesuita de Guadalajara",
+              "count": 1
+            },
+            {
+              "title": "Michigan State University College of Law",
+              "count": 1
+            },
+            {
+              "title": "John Jay College (CUNY)",
+              "count": 1
+            },
+            {
+              "title": "Michigan State University - Eli Broad College of Business",
+              "count": 1
+            },
+            {
+              "title": "King George's Medical University (KGMU), Lucknow",
+              "count": 1
+            },
+            {
+              "title": "Inter-American consultants",
+              "count": 1
+            },
+            {
+              "title": "Brandeis University",
+              "count": 1
+            },
+            {
+              "title": "California College of the Arts",
+              "count": 1
+            },
+            {
+              "title": "Virginia Commonwealth University",
+              "count": 1
+            },
+            {
+              "title": "Gibson Ek High School",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Current Function",
+          "values": [
+            {
+              "title": "Healthcare Services",
+              "count": 12
+            },
+            {
+              "title": "Engineering",
+              "count": 10
+            },
+            {
+              "title": "Business Development",
+              "count": 5
+            },
+            {
+              "title": "Operations",
+              "count": 4
+            },
+            {
+              "title": "Media and Communication",
+              "count": 3
+            },
+            {
+              "title": "Administrative",
+              "count": 3
+            },
+            {
+              "title": "Sales",
+              "count": 2
+            },
+            {
+              "title": "Arts and Design",
+              "count": 2
+            },
+            {
+              "title": "Finance",
+              "count": 1
+            },
+            {
+              "title": "Military and Protective Services",
+              "count": 1
+            },
+            {
+              "title": "Program and Project Management",
+              "count": 1
+            },
+            {
+              "title": "Customer Success and Support",
+              "count": 1
+            },
+            {
+              "title": "Consulting",
+              "count": 1
+            },
+            {
+              "title": "Education",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Skill Explicit",
+          "values": [
+            {
+              "title": "Leadership",
+              "count": 9
+            },
+            {
+              "title": "Project Management",
+              "count": 9
+            },
+            {
+              "title": "Public Speaking",
+              "count": 7
+            },
+            {
+              "title": "Microsoft Office",
+              "count": 7
+            },
+            {
+              "title": "Team Leadership",
+              "count": 6
+            },
+            {
+              "title": "Microsoft PowerPoint",
+              "count": 6
+            },
+            {
+              "title": "Social Media",
+              "count": 6
+            },
+            {
+              "title": "Customer Service",
+              "count": 6
+            },
+            {
+              "title": "Microsoft Word",
+              "count": 5
+            },
+            {
+              "title": "Sales",
+              "count": 5
+            },
+            {
+              "title": "Microsoft Excel",
+              "count": 4
+            },
+            {
+              "title": "Research Skills",
+              "count": 4
+            },
+            {
+              "title": "Startups",
+              "count": 4
+            },
+            {
+              "title": "Airtable",
+              "count": 4
+            },
+            {
+              "title": "Notion Productivity Software",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "statTitle": "Service categories",
+          "values": [
+            {
+              "title": "Software Development",
+              "count": 3
+            },
+            {
+              "title": "Consulting",
+              "count": 2
+            },
+            {
+              "title": "Information Management",
+              "count": 2
+            },
+            {
+              "title": "Custom Software Development",
+              "count": 2
+            },
+            {
+              "title": "Operations",
+              "count": 2
+            },
+            {
+              "title": "Application Development",
+              "count": 1
+            },
+            {
+              "title": "User Experience Design (UED)",
+              "count": 1
+            },
+            {
+              "title": "Project Management",
+              "count": 1
+            },
+            {
+              "title": "Executive Administrative Assistance",
+              "count": 1
+            },
+            {
+              "title": "Design",
+              "count": 1
+            },
+            {
+              "title": "Administrative Assistance",
+              "count": 1
+            },
+            {
+              "title": "Database Development",
+              "count": 1
+            },
+            {
+              "title": "Enterprise Content Management",
+              "count": 1
+            },
+            {
+              "title": "Strategic Planning",
+              "count": 1
+            },
+            {
+              "title": "Management Consulting",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "statTitle": "Field of Study",
+          "values": [
+            {
+              "title": "Business Administration and Management, General",
+              "count": 3
+            },
+            {
+              "title": "Entrepreneurship/Entrepreneurial Studies",
+              "count": 2
+            },
+            {
+              "title": "Architecture",
+              "count": 1
+            },
+            {
+              "title": "Communication and Media Studies",
+              "count": 1
+            },
+            {
+              "title": "Computer Software Engineering",
+              "count": 1
+            },
+            {
+              "title": "Law",
+              "count": 1
+            },
+            {
+              "title": "American/U.S. Law/Legal Studies/Jurisprudence",
+              "count": 1
+            },
+            {
+              "title": "Creative Writing",
+              "count": 1
+            },
+            {
+              "title": "General Literature",
+              "count": 1
+            },
+            {
+              "title": "Biochemistry",
+              "count": 1
+            },
+            {
+              "title": "Philosophy",
+              "count": 1
+            },
+            {
+              "title": "Psychology",
+              "count": 1
+            },
+            {
+              "title": "Social Work",
+              "count": 1
+            },
+            {
+              "title": "Film/Cinema/Video Studies",
+              "count": 1
+            },
+            {
+              "title": "Physical Therapy Technician/Assistant",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "_meta": {
+        "pagination": {
+          "totalElements": 4,
+          "totalPages": 1,
+          "pageNumber": 1,
+          "previousElements": 0,
+          "pageSize": 50,
+          "totalResultCount": 4
+        }
+      }
+    }
+  ]
+}

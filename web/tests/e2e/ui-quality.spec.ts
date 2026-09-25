@@ -115,7 +115,7 @@ test.describe("ui quality", () => {
       await expect(page).toHaveURL(new RegExp(`/runs/${run.id}/sample-pack$`), { timeout: 10_000 });
 
       // sample pack -> copy, via keyboard only.
-      await expect(page.getByText("Acme Robotics")).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("heading", { level: 2, name: "Acme Robotics" })).toBeVisible({ timeout: 10_000 });
       const copyAll = page.getByRole("button", { name: "Copy all" });
       await copyAll.focus();
       await expect(copyAll).toBeFocused();

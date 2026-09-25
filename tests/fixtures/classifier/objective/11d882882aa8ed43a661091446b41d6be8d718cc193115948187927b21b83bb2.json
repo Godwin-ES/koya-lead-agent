@@ -1,0 +1,16 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request asks for companies but provides no industry, geography, company type, or other criteria to perform a targeted search.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 B2B SaaS companies in the United States with 50-200 employees that sell HR software."
+}

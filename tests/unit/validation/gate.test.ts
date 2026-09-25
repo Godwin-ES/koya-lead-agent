@@ -123,11 +123,24 @@ describe("validateObjective (the gate)", () => {
     expect(r.severity).toBe("advisory");
   });
 
-  it("degrades permissive when the classifier is unavailable", async () => {
+  // Decided before deployment: no run starts on an objective that couldn't be checked.
+  it("blocks the run when the classifier is unavailable, after one retry", async () => {
+    mockedClassify.mockReset();
     mockedClassify.mockRejectedValue(new Error("model unavailable"));
 
     const r = await validateObjective(fakeSupabase(), "find 10 us saas companies with a hundred employees", u);
     expect(r.verdict).toBe("unavailable");
+    expect(r.blocking).toBe(true);
+    expect(r.dismissible).toBe(false);
+    expect(mockedClassify).toHaveBeenCalledTimes(2);
+  });
+
+  it("recovers on the retry when the first check call fails", async () => {
+    mockedClassify.mockReset();
+    mockedClassify.mockRejectedValueOnce(new Error("blip")).mockResolvedValueOnce({ verdict: "valid", confidence: 0.9, reason: "ok", missing_criteria: [], suggested_rewrite: "" });
+
+    const r = await validateObjective(fakeSupabase(), "find 12 us saas companies with fifty employees", u);
+    expect(r.verdict).toBe("valid");
     expect(r.blocking).toBe(false);
   });
 
@@ -162,6 +175,8 @@ describe("validateObjective (the gate)", () => {
   // text kept returning the stale "unavailable" verdict, even minutes
   // later once the outage had cleared.
   it("does not permanently cache a classifier outage - retries on the next check instead", async () => {
+    // Two failures: the check itself and its one retry.
+    mockedClassify.mockRejectedValueOnce(new Error("503 model unavailable"));
     mockedClassify.mockRejectedValueOnce(new Error("503 model unavailable"));
     mockedClassify.mockResolvedValueOnce({
       verdict: "valid",
@@ -178,7 +193,7 @@ describe("validateObjective (the gate)", () => {
     expect(first.verdict).toBe("unavailable");
 
     const second = await validateObjective(db, text, u);
-    expect(mockedClassify).toHaveBeenCalledTimes(2);
+    expect(mockedClassify).toHaveBeenCalledTimes(3);
     expect(second.verdict).toBe("valid");
   });
 

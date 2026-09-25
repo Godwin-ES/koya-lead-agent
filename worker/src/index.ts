@@ -11,6 +11,8 @@ import { createClient } from "@supabase/supabase-js";
 import { reclaimStaleRuns } from "@core/db/runs";
 import { validateBootCredentials, runClaimLoop } from "./service";
 import { startHealthServer } from "./health";
+import { isProduction } from "@core/domain/environment";
+import { sendDiscord, workerOnlineMessage } from "@core/notify/discord";
 
 const WORKER_ID = process.env.WORKER_ID ?? `worker-${randomUUID()}`;
 const HEALTH_PORT = Number(process.env.PORT ?? 8080);
@@ -27,6 +29,8 @@ async function main() {
 
   const healthServer = startHealthServer(HEALTH_PORT);
   console.log(`${WORKER_ID} listening for runs (health on :${HEALTH_PORT}).`);
+  // Only the deployed worker announces itself - a restart there is worth knowing about; a local one isn't.
+  if (isProduction()) await sendDiscord("alerts", workerOnlineMessage(WORKER_ID));
 
   const reclaimTimer = setInterval(() => {
     reclaimStaleRuns(supabase).catch((err) => console.error("reclaim_stale_runs failed:", err));

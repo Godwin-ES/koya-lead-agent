@@ -1,4 +1,5 @@
 import type { RawScrapeResult } from "./types";
+import { RunFailure } from "../../domain/failure";
 
 /**
  * Calls the self-hosted Crawl4AI sidecar. Shape confirmed live
@@ -12,14 +13,24 @@ export async function scrapeCrawl4aiRaw(url: string): Promise<RawScrapeResult> {
   const baseUrl = process.env.CRAWL4AI_BASE_URL ?? "http://localhost:11235";
   const token = process.env.CRAWL4AI_API_TOKEN;
 
-  const res = await fetch(`${baseUrl}/crawl`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ urls: [url] }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/crawl`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ urls: [url] }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (err) {
+    // A slow page is one page; an unreachable sidecar is every page (local development only).
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return { success: false, httpStatus: null, errorMessage: "crawl4ai: no response within 60s", providerError: true };
+    }
+    throw new RunFailure("temporary", "crawl4ai", `Crawl4AI isn't reachable at ${baseUrl} - start the sidecar (docker-compose.dev.yml), then resume.`);
+  }
 
   if (!res.ok) {
     return { success: false, httpStatus: res.status, errorMessage: `crawl4ai request failed with HTTP ${res.status}` };

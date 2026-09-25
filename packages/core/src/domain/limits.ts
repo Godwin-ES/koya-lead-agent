@@ -1,8 +1,13 @@
 import type { RunLimits } from "./types";
+import { candidatesPerDiscoverCall } from "./discovery";
+
+/** The most searches a run can ever be given, including extensions. */
+export const MAX_SEARCHES = 6;
 
 /** SYSTEM-DESIGN-NEXTJS.md §7's "Intake and Visible Defaults" table. */
 export const LIMIT_DEFAULTS: RunLimits = {
   target_qualified: 10,
+  max_discover_attempts: 3,
   candidate_limit: 25,
   scrape_limit: 30,
   max_turns: 60,
@@ -22,8 +27,10 @@ export const LIMIT_DEFAULTS: RunLimits = {
  */
 const RANGES: Partial<Record<keyof RunLimits, { min: number; max: number }>> = {
   target_qualified: { min: 1, max: 10 },
-  candidate_limit: { min: 1, max: 40 },
-  scrape_limit: { min: 1, max: 40 },
+  // Room for up to six searches of 25 - three at creation, more via "Continue with more budget".
+  candidate_limit: { min: 1, max: 150 },
+  scrape_limit: { min: 1, max: 300 },
+  max_discover_attempts: { min: 1, max: MAX_SEARCHES },
 };
 
 const FLOORS: Partial<Record<keyof RunLimits, number>> = {
@@ -64,32 +71,22 @@ export function clampLimits(requested: Partial<RunLimits>): RunLimits {
  * everything else is derived here, server-side, never trusted from the
  * client (a hidden field is not the same as an enforced one).
  *
- * No dollar-denominated ceiling anywhere in this run - the user's own
- * call, after a real run showed the spend ceiling firing on an
- * over-inflated cost estimate rather than a real problem. Real spend is
- * now bounded structurally instead:
+ * No dollar-denominated ceiling anywhere - spend is bounded structurally:
  *
- * - `candidate_limit` is a fixed 40 regardless of `target_qualified` -
- *   not because bigger asks don't need more candidates (they do), but
- *   because this is sized for the worst case (target_qualified's own max
- *   of 10) and matched 1:1 to a single Apify actor dispatch's own cap
- *   (`APIFY_CAP_FIELD_NAME`) - the whole design is "one real discover
- *   call per run, sized generously enough that if it can't find enough
- *   candidates, the objective itself needs refining," not "scale the cap
- *   with how many leads you asked for." A smaller `target_qualified`
- *   doesn't need a smaller candidate pool to choose from.
- * - `scrape_limit`/`max_turns`/`max_tool_calls` are fixed, generous
- *   safety nets, not meant to bind in normal operation against a
- *   candidate pool this size - insurance against a genuine agent
- *   malfunction (e.g. a stuck re-scrape loop), not a routine constraint.
- * - `max_spend_usd` is kept in the type (avoids a schema/UI churn for a
- *   field that's still useful to *record*, just not to *gate on*) but
- *   set high enough here that it can never realistically bind; nothing
- *   in `gate()` or the Apify adapter checks it anymore either.
+ * - `candidate_limit` = MAX_DISCOVER_ATTEMPTS x the per-call size
+ *   (candidatesPerDiscoverCall: 2x target, within [10, 25]), so every one
+ *   of the three attempts - including paging deeper through a query that
+ *   works - can return a full page. Worst case at target 10: 75 results,
+ *   ~$0.30 at HarvestAPI's $0.004/result.
+ * - `scrape_limit` = 2 pages per candidate (homepage plus a pricing or
+ *   product page); scrape_site also enforces the 2-page limit per company.
+ * - `max_turns`/`max_tool_calls` are generous circuit breakers, not meant
+ *   to bind in normal operation.
+ * - `max_spend_usd` stays in the type for recording only; nothing gates on it.
  */
-const FIXED_CANDIDATE_LIMIT = 40;
-const FIXED_SCRAPE_LIMIT = 80;
-const FIXED_MAX_TOOL_CALLS = 300;
+const DISCOVER_ATTEMPTS = 3;
+const SCRAPE_PAGES_PER_CANDIDATE = 2;
+const FIXED_MAX_TOOL_CALLS = 400;
 const FIXED_MAX_TURNS = 150;
 const EFFECTIVELY_UNLIMITED_SPEND_USD = 999;
 
@@ -98,13 +95,43 @@ export function deriveLimitsFromTarget(targetQualifiedRequested: number): RunLim
   const safeRequested = Number.isFinite(targetQualifiedRequested) ? targetQualifiedRequested : range.min;
   const target = Math.min(range.max, Math.max(range.min, Math.round(safeRequested)));
 
+  const candidateLimit = DISCOVER_ATTEMPTS * candidatesPerDiscoverCall(target);
+
   return {
     target_qualified: target,
-    candidate_limit: FIXED_CANDIDATE_LIMIT,
-    scrape_limit: FIXED_SCRAPE_LIMIT,
+    max_discover_attempts: DISCOVER_ATTEMPTS,
+    candidate_limit: candidateLimit,
+    scrape_limit: candidateLimit * SCRAPE_PAGES_PER_CANDIDATE,
     max_turns: FIXED_MAX_TURNS,
     max_tool_calls: FIXED_MAX_TOOL_CALLS,
     max_spend_usd: EFFECTIVELY_UNLIMITED_SPEND_USD,
   };
 }
 
+
+export type LimitReachedKind = "searches" | "candidates" | "scrapes" | "turns" | "tool_calls" | null;
+
+/**
+ * "Continue with more budget": the run's limits with `extraSearches` more
+ * LinkedIn searches, each with its own candidates and scrape pages. Whatever
+ * actually stopped the run (scrape pages, candidates, turns, tool calls)
+ * also gets headroom - otherwise the continued run would stop again at once.
+ */
+export function extendLimits(limits: RunLimits, extraSearches: number, limitReached: LimitReachedKind): RunLimits {
+  const searches = limits.max_discover_attempts ?? DISCOVER_ATTEMPTS;
+  const added = Math.max(0, Math.min(Math.round(extraSearches), MAX_SEARCHES - searches));
+  const perSearch = candidatesPerDiscoverCall(limits.target_qualified);
+  return clampLimits({
+    ...limits,
+    max_discover_attempts: searches + added,
+    candidate_limit: limits.candidate_limit + (added + (limitReached === "candidates" ? 1 : 0)) * perSearch,
+    scrape_limit: limits.scrape_limit + (added + (limitReached === "scrapes" ? 1 : 0)) * perSearch * SCRAPE_PAGES_PER_CANDIDATE,
+    max_turns: limits.max_turns + (limitReached === "turns" ? 75 : added * 25),
+    max_tool_calls: limits.max_tool_calls + (limitReached === "tool_calls" ? 150 : added * 60),
+  });
+}
+
+/** How many more searches a run can still be given. */
+export function searchesLeftToAdd(limits: Partial<RunLimits>): number {
+  return Math.max(0, MAX_SEARCHES - (limits.max_discover_attempts ?? DISCOVER_ATTEMPTS));
+}

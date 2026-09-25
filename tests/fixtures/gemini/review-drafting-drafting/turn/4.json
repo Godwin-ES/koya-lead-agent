@@ -1,0 +1,21 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "draft-4",
+        "name": "save_outreach",
+        "args": {
+          "lead_id": "5f0c3f8e-0000-4000-8000-00000000d001",
+          "channel": "linkedin",
+          "step": 1,
+          "body": "NextStage's AI compliance matrix for government contractors caught my eye - we help teams hand repetitive proposal work to trained automation assistants. Open to connecting?",
+          "personalization_evidence": "AI-Powered Proposal Suite with an AI compliance matrix (nextstage.ai)"
+        }
+      }
+    }
+  ],
+  "usage": {
+    "inputTokens": 900,
+    "outputTokens": 150
+  }
+}

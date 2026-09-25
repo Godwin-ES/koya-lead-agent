@@ -8,7 +8,7 @@ import type { LeadRow, OutreachDraftRow } from "../db/row-types";
  * to extract from those two). Every function here is a plain,
  * dependency-free transform over already-fetched rows, deliberately
  * mirroring the pure-extraction pattern the rest of the project uses
- * (derivePhases, computeQualityReport, buildSamplePackMarkdown) so the
+ * (derivePhases, computeQualityReport, buildSamplePack) so the
  * scoring logic itself is directly unit-testable without a live run.
  */
 

@@ -1,0 +1,13 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The objective mentions a general need (managing emails) but lacks specificity regarding industry, geography, company size, and specific buyer persona.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona"
+  ],
+  "suggested_rewrite": "Find B2B SaaS companies in North America with 50 to 200 employees that struggle with customer support email volume and whose VP of Customer Success is likely looking for AI email triage tools."
+}

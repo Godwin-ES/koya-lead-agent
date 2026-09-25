@@ -1,21 +1,36 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { claimNextRun, heartbeat, updateRun } from "@core/db/runs";
+import { claimNextRun, getRunById, heartbeat, mergeRunCounters, updateRun } from "@core/db/runs";
 import { sumCostForRun } from "@core/db/cost";
 import { recordSystemError } from "@core/db/system-errors";
-import { isInjected } from "@core/providers/failure-injection";
+import { isReplayMode } from "@core/providers/replay/recorder";
+import { errorMessage } from "@core/domain/errors";
 import type { RunLimits, Runner, Scraper } from "@core/domain/types";
 import type { ToolRunState } from "@core/tools/log";
 import { runGeminiAgent, type GeminiStopReason } from "./runners/gemini";
 import { runAgentSdk, type AgentSdkStopReason } from "./runners/agent-sdk";
+import { claimAndProcessDraftRequest } from "./drafting";
+import { isProduction, productionRunConfig } from "@core/domain/environment";
+import { nextAutoResumeDelay, RunFailure } from "@core/domain/failure";
+import { notifyRunFailure, notifyRunOutcome } from "./notifications";
 
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 15_000;
 
-function resolveRunner(row: { runner: Runner | null }): Runner {
+// In production every run is Claude (Sonnet) through the Agent SDK with
+// Firecrawl, whatever the row says - a request can't pick another runner or
+// model. Locally the row's choice (or the env default) stands.
+export function resolveRunner(row: { runner: Runner | null }): Runner {
+  if (isProduction()) return productionRunConfig().runner;
   return row.runner ?? (process.env.RUNNER_DEFAULT === "agent-sdk" ? "agent-sdk" : "gemini");
 }
 
-function resolveScraper(row: { scraper: Scraper | null }): Scraper {
+export function resolveScraper(row: { scraper: Scraper | null }): Scraper {
+  if (isProduction()) return productionRunConfig().scraper;
   return row.scraper ?? (process.env.SCRAPER_DEFAULT === "firecrawl" ? "firecrawl" : "crawl4ai");
+}
+
+export function resolveModel(row: { model: string | null }): string | undefined {
+  if (isProduction()) return productionRunConfig().model;
+  return row.model ?? undefined;
 }
 
 export interface ClaimAndProcessOptions {
@@ -43,7 +58,7 @@ export async function claimAndProcessOne(
   workerId: string,
   options: ClaimAndProcessOptions = {},
 ): Promise<ClaimAndProcessResult> {
-  const row = await claimNextRun(supabase, workerId);
+  const row = await claimNextRun(supabase, workerId, isReplayMode());
   if (!row) return { claimed: false };
 
   const heartbeatIntervalMs = options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS;
@@ -67,29 +82,13 @@ export async function claimAndProcessOne(
       objectiveRaw: row.objective_raw,
       clarificationAnswer: row.clarification_answer,
       fixtureSet: row.fixture_set,
-      injectedFailure: row.injected_failure,
     };
-
-    // Task 20 failure injection (§13: "Worker crash / redeploy
-    // mid-run"). A demo/test process can't literally call
-    // `process.exit()` here without killing whatever is running this
-    // code (including the test suite that verifies this path) - this
-    // simulates the *outcome* a real crash produces (the run can't
-    // continue, fails loudly with a system_errors row) rather than the
-    // OS-level kill itself. The actual "heartbeat expires, the run gets
-    // reclaimed and requeued" recovery path already has real test
-    // coverage (tests/integration/rpc/reclaim.test.ts, Task 5), driven
-    // by directly manipulating heartbeat_at rather than waiting out a
-    // real 90-second staleness window.
-    if (isInjected("worker_kill", row.injected_failure)) {
-      throw new Error("Simulated worker crash mid-run (failure injection: worker_kill).");
-    }
 
     const runner = resolveRunner(row);
     const result =
       runner === "agent-sdk"
-        ? await runAgentSdk({ supabase, run: runState, model: row.model ?? undefined, shouldStop: options.shouldStop })
-        : await runGeminiAgent({ supabase, run: runState, model: row.model ?? undefined, shouldStop: options.shouldStop });
+        ? await runAgentSdk({ supabase, run: runState, model: resolveModel(row), shouldStop: options.shouldStop })
+        : await runGeminiAgent({ supabase, run: runState, model: resolveModel(row), shouldStop: options.shouldStop });
 
     if (result.stopReason === "cancelled") {
       // Graceful SIGTERM (Task 16): the current tool call already
@@ -101,26 +100,58 @@ export async function claimAndProcessOne(
         heartbeat_at: null,
         queued_at: new Date().toISOString(),
       });
+    } else if (result.stopReason === "paused") {
+      // The user's Pause, reached at a safe point: release the run. Resume
+      // requeues it, and the next worker continues from the handover note.
+      await updateRun(supabase, row.id, { status: "paused", worker_id: null, heartbeat_at: null, pause_requested_at: null });
+    } else if (result.stopReason === "user_cancelled") {
+      // Status is already 'cancelled' (the user's action set it) - just release the run.
+      await updateRun(supabase, row.id, { worker_id: null, heartbeat_at: null, pause_requested_at: null });
     } else if (result.stopReason === "clarification_requested") {
-      await updateRun(supabase, row.id, { status: "awaiting_input" });
+      await updateRun(supabase, row.id, { status: "awaiting_input", pause_requested_at: null });
+    } else {
+      // "finalized" / "max_turns" already transitioned the run via
+      // finalize_run's own RPC (completed/partial). A pause requested
+      // during that last step no longer applies.
+      await updateRun(supabase, row.id, { pause_requested_at: null });
     }
-    // "finalized" and "max_turns" already transitioned the run via
-    // finalize_run's own RPC (completed/partial) - nothing more here.
 
+    // One Discord message for a finished, stopped-short or waiting run (live runs only).
+    await notifyRunOutcome(supabase, row.id);
     return { claimed: true, runId: row.id, stopReason: result.stopReason };
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`run ${row.id} failed:`, err);
-    await updateRun(supabase, row.id, { status: "failed", failure_reason: message }).catch((updateErr) =>
-      console.error(`failed to mark run ${row.id} failed:`, updateErr),
-    );
+    const message = errorMessage(err);
+    const kind = err instanceof RunFailure ? err.kind : "bug";
+    const provider = err instanceof RunFailure ? err.provider : null;
+    console.error(`run ${row.id} failed (${kind}):`, err);
+
+    // A temporary failure (provider overloaded, rate-limited, unreachable)
+    // goes back in the queue to resume on its own after a wait - twice,
+    // then it fails like any other. Everything saved is kept either way.
+    const autoResumes = Number((await getRunById(supabase, row.id).catch(() => null))?.counters?.auto_resumes ?? 0);
+    const resumeInMs = kind === "temporary" ? nextAutoResumeDelay(autoResumes) : null;
+
+    if (resumeInMs !== null) {
+      await mergeRunCounters(supabase, row.id, { auto_resumes: autoResumes + 1 }).catch(() => undefined);
+      await updateRun(supabase, row.id, {
+        status: "queued",
+        worker_id: null,
+        heartbeat_at: null,
+        pause_requested_at: null,
+        queued_at: new Date(Date.now() + resumeInMs).toISOString(),
+      }).catch((updateErr) => console.error(`failed to requeue run ${row.id}:`, updateErr));
+    } else {
+      await updateRun(supabase, row.id, { status: "failed", failure_reason: message, pause_requested_at: null }).catch((updateErr) =>
+        console.error(`failed to mark run ${row.id} failed:`, updateErr),
+      );
+    }
     // SYSTEM-DESIGN-NEXTJS.md §13: "Every failure writes a system_errors
-    // row" - this catch block is the one place every unrecoverable run
-    // failure already passes through, regardless of which stage or
-    // provider caused it.
-    await recordSystemError(supabase, { runId: row.id, phase: "run", message }).catch((recordErr) =>
+    // row" - this catch block is the one place every run failure passes
+    // through, regardless of which stage or provider caused it.
+    await recordSystemError(supabase, { runId: row.id, phase: "run", provider: provider ?? undefined, message, detail: { kind } }).catch((recordErr) =>
       console.error(`failed to record system_error for run ${row.id}:`, recordErr),
     );
+    await notifyRunFailure(supabase, row.id, { kind, provider, message, resumeInMs });
     return { claimed: true, runId: row.id };
   } finally {
     clearInterval(heartbeatTimer);
@@ -158,7 +189,6 @@ export async function validateBootCredentials(checkers: BootCredentialCheckers =
   requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
   const apifyToken = requiredEnv("APIFY_API_KEY");
-  requiredEnv("APIFY_ACTOR_ID");
 
   const expectedAccountId = process.env.APIFY_EXPECTED_ACCOUNT_ID;
   if (expectedAccountId) {
@@ -171,7 +201,14 @@ export async function validateBootCredentials(checkers: BootCredentialCheckers =
     }
   }
 
-  if (process.env.RUNNER_DEFAULT === "agent-sdk") {
+  if (isProduction()) {
+    // Production always runs Claude with Firecrawl and notifies Discord -
+    // a missing key should stop the deploy here, not fail a run halfway.
+    if (process.env.REPLAY_MODE === "true") {
+      throw new Error("REPLAY_MODE=true in production would replay test recordings instead of doing real work - refusing to start.");
+    }
+    for (const name of ["ANTHROPIC_API_KEY", "FIRECRAWL_API_KEY", "DISCORD_RUNS_WEBHOOK_URL", "DISCORD_ALERTS_WEBHOOK_URL", "APP_URL"]) requiredEnv(name);
+  } else if (process.env.RUNNER_DEFAULT === "agent-sdk") {
     requiredEnv("ANTHROPIC_API_KEY");
   } else {
     requiredEnv("GOOGLE_AI_API_KEY");
@@ -198,8 +235,10 @@ export async function runClaimLoop(supabase: SupabaseClient, workerId: string, o
       heartbeatIntervalMs: options.heartbeatIntervalMs,
       shouldStop: options.isShuttingDown,
     });
+    // Runs first; a reviewer's "draft outreach" requests fill the gaps between them.
+    const drafted = result.claimed ? { claimed: false } : await claimAndProcessDraftRequest(supabase, workerId, options.isShuttingDown);
 
-    if (!result.claimed) {
+    if (!result.claimed && !drafted.claimed) {
       await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
   }

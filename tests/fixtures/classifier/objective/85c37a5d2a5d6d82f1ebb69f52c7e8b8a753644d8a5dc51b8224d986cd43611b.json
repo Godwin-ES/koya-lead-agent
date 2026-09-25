@@ -1,0 +1,7 @@
+{
+  "verdict": "out_of_scope_unsafe",
+  "confidence": 1,
+  "reason": "The user is explicitly asking to find a personal email address, which falls under the out-of-scope-unsafe category.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

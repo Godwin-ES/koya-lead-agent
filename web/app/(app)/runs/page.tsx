@@ -3,6 +3,8 @@ import { listMyRuns } from "@/actions/runs";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { EmptyState } from "@/components/primitives/empty-state";
 import { RUN_STATUS } from "@core/domain/status";
+import { deriveRunActions } from "@core/domain/run-actions";
+import { DeleteRunButton } from "@/components/runs/delete-run-button";
 
 export default async function RunsPage() {
   const runs = await listMyRuns();
@@ -38,6 +40,9 @@ export default async function RunsPage() {
               <th className="py-2 font-medium">Status</th>
               <th className="py-2 font-medium">Qualified</th>
               <th className="py-2 font-medium">Created</th>
+              <th className="py-2 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -51,9 +56,13 @@ export default async function RunsPage() {
                 <td className="py-2">
                   <StatusBadge entry={RUN_STATUS[run.status]} />
                 </td>
-                <td className="py-2 text-[var(--color-text-muted)]">{run.counters.qualified_count ?? 0}</td>
+                <td className="py-2 text-[var(--color-text-muted)]">{run.qualifiedCount}</td>
                 <td className="py-2 text-[var(--color-text-muted)]">
                   {new Date(run.created_at).toLocaleDateString()}
+                </td>
+                <td className="py-2 text-right">
+                  {/* The delete rule depends only on the status. */}
+                  <DeleteRunButton runId={run.id} state={deriveRunActions({ status: run.status, counters: { qualified_count: 0 }, lead_count: 0 }).delete} />
                 </td>
               </tr>
             ))}

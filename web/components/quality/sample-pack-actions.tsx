@@ -5,15 +5,17 @@ import { Check, Copy, Download, Printer } from "lucide-react";
 
 export interface SamplePackActionsProps {
   markdown: string;
+  /** Plain text for the clipboard - readable wherever it's pasted. */
+  text: string;
 }
 
 /** Task 19 Step 3: copy-all, markdown download, print - a real feature, not a manual copy-paste job. */
-export function SamplePackActions({ markdown }: SamplePackActionsProps) {
+export function SamplePackActions({ markdown, text }: SamplePackActionsProps) {
   const [copied, setCopied] = useState(false);
 
   async function copyAll() {
     try {
-      await navigator.clipboard.writeText(markdown);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

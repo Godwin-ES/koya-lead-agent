@@ -1,0 +1,14 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The objective mentions a target industry or niche ('widget companies'), but lacks specific details on geography, size, buyer persona, and other ICP criteria.",
+  "missing_criteria": [
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 manufacturing companies that produce widgets, located in North America, with 50 to 200 employees, where the buyer persona is the VP of Supply Chain."
+}

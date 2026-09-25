@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "httpStatus": 200,
+  "errorMessage": "Blocked by anti-bot protection: Structural: minimal_text, no_content_elements, script_heavy_shell (5699 bytes, 0 chars visible)"
+}

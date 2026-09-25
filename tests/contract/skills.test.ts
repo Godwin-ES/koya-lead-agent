@@ -20,17 +20,12 @@ describe("skill files", () => {
 });
 
 describe("buildSystemPrompt", () => {
-  it("the gemini runner receives every skill body in its system prompt", () => {
-    const p = buildSystemPrompt({ runner: "gemini" });
-    for (const n of SKILL_NAMES) expect(p).toContain(loadSkill(n).body.slice(0, 40));
-  });
-
-  it("the agent-sdk runner's system prompt does not duplicate skills it discovers natively", () => {
-    const p = buildSystemPrompt({ runner: "agent-sdk" });
-    // Only the always-inlined safety skill should be fully present -
-    // the other four are discovered from worker/.claude/skills instead.
-    expect(p).toContain(loadSkill("outreach-safety").body.slice(0, 40));
-    expect(p).not.toContain(loadSkill("lead-qualification").body.slice(0, 40));
+  it("both runners receive every skill body in their system prompt - the same rules from the first turn", () => {
+    for (const runner of ["gemini", "agent-sdk"] as const) {
+      const p = buildSystemPrompt({ runner });
+      for (const n of SKILL_NAMES) expect(p).toContain(loadSkill(n).body.slice(0, 40));
+    }
+    expect(buildSystemPrompt({ runner: "agent-sdk" })).toBe(buildSystemPrompt({ runner: "gemini" }));
   });
 
   it("the safety skill is inlined for both runners", () => {

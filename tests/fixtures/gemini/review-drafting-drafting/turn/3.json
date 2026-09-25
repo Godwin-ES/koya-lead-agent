@@ -1,0 +1,22 @@
+{
+  "parts": [
+    {
+      "functionCall": {
+        "id": "draft-3",
+        "name": "save_outreach",
+        "args": {
+          "lead_id": "5f0c3f8e-0000-4000-8000-00000000d001",
+          "channel": "email",
+          "step": 3,
+          "body": "If the timing or fit is off for NextStage right now, just let me know and I will leave it there. Glad to pick this up whenever it suits your team.",
+          "personalization_evidence": "AI-Powered Proposal Suite with an AI compliance matrix (nextstage.ai)",
+          "subject": "closing the loop"
+        }
+      }
+    }
+  ],
+  "usage": {
+    "inputTokens": 900,
+    "outputTokens": 150
+  }
+}

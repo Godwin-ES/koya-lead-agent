@@ -1,0 +1,7 @@
+{
+  "verdict": "valid",
+  "confidence": 1,
+  "reason": "The objective specifies company type, industry, geography, headcount range, and the business problem, making it sufficiently specific for an AI agent to search and qualify.",
+  "missing_criteria": [],
+  "suggested_rewrite": ""
+}

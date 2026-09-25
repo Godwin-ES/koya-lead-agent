@@ -1,0 +1,25 @@
+{
+  "_status": "DRAFT - labelled from each company's LinkedIn description only, not yet checked against its website. Review before scoring against it.",
+  "_criteria": "b2b: customers are organizations. saas: sells software it runs, used online, usually by subscription - not services around software. 'unclear' = the LinkedIn text alone can't settle it (expected needs_review unless the website does).",
+  "_source": "Companies returned by the live harvestapi/linkedin-company-search probes (BUILD-NOTES-NEXTJS.md, discovery redesign entries), plus two from the user's own probe run.",
+  "companies": {
+    "procareportal.com": { "name": "ProCARE Portal", "b2b": true, "saas": true, "basis": "Provider compensation management platform for healthcare organizations." },
+    "g2x.com": { "name": "G2X", "b2b": true, "saas": true, "basis": "GovCon growth platform: tools for capture, sales and BD teams." },
+    "soloinsight.com": { "name": "Soloinsight (CloudGate Platform)", "b2b": true, "saas": true, "basis": "Security and workflow automation platform adopted by organizations." },
+    "softwaredefinedautomation.io": { "name": "Software Defined Automation", "b2b": true, "saas": true, "basis": "Industrial DevOps platform for automation engineers in manufacturing." },
+    "saasmarkets.com": { "name": "SaaS Markets", "b2b": true, "saas": true, "basis": "Cloud marketplace provider and management platform (MarketMaker) for partners." },
+    "health-samurai.io": { "name": "Health Samurai", "b2b": true, "saas": "unclear", "basis": "Aidbox FHIR platform for IT vendors - FHIR servers are often self-hosted; delivery model not stated." },
+    "olibr.com": { "name": "Olibr", "b2b": "unclear", "saas": "unclear", "basis": "Free job community platform connecting businesses with talent - two-sided marketplace." },
+    "saascrm.io": { "name": "SaaS Solutions", "b2b": true, "saas": false, "basis": "CRM implementation and integration firm for HubSpot/Salesforce - services." },
+    "saasdirect.com": { "name": "SaaS Direct", "b2b": true, "saas": false, "basis": "Accounting-system migration services." },
+    "saasadviser.co": { "name": "SaaS Adviser", "b2b": true, "saas": false, "basis": "Marketplace/review site to discover and compare business software." },
+    "softwarefinder.com": { "name": "Software Finder", "b2b": true, "saas": false, "basis": "Software review and discovery site." },
+    "daxsws.com": { "name": "DAX Software Solutions", "b2b": true, "saas": false, "basis": "Microsoft Solutions Partner - Dynamics 365 implementation services." },
+    "ipsoft.com": { "name": "IPsoft", "b2b": true, "saas": false, "basis": "IT managed services and AI services company." },
+    "openstack.org": { "name": "OpenStack", "b2b": false, "saas": false, "basis": "Open-source project hosted by a foundation, not a company selling software." },
+    "551media.com": { "name": "551 Media", "b2b": true, "saas": false, "basis": "Influencer-marketing consultancy for Series B+ SaaS companies." },
+    "letsaspiro.com": { "name": "Aspiro", "b2b": true, "saas": false, "basis": "Founder-led sales coaching for early-stage B2B SaaS founders." },
+    "beesblaze.com": { "name": "Beesblaze Software Solutions", "b2b": true, "saas": false, "basis": "Offshore IT services." },
+    "google.com": { "name": "Saas and Enterprise Software Company", "b2b": "unclear", "saas": "unclear", "basis": "LinkedIn page lists google.com as its website - the site isn't theirs, so nothing can be verified." }
+  }
+}

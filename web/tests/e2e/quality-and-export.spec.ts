@@ -52,11 +52,33 @@ test.describe("quality report and sample pack", () => {
       await signIn(page, user.email, user.password);
       await page.goto(`/runs/${run.id}/sample-pack`);
 
-      await expect(page.getByText("Acme Robotics")).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("heading", { level: 2, name: "Acme Robotics" })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText("Step one draft body.")).toBeVisible();
 
       await page.getByRole("button", { name: "Copy all" }).click();
       await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+    } finally {
+      await user.cleanup();
+    }
+  });
+
+  test("the sample pack is a formatted document - subject shown separately, no raw markdown, no stored evidence", async ({ page }) => {
+    const user = await createTestUser();
+    try {
+      const run = await seedRun({ userId: user.userId, status: "completed", icp: {} });
+      const lead = await seedLead({ runId: run.id, companyName: "Acme Robotics", qualificationStatus: "qualified" });
+      await seedDraft({ leadId: lead.id, channel: "email", step: 1, body: "Good day,\n\nAcme Robotics body.\n\nBest,\nJordan Reyes\nKoya Talent" });
+
+      await signIn(page, user.email, user.password);
+      await page.goto(`/runs/${run.id}/sample-pack`);
+
+      await expect(page.getByRole("heading", { level: 1, name: "Lead sample pack" })).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("heading", { level: 2, name: "Acme Robotics" })).toBeVisible();
+      await expect(page.getByText("Email 1 of 3")).toBeVisible();
+      await expect(page.getByText("Quick question", { exact: true })).toBeVisible();
+      await expect(page.getByText(/Incomplete: 2 email steps and the LinkedIn message missing/)).toBeVisible();
+      await expect(page.getByText(/\*\*/)).toHaveCount(0);
+      await expect(page.getByText("References their hiring signal.")).toHaveCount(0);
     } finally {
       await user.cleanup();
     }

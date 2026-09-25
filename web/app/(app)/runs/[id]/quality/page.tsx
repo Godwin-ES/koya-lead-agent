@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/primitives/empty-state";
 import { CheckList, Scorecard } from "@/components/quality/check-list";
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { QualityCheckResult, QualityScorecardEntry } from "@core/schemas/quality";
+import { RunSummary } from "@/components/quality/run-summary";
 
 export default async function QualityPage(props: PageProps<"/runs/[id]/quality">) {
   const { id } = await props.params;
@@ -39,7 +40,7 @@ export default async function QualityPage(props: PageProps<"/runs/[id]/quality">
             {report.passed ? "This run passed every quality check." : "This run did not pass every quality check."}
           </div>
 
-          <p className="text-sm text-[var(--color-text)]">{report.summary}</p>
+          <RunSummary summary={report.summary} />
 
           <section>
             <h2 className="mb-2 text-sm font-semibold text-[var(--color-text)]">Required checks</h2>

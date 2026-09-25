@@ -61,6 +61,34 @@ this shape:
 }
 ```
 
+## Discovery filters
+
+`save_icp` also takes `discovery_filters`, next to the ICP fields above:
+`linkedin_industries` (exact LinkedIn industry labels), `headcount_min` /
+`headcount_max` (numbers, or null when the objective gives no bound) and
+`locations` (full names: "United States", "United Kingdom" - LinkedIn
+reads "UK" as Ukraine). `discover_companies` applies these on every
+search, so get them right here.
+
+- **Industries say what kind of company it is**, not its market. A fintech
+  or healthtech SaaS company is usually tagged as software, not "Financial
+  Services" or "Hospitals and Health Care" - those return banks and
+  hospitals. Put the vertical in the search keyword instead.
+- **A parent label includes everything under it.** "Technology,
+  Information and Internet" covers "Software Development", "Data
+  Infrastructure and Analytics", "Internet Marketplace Platforms" - and
+  also blogs and internet news. Start narrow and widen only if the pool
+  is too small.
+- Useful labels: "Software Development" (software products, including
+  SaaS - start here), "Technology, Information and Internet" (wider),
+  "Data Infrastructure and Analytics", "Business Intelligence Platforms",
+  "Internet Marketplace Platforms". Services labels like "IT Services and
+  IT Consulting", "Business Consulting and Services", "Advertising
+  Services" and "Staffing and Recruiting" are for when the user wants
+  service firms. A wrong label comes back with the closest real ones.
+- Headcount: "10 to 100 employees" is `headcount_min: 10`,
+  `headcount_max: 100`. "Under 50" is `null` / `50`.
+
 ## Rules
 
 - Preserve specific constraints the user gives - do not generalize them away.

@@ -23,6 +23,8 @@ export interface ScrapeFailure {
   url: string;
   httpStatus: number | null;
   errorMessage: string;
+  /** The scraping service itself failed (server error, no response) after its retry - not the website. */
+  providerError?: boolean;
 }
 
 export type ScrapeResult = ScrapeSuccess | ScrapeFailure;
@@ -30,4 +32,4 @@ export type ScrapeResult = ScrapeSuccess | ScrapeFailure;
 /** What each provider adapter (crawl4ai.ts, firecrawl.ts) returns before the shared normalize/scan/truncate pipeline in index.ts runs. */
 export type RawScrapeResult =
   | { success: true; httpStatus: number; title: string | null; contentMd: string; finalUrl: string }
-  | { success: false; httpStatus: number | null; errorMessage: string };
+  | { success: false; httpStatus: number | null; errorMessage: string; providerError?: boolean };

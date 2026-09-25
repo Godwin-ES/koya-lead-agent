@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ListChecks, Settings, FlaskConical, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ListChecks, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/runs", label: "Runs", icon: ListChecks },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/test-console", label: "Test Console", icon: FlaskConical },
 ];
 
 /**

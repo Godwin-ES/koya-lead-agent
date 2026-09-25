@@ -1,0 +1,13 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request asks to find 'widget companies', which is extremely broad and lacks essential ICP details such as industry nuance, geography, size, and buyer persona.",
+  "missing_criteria": [
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem"
+  ],
+  "suggested_rewrite": "Find manufacturing companies that produce widgets in North America with 50-200 employees."
+}

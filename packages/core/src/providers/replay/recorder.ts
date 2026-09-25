@@ -1,4 +1,5 @@
 import { fixtureExists, loadFixture, saveFixture } from "./fixtures";
+import { isProduction } from "../../domain/environment";
 
 /**
  * Wraps every external call in the project - Apify, Crawl4AI, Firecrawl,
@@ -13,8 +14,14 @@ import { fixtureExists, loadFixture, saveFixture } from "./fixtures";
  * A missing fixture in replay mode is a loud, explicit error, never a
  * silent fall-through to a live call - a fall-through would spend real
  * money the moment a fixture is missing during an automated test run.
+ *
+ * In production (APP_ENV=production) it's the other way round: live unless
+ * REPLAY_MODE=true, so a deploy that forgets the setting does real work
+ * instead of silently replaying recordings. And nothing is recorded there -
+ * a recording holds scraped pages and lead data, and belongs to tests.
  */
 export function isReplayMode(): boolean {
+  if (isProduction()) return process.env.REPLAY_MODE === "true";
   return process.env.REPLAY_MODE !== "false";
 }
 
@@ -24,7 +31,7 @@ export async function withRecording<T>(key: string, fn: () => Promise<T>): Promi
   }
 
   const result = await fn();
-  saveFixture(key, result);
+  if (!isProduction()) saveFixture(key, result);
   return result;
 }
 

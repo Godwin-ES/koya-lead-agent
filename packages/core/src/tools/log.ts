@@ -3,13 +3,12 @@ import type { Scraper } from "../domain/types";
 import { recordToolCall } from "../db/tool-calls";
 import { updateRun, mergeRunCounters } from "../db/runs";
 import { gate, UNCOUNTED_TOOLS, type GateRunState } from "./gate";
-import { isInjected } from "../providers/failure-injection";
+import { errorMessage } from "../domain/errors";
 
-/** What a tool handler needs beyond gate()'s own GateRunState - the run id (to write rows against), scraper choice, and any active failure-injection toggle (Task 20). */
+/** What a tool handler needs beyond gate()'s own GateRunState - the run id (to write rows against) and scraper choice. */
 export interface ToolRunState extends GateRunState {
   id: string;
   scraper: Scraper;
-  injectedFailure?: string | null;
 }
 
 export interface ToolContext {
@@ -18,7 +17,10 @@ export interface ToolContext {
 }
 
 export interface ToolHandlerResult {
+  /** One line for the timeline and agent_events. */
   resultSummary?: string;
+  /** What the model actually receives. Falls back to resultSummary - which on its own carries no candidates or page text. */
+  modelOutput?: string;
   estimatedCostUsd?: number;
   data?: unknown;
 }
@@ -34,25 +36,30 @@ export class ToolDeniedError extends Error {
 }
 
 /**
- * A handler error the runner must not treat as recoverable - unlike an
- * ordinary thrown error (which `invoke()` records and rethrows, and
- * which each runner's own per-call catch converts into a functionResult
- * error fed back to the model so it can self-correct, e.g. malformed
- * tool input), a `FatalToolError` means the underlying failure can't be
- * worked around by trying again or using a different tool - an
- * authentication failure, a dead provider. §13: "Apify auth/quota
- * error: run fails fast... no retry loop" / "Crawl4AI sidecar down:
- * run fails with an actionable message." Each runner's tool-call catch
- * block re-throws this instead of swallowing it, so it propagates all
- * the way out to the worker's own catch (service.ts), which marks the
- * run `failed` with the real reason.
+ * A guardrail returning the call to the agent to fix - a draft that broke
+ * a writing rule, a search keyword made of criteria words, a finalize with
+ * work still left. Intended behavior, not a failure: recorded as
+ * `sent_back`, not `error`, and the agent receives `reasons` to act on.
  */
-export class FatalToolError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "FatalToolError";
+export class ToolSentBack extends Error {
+  constructor(
+    /** One line for the timeline, e.g. "Financiario email step 2 sent back". */
+    public readonly summary: string,
+    public readonly reasons: string[],
+  ) {
+    super(`${summary}:\n- ${reasons.join("\n- ")}`);
+    this.name = "ToolSentBack";
   }
 }
+
+/**
+ * A tool failure the run can't work around - a bad key, no credits, a
+ * provider down after its retry. Unlike an ordinary thrown error (recorded,
+ * then fed back to the model as a tool error so it can correct itself),
+ * both runners stop the run on this and hand it to the worker, which fails
+ * it or resumes it later depending on `kind` (domain/failure.ts).
+ */
+export { RunFailure as FatalToolError } from "../domain/failure";
 
 /**
  * The one path every tool call goes through, runner-agnostic. Writes a
@@ -87,25 +94,6 @@ async function bumpToolCallsUsed(ctx: ToolContext, toolName: string): Promise<vo
   await mergeRunCounters(ctx.supabase, ctx.run.id, { tool_calls_used: next });
 }
 
-/**
- * Task 20's `invalid_tool_input` toggle: fires once, on the first call
- * to `save_icp` (the agent's near-universal first tool call, so this is
- * reliably reachable), then clears itself so it doesn't re-corrupt
- * every subsequent call and loop forever - the point is to demonstrate
- * §13's "Zod error returned to the agent as a tool error so it can
- * correct itself," not to permanently break the tool.
- */
-async function maybeInjectInvalidInput(
-  ctx: ToolContext,
-  toolName: string,
-  input: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
-  if (toolName !== "save_icp" || !isInjected("invalid_tool_input", ctx.run.injectedFailure)) return input;
-  ctx.run.injectedFailure = null;
-  await updateRun(ctx.supabase, ctx.run.id, { injected_failure: null });
-  return {};
-}
-
 export async function invoke(
   ctx: ToolContext,
   toolName: string,
@@ -113,7 +101,7 @@ export async function invoke(
   handler: ToolHandler,
 ): Promise<ToolHandlerResult> {
   const startedAt = Date.now();
-  const input = await maybeInjectInvalidInput(ctx, toolName, rawInput);
+  const input = rawInput;
   const decision = gate(ctx.run, toolName, input);
 
   if (decision.kind === "deny") {
@@ -142,11 +130,23 @@ export async function invoke(
     await bumpToolCallsUsed(ctx, toolName);
     return result;
   } catch (err) {
+    if (err instanceof ToolSentBack) {
+      await recordToolCall(ctx.supabase, {
+        runId: ctx.run.id,
+        toolName,
+        status: "sent_back",
+        resultSummary: err.summary,
+        durationMs: Date.now() - startedAt,
+        resultData: { reasons: err.reasons },
+      });
+      await bumpToolCallsUsed(ctx, toolName);
+      throw err;
+    }
     await recordToolCall(ctx.supabase, {
       runId: ctx.run.id,
       toolName,
       status: "error",
-      errorMessage: err instanceof Error ? err.message : String(err),
+      errorMessage: errorMessage(err),
       durationMs: Date.now() - startedAt,
     });
     await bumpToolCallsUsed(ctx, toolName);

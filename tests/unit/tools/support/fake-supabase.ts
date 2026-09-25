@@ -23,17 +23,20 @@ export function createFakeSupabase() {
     scrape_cache: [],
     cost_ledger: [],
     tool_calls: [],
+    /** Stand-in for auth.users: { id, user_metadata } - read by auth.admin.getUserById. */
+    auth_users: [],
   };
 
   const toolCallSeqByRun = new Map<string, number>();
 
   function from(table: string) {
     const rows = tables[table] ?? (tables[table] = []);
-    const filters: Array<{ col: string; val: unknown; op: "eq" | "gt" }> = [];
+    const filters: Array<{ col: string; val: unknown; op: "eq" | "gt" | "in" }> = [];
 
     function matches(row: Row): boolean {
       return filters.every(({ col, val, op }) => {
         if (op === "eq") return row[col] === val;
+        if (op === "in") return (val as unknown[]).includes(row[col]);
         const rowVal = row[col];
         return typeof rowVal === "string" && typeof val === "string" && rowVal > val;
       });
@@ -49,6 +52,10 @@ export function createFakeSupabase() {
       },
       gt(col: string, val: unknown) {
         filters.push({ col, val, op: "gt" });
+        return builder;
+      },
+      in(col: string, val: unknown[]) {
+        filters.push({ col, val, op: "in" });
         return builder;
       },
       order() {
@@ -196,7 +203,18 @@ export function createFakeSupabase() {
   }
 
   return {
-    client: { from, rpc } as unknown as SupabaseClient,
+    client: {
+      from,
+      rpc,
+      auth: {
+        admin: {
+          async getUserById(id: string) {
+            const user = tables.auth_users.find((u) => u.id === id);
+            return user ? { data: { user }, error: null } : { data: { user: null }, error: { message: "User not found" } };
+          },
+        },
+      },
+    } as unknown as SupabaseClient,
     tables,
     seed(table: string, row: Row) {
       (tables[table] ?? (tables[table] = [])).push({ id: row.id ?? randomId(), created_at: new Date().toISOString(), ...row });

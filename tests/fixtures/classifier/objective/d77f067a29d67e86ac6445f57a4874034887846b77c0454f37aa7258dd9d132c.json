@@ -1,0 +1,16 @@
+{
+  "verdict": "vague",
+  "confidence": 0.95,
+  "reason": "The request mentions a quantity and a partial number '3', but lacks any context regarding industry, geography, or the type of companies to find.",
+  "missing_criteria": [
+    "target_company_type",
+    "industry_or_niche",
+    "geography",
+    "headcount_range",
+    "buyer_persona",
+    "business_problem",
+    "hard_disqualifiers",
+    "soft_preferences"
+  ],
+  "suggested_rewrite": "Find 10 Series A fintech startups in New York with 10 to 50 employees."
+}

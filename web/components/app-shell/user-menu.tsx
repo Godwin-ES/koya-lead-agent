@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { User } from "lucide-react";
+import Link from "next/link";
+import { User, Settings } from "lucide-react";
 import { ActionButton } from "@/components/primitives/action-button";
 import { ThemeToggle } from "./theme-toggle";
 import { signOut } from "@/app/(app)/actions";
@@ -27,6 +28,15 @@ export function UserMenu({ email }: { email: string }) {
           role="menu"
           className="absolute right-0 top-full z-10 mt-1 w-48 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-lg"
         >
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
+          >
+            <Settings className="h-4 w-4" aria-hidden="true" />
+            Settings
+          </Link>
           <ActionButton
             action={() => signOut()}
             idleLabel="Sign out"

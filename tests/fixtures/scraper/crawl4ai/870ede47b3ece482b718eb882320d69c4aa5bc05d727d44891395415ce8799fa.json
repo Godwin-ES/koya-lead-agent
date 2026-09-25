@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "httpStatus": 301,
+  "errorMessage": "Blocked by anti-bot protection: Structural: minimal_text on small page (159 bytes, 8 chars visible)"
+}

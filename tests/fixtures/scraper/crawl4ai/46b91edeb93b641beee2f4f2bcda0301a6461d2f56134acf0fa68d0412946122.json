@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "httpStatus": 400,
+  "errorMessage": "crawl4ai request failed with HTTP 400"
+}

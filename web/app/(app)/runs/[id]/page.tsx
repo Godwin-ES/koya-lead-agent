@@ -6,6 +6,9 @@ import { listAgentEventsForRun } from "@core/db/events";
 import { listCostForRun } from "@core/db/cost";
 import { listLeadsForRun } from "@core/db/leads";
 import { RunView } from "./run-view";
+import { searchesLeftToAdd } from "@core/domain/limits";
+import { candidatesPerDiscoverCall } from "@core/domain/discovery";
+import type { RunLimits } from "@core/domain/types";
 
 export default async function RunPage(props: PageProps<"/runs/[id]">) {
   const { id } = await props.params;
@@ -38,6 +41,11 @@ export default async function RunPage(props: PageProps<"/runs/[id]">) {
       runId={id}
       initial={{ run, toolCalls, agentEvents, costLedger }}
       hasIcp={run.icp !== null}
+      budget={{
+        searchesLeftToAdd: searchesLeftToAdd(run.limits),
+        companiesPerSearch: candidatesPerDiscoverCall((run.limits as RunLimits).target_qualified ?? 10),
+      }}
+      reviewerDecisions={Object.fromEntries(leads.filter((l) => l.decided_by === "reviewer").map((l) => [l.company_domain, l.qualification_status]))}
       hasLeads={leads.length > 0}
       hasDrafts={hasDrafts}
     />

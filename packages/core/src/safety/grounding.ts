@@ -27,6 +27,15 @@ export interface GroundingCheckInput {
   draftText: string;
   sourceSummary: string;
   sourceUrls: string[];
+  /** Names that aren't claims about the company - the sender's own company. Removed before deciding whether a sentence carries a specific detail. */
+  ignoreNames?: string[];
+  /**
+   * The company's own names (full and short). A name alone isn't a detail:
+   * a sentence naming the company is checked only when it states something
+   * about it, not when it's a conditional, a question, a proposal or a
+   * follow-up pleasantry ("If this isn't the right time for Acme...").
+   */
+  companyNames?: string[];
 }
 
 export interface GroundingCheckResult {
@@ -56,6 +65,20 @@ function hostOf(url: string): string {
   return url.toLowerCase().replace(/^https?:\/\//, "").split("/")[0] ?? "";
 }
 
+/**
+ * Sentence shapes that don't assert a fact: conditionals, questions,
+ * proposals (modal verbs) and follow-up or sign-off phrasing. Live, "If this
+ * isn't the right time for Health Samurai to look at AI automation support,
+ * no problem at all - a short reply either way is appreciated" was flagged
+ * only because it named the company.
+ */
+const CONDITIONAL_START = /^(if|when|whether|unless|should|in case)\b/i;
+const NON_CLAIM_PHRASES = /\b(could|would|might|may|no problem|no worries|no pressure|happy to|glad to|feel free|let me know|reach out|reconnect|reply|appreciated|whenever|leave (it|this) (here|there)|open to)\b/i;
+
+function statesSomething(sentence: string): boolean {
+  return !CONDITIONAL_START.test(sentence) && !sentence.trim().endsWith("?") && !NON_CLAIM_PHRASES.test(sentence);
+}
+
 /** Below this fraction of a sentence's significant words appearing in the source summary, the sentence is treated as unsupported. */
 const OVERLAP_RATIO_THRESHOLD = 0.5;
 
@@ -65,8 +88,11 @@ export function checkGrounding(input: GroundingCheckInput): GroundingCheckResult
   const unsupportedClaims: string[] = [];
 
   for (const sentence of splitSentences(input.draftText)) {
-    const hasSpecificDetail = /\d/.test(sentence) || /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(sentence);
-    if (!hasSpecificDetail) continue;
+    const companyNames = (input.companyNames ?? []).filter(Boolean);
+    const withoutNames = [...(input.ignoreNames ?? []), ...companyNames].reduce((text, name) => text.split(name).join(""), sentence);
+    const hasOtherDetail = /\d/.test(withoutNames) || /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(withoutNames);
+    const claimAboutCompany = companyNames.some((name) => sentence.includes(name)) && statesSomething(sentence);
+    if (!hasOtherDetail && !claimAboutCompany) continue;
 
     const sentenceWords = significantWords(sentence);
     const referencesSource = hosts.some((host) => sentence.toLowerCase().includes(host));

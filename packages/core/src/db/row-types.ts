@@ -8,12 +8,16 @@
  */
 import type { RunLimits, RunStatus, LeadQualificationStatus, ToolCallStatus, Runner, Scraper } from "../domain/types";
 import type { RunValidationVerdict } from "../schemas/validation";
+import type { DiscoveryFilters } from "../schemas/discovery";
+import type { StopDetails } from "../tools/finish-check";
 
 export interface RunRow {
   id: string;
   user_id: string;
   objective_raw: string;
   icp: Record<string, unknown> | null;
+  /** Resolved HarvestAPI filters from save_icp - see schemas/discovery.ts. */
+  discovery_filters: DiscoveryFilters | null;
   status: RunStatus;
   runner: Runner | null;
   model: string | null;
@@ -40,8 +44,12 @@ export interface RunRow {
   finished_at: string | null;
   created_at: string;
   idempotency_key: string | null;
-  /** Task 20's failure-injection toggle - see packages/core/src/providers/failure-injection.ts. */
+  /** Left from the removed test-console failure injection; always null. */
   injected_failure: string | null;
+  /** Set by Pause while the run is running; cleared once the worker stops it. */
+  pause_requested_at: string | null;
+  /** Why a finished run stopped where it did, from its own records (tools/finish-check.ts). */
+  stop_details: StopDetails | null;
 }
 
 export interface NewRun {
@@ -61,7 +69,6 @@ export interface NewRun {
   validation_missing_criteria?: string[];
   validation_dismissed_at?: string;
   idempotency_key?: string;
-  injected_failure?: string;
   queued_at?: string;
 }
 
@@ -80,11 +87,18 @@ export interface LeadRow {
   scraper_used: Scraper | null;
   injection_flagged: boolean;
   evidence_gap_reason: string | null;
+  /** The agent's own decision - kept when a reviewer changes qualification_status. */
+  agent_qualification_status: LeadQualificationStatus | null;
+  decided_by: "agent" | "reviewer";
+  review_reason: string | null;
+  reviewed_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export type NewLead = Omit<LeadRow, "id" | "created_at" | "updated_at">;
+export type NewLead = Omit<LeadRow, "id" | "created_at" | "updated_at" | "decided_by" | "review_reason" | "reviewed_at"> & {
+  decided_by?: LeadRow["decided_by"];
+};
 
 export interface OutreachDraftRow {
   id: string;
@@ -96,12 +110,34 @@ export interface OutreachDraftRow {
   personalization_note: string;
   grounding_check: Record<string, unknown> | null;
   flagged_unsupported: boolean;
+  /** The agent's version, kept once a reviewer edits the draft. */
+  original_subject: string | null;
+  original_body: string | null;
+  edited_at: string | null;
+  approved_at: string | null;
   created_at: string;
 }
 
-export type NewOutreachDraft = Omit<OutreachDraftRow, "id" | "created_at" | "flagged_unsupported"> & {
+export type NewOutreachDraft = Omit<OutreachDraftRow, "id" | "created_at" | "flagged_unsupported" | "original_subject" | "original_body" | "edited_at" | "approved_at"> & {
   flagged_unsupported?: boolean;
+  original_subject?: null;
+  original_body?: null;
+  edited_at?: null;
+  approved_at?: null;
 };
+
+export interface DraftRequestRow {
+  id: string;
+  run_id: string;
+  lead_id: string;
+  status: "queued" | "running" | "done" | "failed";
+  replay_mode: boolean;
+  error: string | null;
+  worker_id: string | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
 
 export interface ToolCallRow {
   id: string;

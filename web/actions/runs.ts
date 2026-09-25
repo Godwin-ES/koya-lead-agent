@@ -1,14 +1,18 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { insertRun, listRunsForUser, getRunById, updateRun } from "@core/db/runs";
+import { insertRun, listRunsForUser, getRunById, updateRun, requestPause } from "@core/db/runs";
 import { listLeadsForRun } from "@core/db/leads";
 import { validateObjective } from "@core/validation/objective";
-import { clampLimits, deriveLimitsFromTarget } from "@core/domain/limits";
+import { clampLimits, deriveLimitsFromTarget, extendLimits, searchesLeftToAdd } from "@core/domain/limits";
 import { deriveRunActions } from "@core/domain/run-actions";
 import type { RunCounters, RunLimits, Runner, Scraper } from "@core/domain/types";
 import type { RunRow } from "@core/db/row-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isReplayMode } from "@core/providers/replay/recorder";
+import { errorMessage } from "@core/domain/errors";
+import { isProduction, productionRunConfig } from "@core/domain/environment";
+import { revalidatePath } from "next/cache";
 
 export interface CreateRunInput {
   objectiveText: string;
@@ -69,9 +73,10 @@ export async function createRun(input: CreateRunInput): Promise<CreateRunResult>
     user_id: user.id,
     objective_raw: input.objectiveText,
     status: "queued",
-    runner: input.runner,
-    model: input.model,
-    scraper: input.scraper,
+    // Production ignores what the request asks for (see productionRunConfig).
+    ...(isProduction() ? productionRunConfig() : { runner: input.runner, model: input.model, scraper: input.scraper }),
+    // Recorded so only a worker in the same mode claims it - see migration 019.
+    replay_mode: isReplayMode(),
     limits,
     validation_verdict: validation.verdict,
     validation_reason: validation.reason,
@@ -85,13 +90,32 @@ export async function createRun(input: CreateRunInput): Promise<CreateRunResult>
   return { runId: run.id };
 }
 
-export async function listMyRuns() {
+/**
+ * The signed-in user's runs, each with its qualified-lead count. The count
+ * comes from `leads` - `counters.qualified_count` is never written (it's
+ * always derived, so it can't drift), and reading it showed 0 for every run.
+ */
+export async function listMyRuns(): Promise<Array<RunRow & { qualifiedCount: number }>> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
-  return listRunsForUser(supabase, user.id);
+  const runs = await listRunsForUser(supabase, user.id);
+  if (runs.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("run_id")
+    .eq("qualification_status", "qualified")
+    .in(
+      "run_id",
+      runs.map((r) => r.id),
+    );
+  if (error) throw error;
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as Array<{ run_id: string }>) counts.set(row.run_id, (counts.get(row.run_id) ?? 0) + 1);
+  return runs.map((r) => ({ ...r, qualifiedCount: counts.get(r.id) ?? 0 }));
 }
 
 export interface RunActionResult {
@@ -127,7 +151,42 @@ async function actionStateFor(supabase: SupabaseClient, run: RunRow) {
     status: run.status,
     counters: { qualified_count: 0, ...(run.counters as Record<string, number>) } as RunCounters,
     lead_count: leadCount,
+    pause_requested: run.pause_requested_at !== null,
+    limit_reached: run.stop_details?.limit_reached ?? null,
+    searches_left_to_add: searchesLeftToAdd(run.limits),
   });
+}
+
+/**
+ * "Continue with more budget": a partial run gets more searches (and
+ * whatever budget actually stopped it), then goes back in the queue as the
+ * same run. The worker continues it from the handover note - its leads,
+ * drafts, and every company already seen are kept, so nothing is redone.
+ */
+export async function extendRun(runId: string, extraSearches: number): Promise<RunActionResult> {
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return { error: "Not signed in." };
+
+  const run = await requireOwnedRun(supabase, runId, userId);
+  if (!run) return { error: "Run not found." };
+
+  const actions = await actionStateFor(supabase, run);
+  if (actions.extend.kind !== "enabled") {
+    return { error: actions.extend.kind === "disabled" ? actions.extend.reason : "This run can't be continued." };
+  }
+
+  const limits = extendLimits(run.limits as RunLimits, extraSearches, run.stop_details?.limit_reached ?? null);
+  await updateRun(supabase, runId, {
+    limits,
+    status: "queued",
+    queued_at: new Date().toISOString(),
+    finished_at: null,
+    partial_reason: null,
+    stop_details: null,
+    replay_mode: isReplayMode(),
+  });
+  return {};
 }
 
 /** §17.4: cancelling is a destructive/expensive action - the UI confirms before calling this; this still re-checks server-side regardless. */
@@ -148,8 +207,13 @@ export async function cancelRun(runId: string): Promise<RunActionResult> {
   return {};
 }
 
-/** Requeues the same run row - only ever offered for `failed` (§17.5), never for a terminal success state, which uses rerun instead. */
-export async function retryRun(runId: string): Promise<RunActionResult> {
+/**
+ * Delete a run and everything saved for it - leads, drafts, the timeline,
+ * cost records and the quality report all cascade from the run row. The
+ * delete_run RPC re-checks, under a row lock, that no worker is running the
+ * run or drafting for one of its leads.
+ */
+export async function deleteRun(runId: string): Promise<RunActionResult> {
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) return { error: "Not signed in." };
@@ -158,11 +222,60 @@ export async function retryRun(runId: string): Promise<RunActionResult> {
   if (!run) return { error: "Run not found." };
 
   const actions = await actionStateFor(supabase, run);
-  if (actions.retry.kind !== "enabled") {
-    return { error: actions.retry.kind === "disabled" ? actions.retry.reason : "This run cannot be retried." };
+  if (actions.delete.kind !== "enabled") {
+    return { error: actions.delete.kind === "disabled" ? actions.delete.reason : "This run cannot be deleted." };
   }
 
-  await updateRun(supabase, runId, { status: "queued", queued_at: new Date().toISOString(), failure_reason: null });
+  const { error } = await supabase.rpc("delete_run", { p_run_id: runId });
+  if (error) return { error: errorMessage(error) };
+
+  revalidatePath("/runs");
+  return {};
+}
+
+/**
+ * Pause. A queued run pauses immediately; a running one finishes its
+ * current step first (the worker checks between steps), so the UI shows
+ * "Pausing…" until the worker sets status 'paused'.
+ */
+export async function pauseRun(runId: string): Promise<RunActionResult> {
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return { error: "Not signed in." };
+
+  const run = await requireOwnedRun(supabase, runId, userId);
+  if (!run) return { error: "Run not found." };
+
+  const actions = await actionStateFor(supabase, run);
+  if (actions.pause.kind !== "enabled") {
+    return { error: actions.pause.kind === "disabled" ? actions.pause.reason : "This run cannot be paused." };
+  }
+
+  if (!(await requestPause(supabase, runId))) return { error: "The run changed state before it could be paused - refresh and try again." };
+  return {};
+}
+
+/**
+ * Resume a paused or failed run: back into the queue as the same run. The
+ * worker that picks it up starts the agent with a handover note of the
+ * run's saved work (tools/resume-brief.ts), so it continues rather than
+ * starting over.
+ */
+export async function resumeRun(runId: string): Promise<RunActionResult> {
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return { error: "Not signed in." };
+
+  const run = await requireOwnedRun(supabase, runId, userId);
+  if (!run) return { error: "Run not found." };
+
+  const actions = await actionStateFor(supabase, run);
+  if (actions.resume.kind !== "enabled") {
+    return { error: actions.resume.kind === "disabled" ? actions.resume.reason : "This run cannot be resumed." };
+  }
+
+  // replay_mode too: runs created before migration 019 all carry the column default, which may not match this server's mode.
+  await updateRun(supabase, runId, { status: "queued", queued_at: new Date().toISOString(), failure_reason: null, pause_requested_at: null, replay_mode: isReplayMode() });
   return {};
 }
 
@@ -200,9 +313,8 @@ export async function rerunRun(runId: string): Promise<RerunResult> {
     user_id: userId,
     objective_raw: run.objective_raw,
     status: "queued",
-    runner: run.runner ?? undefined,
-    model: run.model ?? undefined,
-    scraper: run.scraper ?? undefined,
+    ...(isProduction() ? productionRunConfig() : { runner: run.runner ?? undefined, model: run.model ?? undefined, scraper: run.scraper ?? undefined }),
+    replay_mode: isReplayMode(),
     limits: clampLimits(seedLimits),
     queued_at: new Date().toISOString(),
   });

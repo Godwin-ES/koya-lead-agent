@@ -3,6 +3,9 @@ import { stage1, type Stage1Code } from "./stage1";
 import { classifyObjective } from "./classifier";
 import { hashObjective } from "../domain/normalize";
 import type { MissingCriterion, RunValidationVerdict } from "../schemas/validation";
+import { cheapModel, isProduction } from "../domain/environment";
+import { objectiveCheckDownMessage, sendDiscord } from "../notify/discord";
+import { isReplayMode } from "../providers/replay/recorder";
 
 /** Below this, a confident-sounding verdict still only whispers (§7.2: "Low classifier confidence never blocks"). */
 const CONFIDENCE_FLOOR = 0.6;
@@ -42,6 +45,33 @@ function stage1CodeToVerdict(code: Stage1Code): { verdict: RunValidationVerdict;
   }
 }
 
+/** At most one #alerts message per server instance every 10 minutes, however many checks fail. */
+const CHECK_DOWN_ALERT_INTERVAL_MS = 10 * 60_000;
+let lastCheckDownAlertAt = 0;
+
+async function alertObjectiveCheckDown(): Promise<void> {
+  if (isReplayMode() || Date.now() - lastCheckDownAlertAt < CHECK_DOWN_ALERT_INTERVAL_MS) return;
+  lastCheckDownAlertAt = Date.now();
+  await sendDiscord("alerts", objectiveCheckDownMessage());
+}
+
+export const UNAVAILABLE_REASON = "The objective check is unavailable right now - try again in a minute. A run can't start until its objective has been checked.";
+
+/** A blocking result for when the check itself couldn't run - the same shape the browser shows if the request fails. */
+export function unavailableResult(): ValidationResult {
+  return {
+    verdict: "unavailable",
+    confidence: null,
+    reason: UNAVAILABLE_REASON,
+    missingCriteria: [],
+    suggestedRewrite: null,
+    cached: false,
+    dismissible: false,
+    blocking: true,
+    severity: "flag",
+  };
+}
+
 function buildResult(args: {
   verdict: RunValidationVerdict;
   confidence: number | null;
@@ -75,10 +105,7 @@ async function persist(
   objectiveRaw: string,
   result: ValidationResult,
 ): Promise<void> {
-  const model =
-    process.env.RUNNER_DEFAULT === "agent-sdk"
-      ? (process.env.ANTHROPIC_CHEAP_MODEL ?? "claude-haiku-4-5")
-      : process.env.GEMINI_MODEL;
+  const model = isProduction() || process.env.RUNNER_DEFAULT === "agent-sdk" ? cheapModel() : process.env.GEMINI_MODEL;
 
   await supabase.from("objective_validations").upsert(
     {
@@ -156,21 +183,16 @@ export async function validateObjective(
 
   let classifierVerdict;
   try {
-    classifierVerdict = await classifyObjective(text);
+    // One retry for a momentary glitch before calling the check unavailable.
+    classifierVerdict = await classifyObjective(text).catch(() => classifyObjective(text));
   } catch {
-    // §13: "Validation degrades permissive - it must never be the reason
-    // a user cannot start a run." A classifier outage is not a reason to
-    // block, and persisting the attempt (best-effort - a write failure
-    // here must not block either) still feeds §7.3's dismissal dataset.
-    const result = buildResult({
-      verdict: "unavailable",
-      confidence: null,
-      reason: "Could not check this objective right now - proceeding without validation.",
-      missingCriteria: [],
-      suggestedRewrite: null,
-      cached: false,
-    });
+    // Decision changed before deployment: an outage now blocks the run
+    // (it used to proceed without validation). No run starts on an
+    // objective nobody checked; checking again once it's back is one
+    // click. Persisting the attempt is best-effort and never cached.
+    const result = unavailableResult();
     await persist(supabase, userId, text, result).catch(() => undefined);
+    await alertObjectiveCheckDown();
     return result;
   }
 

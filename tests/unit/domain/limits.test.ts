@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampLimits, deriveLimitsFromTarget, LIMIT_DEFAULTS } from "@core/domain/limits";
+import { clampLimits, deriveLimitsFromTarget, extendLimits, searchesLeftToAdd, LIMIT_DEFAULTS, MAX_SEARCHES } from "@core/domain/limits";
 
 // Ranges below are exactly SYSTEM-DESIGN-NEXTJS.md §7's "Intake and Visible
 // Defaults" table.
@@ -7,8 +7,8 @@ describe("clampLimits", () => {
   it("clamps a request above the ceiling instead of rejecting it", () => {
     const clamped = clampLimits({ target_qualified: 999, candidate_limit: 999, scrape_limit: 999 });
     expect(clamped.target_qualified).toBe(10);
-    expect(clamped.candidate_limit).toBe(40);
-    expect(clamped.scrape_limit).toBe(40);
+    expect(clamped.candidate_limit).toBe(150);
+    expect(clamped.scrape_limit).toBe(300);
   });
 
   it("clamps a request below the floor up to the minimum of 1", () => {
@@ -36,27 +36,21 @@ describe("clampLimits", () => {
   });
 });
 
-// The only user-facing intake input is target_qualified now - everything
-// else is a fixed, non-dollar constant, deliberately NOT scaled by
-// target_qualified: candidate_limit is sized for the worst case (the
-// highest target_qualified can be) and matched 1:1 to a single Apify
-// actor dispatch's own cap, not to how many leads this particular run
-// happens to want. See deriveLimitsFromTarget's own comment for why -
-// this replaced an earlier proportional-ratio design after a real run
-// showed the dollar-based spend ceiling firing on an inflated cost
-// estimate rather than a real problem.
+// The only user-facing intake input is target_qualified - everything else
+// is derived from it. candidate_limit covers MAX_DISCOVER_ATTEMPTS full
+// pages of candidatesPerDiscoverCall (2x target, within [10, 25]), and
+// scrape_limit is 2 pages per candidate.
 describe("deriveLimitsFromTarget", () => {
-  it("returns the same fixed candidate/scrape/turn/tool-call limits regardless of target_qualified", () => {
-    const small = deriveLimitsFromTarget(1);
-    const large = deriveLimitsFromTarget(10);
-    expect(small.candidate_limit).toBe(40);
-    expect(small.scrape_limit).toBe(80);
-    expect(small.max_turns).toBe(150);
-    expect(small.max_tool_calls).toBe(300);
-    expect(large.candidate_limit).toBe(small.candidate_limit);
-    expect(large.scrape_limit).toBe(small.scrape_limit);
-    expect(large.max_turns).toBe(small.max_turns);
-    expect(large.max_tool_calls).toBe(small.max_tool_calls);
+  it("sizes candidate_limit as 3 attempts of the per-call size, and scrape_limit as 2 pages per candidate", () => {
+    expect(deriveLimitsFromTarget(1)).toMatchObject({ candidate_limit: 30, scrape_limit: 60 });
+    expect(deriveLimitsFromTarget(5)).toMatchObject({ candidate_limit: 30, scrape_limit: 60 });
+    expect(deriveLimitsFromTarget(8)).toMatchObject({ candidate_limit: 48, scrape_limit: 96 });
+    expect(deriveLimitsFromTarget(10)).toMatchObject({ candidate_limit: 60, scrape_limit: 120 });
+  });
+
+  it("stays inside clampLimits' own ranges at the largest target", () => {
+    const derived = deriveLimitsFromTarget(10);
+    expect(clampLimits(derived)).toEqual(derived);
   });
 
   it("sets max_spend_usd high enough that it can never realistically bind - nothing gates on it anymore", () => {
@@ -77,3 +71,27 @@ describe("deriveLimitsFromTarget", () => {
   });
 });
 
+
+describe("extendLimits (Continue with more budget)", () => {
+  const base = deriveLimitsFromTarget(10); // 3 searches of 20: 60 candidates, 120 scrape pages
+
+  it("adds searches, each with its own candidates and scrape pages", () => {
+    const extended = extendLimits(base, 2, "searches");
+    expect(extended).toMatchObject({ max_discover_attempts: 5, candidate_limit: 100, scrape_limit: 200 });
+    expect(extended.max_turns).toBeGreaterThan(base.max_turns);
+  });
+
+  it("gives whatever actually stopped the run room, even with no new searches", () => {
+    expect(extendLimits(base, 0, "scrapes").scrape_limit).toBe(160);
+    expect(extendLimits(base, 0, "candidates").candidate_limit).toBe(80);
+    expect(extendLimits(base, 0, "turns").max_turns).toBe(base.max_turns + 75);
+    expect(extendLimits(base, 0, "tool_calls").max_tool_calls).toBe(base.max_tool_calls + 150);
+  });
+
+  it("never goes past the most searches a run can have", () => {
+    const maxed = extendLimits(base, 10, "searches");
+    expect(maxed.max_discover_attempts).toBe(MAX_SEARCHES);
+    expect(searchesLeftToAdd(maxed)).toBe(0);
+    expect(searchesLeftToAdd({})).toBe(MAX_SEARCHES - 3);
+  });
+});

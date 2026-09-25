@@ -1,0 +1,7 @@
+{
+  "success": true,
+  "httpStatus": 200,
+  "title": "Bot Verification",
+  "contentMd": "### plannerly.com: Verifying that you are not a robot...\n",
+  "finalUrl": "https://plannerly.com/"
+}
