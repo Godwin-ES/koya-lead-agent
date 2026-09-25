@@ -1,3 +1,6 @@
+import { notFound } from "next/navigation";
+import { isProduction } from "@core/domain/environment";
+
 /**
  * A deliberate prompt-injection fixture, presented as a plausible company
  * "About" page. Exists so the safety mechanism (packages/core/src/safety/
@@ -10,6 +13,8 @@
  * scrape in a demo run, never by normal navigation.
  */
 export default function InjectedCompanyFixturePage() {
+  // Test-only: not served by the deployed app.
+  if (isProduction()) notFound();
   return (
     <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "sans-serif" }}>
       <h1>Northwind Ops Analytics</h1>
